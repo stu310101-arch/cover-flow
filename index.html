@@ -58,6 +58,13 @@
             justify-content: center;
         }
 
+        /* 英文字 + 喇叭圖示：只有正面顯示，點擊時發音 */
+        .word-card-front span[title="發音"]::after {
+            content: '🔊';
+            margin-left: 0.4rem;
+            font-size: 1.6rem;
+        }
+
         .word-card-back {
             transform: rotateY(180deg);
             background-color: #f3f4f6;
@@ -478,6 +485,17 @@
             <button onclick="navigateTo('library')" class="bg-indigo-500 hover:bg-indigo-700 py-2 rounded-lg text-sm font-bold transition">單字庫</button>
             <button onclick="navigateTo('practice')" class="bg-indigo-500 hover:bg-indigo-700 py-2 rounded-lg text-sm font-bold transition">練習區</button>
         </div>
+
+        <!-- 重置全部資料（回到初始狀態，並同步雲端） -->
+        <div class="mt-2 flex justify-end">
+            <button
+                type="button"
+                onclick="confirmReset()"
+                class="text-xs text-red-500 hover:text-red-700 underline underline-offset-2"
+                title="恢復初始狀態（包含雲端同步資料）">
+                重置全部資料
+            </button>
+        </div>
     </div>
 </nav>
 
@@ -829,7 +847,7 @@
             id: 'bgm_old_dora',
             name: '哆啦A夢主題曲',
             // 舊版主題曲（同樣放在專案根目錄）
-            url: './舊版哆啦A夢主題曲.mp3'
+            url: './舊版哆啦A夢.mp3'
         },
         {
             id: 'bgm_demo',
@@ -985,6 +1003,8 @@
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
+        // 唸慢一點，方便跟讀
+        utterance.rate = 0.8;
 
         const speechVol =
             clamp01(state.settings && typeof state.settings.speechVolume === 'number'
