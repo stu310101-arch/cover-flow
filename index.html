@@ -1,335 +1,1593 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Coverflow - One Page Portfolio</title>
-    <link href="templatemo-3d-coverflow.css" rel="stylesheet">
-<!--
+  <meta charset="UTF-8">
+  <title>學測自然科視覺化複習筆記網</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Reset & base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-TemplateMo 595 3d coverflow
+    html, body {
+      height: 100%;
+    }
 
-https://templatemo.com/tm-595-3d-coverflow
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: #f9fafb;
+      background:
+        radial-gradient(circle at top, rgba(148, 163, 184, 0.3), transparent 55%),
+        radial-gradient(circle at bottom, rgba(56, 189, 248, 0.25), transparent 55%),
+        #020617;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
--->
+    :root {
+      --accent-color: #38bdf8; /* 預設主色，會依科目覆蓋 */
+      --accent-soft: rgba(56, 189, 248, 0.22);
+      --paper-bg: #0f172a;
+      --paper-border: rgba(148, 163, 184, 0.45);
+      --ink-soft: #cbd5f5;
+      --ink-strong: #e5e7eb;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* Header */
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      backdrop-filter: blur(16px);
+      background: linear-gradient(
+        to right,
+        rgba(15, 23, 42, 0.88),
+        rgba(15, 23, 42, 0.65)
+      );
+      border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background:
+        conic-gradient(from 200deg, rgba(56, 189, 248, 0.8), rgba(59, 130, 246, 0.9), rgba(244, 114, 182, 0.9), rgba(56, 189, 248, 0.8));
+      position: relative;
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 0.8),
+        0 10px 30px rgba(15, 23, 42, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-mark::after {
+      content: "";
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid rgba(15, 23, 42, 0.95);
+      background: radial-gradient(circle at top, rgba(248, 250, 252, 0.9), rgba(15, 23, 42, 0.9));
+    }
+
+    .brand-text-main {
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-text-sub {
+      font-size: 11px;
+      color: #9ca3af;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .header-home-btn {
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .header-home-btn span.icon {
+      font-size: 14px;
+      transform: translateY(-0.5px);
+    }
+
+    .header-home-btn:hover {
+      background: rgba(15, 23, 42, 0.9);
+      border-color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    /* Screens */
+
+    .screen {
+      width: 100%;
+      max-width: 1120px;
+      max-height: 640px;
+      position: relative;
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Dashboard / War room */
+
+    .desk {
+      position: relative;
+      padding: 20px;
+      background:
+        radial-gradient(circle at top left, rgba(148, 163, 184, 0.32), transparent 52%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.35), transparent 55%),
+        linear-gradient(135deg, #020617, #020617 40%, #0b1120 100%);
+      border-radius: 24px;
+      box-shadow:
+        0 32px 80px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(148, 163, 184, 0.4);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .desk {
+        grid-template-columns: 1fr;
+        max-height: none;
+      }
+    }
+
+    .desk::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.6;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+
+    .desk-column {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Countdown block */
+
+    .countdown-panel {
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95));
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.95);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .countdown-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .countdown-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .countdown-sub {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .countdown-display {
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-end;
+      gap: 18px;
+    }
+
+    .flip-days {
+      position: relative;
+      width: 150px;
+      height: 90px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top, #020617, #020617 40%, #020617);
+      overflow: hidden;
+      box-shadow:
+        0 10px 26px rgba(15, 23, 42, 0.85),
+        inset 0 0 0 1px rgba(148, 163, 184, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flip-days-inner {
+      font-variant-numeric: tabular-nums;
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      color: #e5e7eb;
+    }
+
+    .flip-days-unit {
+      font-size: 15px;
+      color: #9ca3af;
+      letter-spacing: 0.45em;
+    }
+
+    .count-label-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: #cbd5f5;
+    }
+
+    .exam-date-pill {
+      border-radius: 999px;
+      padding: 3px 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .desk-note {
+      font-size: 12px;
+      color: #cbd5f5;
+      opacity: 0.9;
+    }
+
+    /* Subject orbs */
+
+    .subjects-panel {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .subject-orb {
+      position: relative;
+      border-radius: 999px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.35), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(148, 163, 184, 0.65);
+      box-shadow:
+        0 12px 25px rgba(15, 23, 42, 0.85),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      overflow: hidden;
+      transition:
+        transform 0.18s ease-out,
+        box-shadow 0.18s ease-out,
+        border-color 0.18s ease-out,
+        background 0.18s ease-out;
+    }
+
+    .subject-orb::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.4), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+      pointer-events: none;
+    }
+
+    .subject-orb:hover {
+      transform: translateY(-2px) translateZ(0);
+      border-color: #e5e7eb;
+      box-shadow:
+        0 16px 32px rgba(15, 23, 42, 1),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.4), rgba(15, 23, 42, 0.98));
+    }
+
+    .subject-orb:hover::before {
+      opacity: 1;
+    }
+
+    .subject-badge-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, rgba(248, 250, 252, 0.9), rgba(15, 23, 42, 0.95));
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 1),
+        0 0 0 6px rgba(15, 23, 42, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: #020617;
+    }
+
+    .subject-text-block {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .subject-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .subject-caption {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    /* Toolbox with Hanlin link */
+
+    .toolbox-panel {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px dashed rgba(148, 163, 184, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+      color: #cbd5f5;
+    }
+
+    .toolbox-title {
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .toolbox-link {
+      align-self: flex-start;
+      border-radius: 999px;
+      padding: 6px 12px;
+      border: 1px solid rgba(56, 189, 248, 0.8);
+      background: rgba(15, 23, 42, 0.95);
+      color: #e0f2fe;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+      box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4);
+    }
+
+    .toolbox-link::after {
+      content: "↗";
+      font-size: 11px;
+    }
+
+    .toolbox-link:hover {
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6),
+                  0 10px 18px rgba(15, 23, 42, 0.9);
+    }
+
+    .desk-small-note {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    /* Right column: subject summary */
+
+    .subject-summary-card {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 18px;
+      padding: 16px 18px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      height: 100%;
+    }
+
+    .summary-heading {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .summary-sub {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .summary-list {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #cbd5f5;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .summary-list li::before {
+      content: "•";
+      margin-right: 6px;
+      color: rgba(56, 189, 248, 0.8);
+    }
+
+    /* BOOK LAYOUT (Subject & Unit) */
+
+    .book-wrapper {
+      position: relative;
+      padding: 18px;
+      background:
+        radial-gradient(circle at top, rgba(148, 163, 184, 0.25), transparent 56%),
+        radial-gradient(circle at bottom, rgba(56, 189, 248, 0.2), transparent 55%),
+        linear-gradient(135deg, #020617, #020617 40%, #020617);
+      border-radius: 24px;
+      box-shadow:
+        0 32px 80px rgba(15, 23, 42, 0.95),
+        0 0 0 1px rgba(148, 163, 184, 0.5);
+    }
+
+    .book {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: 0;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #020617;
+    }
+
+    @media (max-width: 860px) {
+      .book {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .page {
+      padding: 18px 18px 16px;
+      background: var(--paper-bg);
+      border: 1px solid var(--paper-border);
+      color: var(--ink-soft);
+    }
+
+    .page-left {
+      border-right: 1px solid rgba(15, 23, 42, 0.9);
+      position: relative;
+    }
+
+    .page-right {
+      position: relative;
+    }
+
+    .page-title-label {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .subject-cover-name {
+      font-size: 22px;
+      color: var(--ink-strong);
+      margin-bottom: 4px;
+    }
+
+    .subject-cover-tagline {
+      font-size: 13px;
+      color: #cbd5f5;
+      margin-bottom: 14px;
+    }
+
+    .subject-emblem {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      background: radial-gradient(circle at top, rgba(248, 250, 252, 0.95), rgba(15, 23, 42, 0.96));
+      color: #020617;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-size: 13px;
+    }
+
+    .subject-meta {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    .page-actions-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .link-button {
+      font-size: 11px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.18s ease, transform 0.12s ease;
+    }
+
+    .link-button:hover {
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    /* TOC right page */
+
+    .toc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .toc-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-strong);
+    }
+
+    .toc-search {
+      flex: 1;
+      max-width: 260px;
+    }
+
+    .toc-search-input {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      padding: 6px 10px;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      outline: none;
+    }
+
+    .toc-search-input::placeholder {
+      color: #6b7280;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 4px;
+      margin-bottom: 8px;
+    }
+
+    .toc-item {
+      position: relative;
+      padding: 7px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(30, 64, 175, 0.4);
+      overflow: hidden;
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        border-color 0.12s ease,
+        background 0.12s ease;
+    }
+
+    .toc-item::before {
+      content: "";
+      position: absolute;
+      inset: auto -8px 0;
+      height: 50%;
+      background: rgba(250, 250, 150, 0.4);
+      transform: translateX(-115%);
+      transition: transform 0.3s ease-out;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .toc-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.9);
+      border-color: rgba(56, 189, 248, 0.9);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+    }
+
+    .toc-item:hover::before {
+      transform: translateX(0);
+    }
+
+    .toc-line1 {
+      font-size: 12px;
+      color: var(--ink-strong);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .toc-line2 {
+      font-size: 11px;
+      color: #9ca3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toc-tag {
+      font-size: 10px;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .toc-empty {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+      padding: 20px 8px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+    }
+
+    .toc-hint {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    /* UNIT PAGE */
+
+    .unit-breadcrumb {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .unit-title {
+      font-size: 19px;
+      color: var(--ink-strong);
+      margin-bottom: 4px;
+    }
+
+    .unit-lead {
+      font-size: 13px;
+      color: #cbd5f5;
+      margin-bottom: 10px;
+    }
+
+    .unit-summary-list {
+      font-size: 12px;
+      color: #cbd5f5;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .unit-summary-list li::before {
+      content: "–";
+      margin-right: 6px;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .unit-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.6);
+      font-size: 11px;
+    }
+
+    .unit-nav-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .unit-nav-btn {
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.96);
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.16s ease, transform 0.12s ease, opacity 0.1s ease;
+    }
+
+    .unit-nav-btn[disabled] {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .unit-nav-btn:not([disabled]):hover {
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .unit-bookmark-btn {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.98);
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.16s ease, transform 0.12s ease;
+    }
+
+    .unit-bookmark-btn:hover {
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    /* Interactive canvas (right page of unit) */
+
+    .interactive-header {
+      font-size: 12px;
+      color: #9ca3af;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .interactive-canvas {
+      border-radius: 16px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), #020617);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      padding: 12px 14px;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.95);
+    }
+
+    .interactive-caption {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    /* DEMO WIDGET: 等速直線運動 */
+
+    .kinematics-widget {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+
+    .kin-track {
+      position: relative;
+      height: 78px;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        rgba(15, 23, 42, 1),
+        rgba(15, 23, 42, 0.95)
+      );
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      overflow: hidden;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+    }
+
+    .kin-lane {
+      position: absolute;
+      inset: 26px 18px 32px;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        rgba(148, 163, 184, 0.28),
+        rgba(148, 163, 184, 0.08)
+      );
+    }
+
+    .kin-object {
+      position: relative;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, #e0f2fe, #0f172a);
+      box-shadow:
+        0 0 0 2px rgba(15, 23, 42, 1),
+        0 10px 18px rgba(15, 23, 42, 0.9);
+      z-index: 2;
+      transform: translateX(0);
+      transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .kin-object::after {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: inherit;
+      border: 2px solid rgba(56, 189, 248, 0.9);
+    }
+
+    .kin-marker-row {
+      position: absolute;
+      inset: auto 18px 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #9ca3af;
+      z-index: 1;
+    }
+
+    .kin-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .kin-slider {
+      width: 100%;
+      accent-color: var(--accent-color);
+    }
+
+    .kin-footnote {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    /* Footer */
+
+    footer {
+      padding: 10px 18px 16px;
+      font-size: 11px;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header" id="header">
-        <a href="#home" class="logo-container">
-            <div class="logo">
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <rect x="10" y="25" width="15" height="50" fill="url(#grad1)" transform="rotate(-15 17.5 50)" />
-                    <rect x="35" y="15" width="15" height="70" fill="url(#grad1)" />
-                    <rect x="60" y="25" width="15" height="50" fill="url(#grad1)" transform="rotate(15 67.5 50)" />
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#grad1)" stroke-width="2" opacity="0.5" />
-                </svg>
-            </div>
-            <div class="logo-text">3D Coverflow</div>
-        </a>
-        
-        <nav class="main-menu" id="mainMenu">
-            <a href="#home" class="menu-item active">Home</a>
-            <a href="#about" class="menu-item">About</a>
-            <a href="#contact" class="menu-item">Contact</a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="menu-item external">GitHub</a>
-        </nav>
-        
-        <div class="menu-toggle" id="menuToggle">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </header>
-
-    <!-- Home Section -->
-    <section id="home" class="section">
-        <div class="coverflow-wrapper">
-            <div class="info">
-                <h2 id="current-title">Mountain Landscape</h2>
-                <p id="current-description">Majestic peaks covered in snow during golden hour</p>
-            </div>
-
-            <div class="coverflow-container" tabindex="0">
-                <div class="coverflow" id="coverflow">
-                    <div class="coverflow-item" data-index="0">
-                        <div class="cover image-loading">
-                            <img src="images/mountain-landscape.jpg" alt="Mountain Landscape" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="1">
-                        <div class="cover image-loading">
-                            <img src="images/forest-path.jpg" alt="Forest Path" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="2">
-                        <div class="cover image-loading">
-                            <img src="images/serene-water-mirroring.jpg" alt="Lake Reflection" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="3">
-                        <div class="cover image-loading">
-                            <img src="images/ocean-sunset-golden-hour.jpg" alt="Ocean Sunset" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="4">
-                        <div class="cover image-loading">
-                            <img src="images/rolling-sand-dunes.jpg" alt="Desert Dunes" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="5">
-                        <div class="cover image-loading">
-                            <img src="images/starry-night.jpg" alt="Starry Night" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="6">
-                        <div class="cover image-loading">
-                            <img src="images/cascading-waterfall.jpg" alt="Waterfall" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                </div>
-
-                <button class="nav-button prev" onclick="navigate(-1)">‹</button>
-                <button class="nav-button next" onclick="navigate(1)">›</button>
-
-                <div class="dots-container" id="dots"></div>
-                
-                <!-- Play/Pause Button -->
-                <button class="play-pause-button" id="playPauseBtn" onclick="toggleAutoplay()">
-                    <span class="play-icon">▶</span>
-                    <span class="pause-icon" style="display: none;">❚❚</span>
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="section">
-        <div class="about-content">
-            <div class="about-header">
-                <h2>Discover 3D Coverflow</h2>
-                <p>A revolutionary way to showcase your visual content with stunning 3D effects and seamless interactions</p>
-            </div>
-            
-            <div class="about-main">
-                <div class="about-visual">
-                    <div class="showcase-display">
-                        <div class="showcase-main">
-                            <div class="corner-decoration top-left"></div>
-                            <div class="corner-decoration bottom-right"></div>
-                            
-                            <div class="showcase-logo">
-                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="10" y="25" width="15" height="50" fill="white" transform="rotate(-15 17.5 50)" opacity="0.9" />
-                                    <rect x="35" y="15" width="15" height="70" fill="white" />
-                                    <rect x="60" y="25" width="15" height="50" fill="white" transform="rotate(15 67.5 50)" opacity="0.9" />
-                                    <circle cx="50" cy="50" r="45" fill="none" stroke="white" stroke-width="2" opacity="0.3" />
-                                </svg>
-                            </div>
-                            
-                            <h3 class="showcase-title">3D Coverflow</h3>
-                            <p class="showcase-subtitle">Transform your image galleries into immersive 3D experiences</p>
-                            
-                            <div class="showcase-badges">
-                                <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank" rel="noopener noreferrer" class="badge">HTML5</a>
-                                <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank" rel="noopener noreferrer" class="badge">CSS3</a>
-                                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer" class="badge">JavaScript</a>
-                                <a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Responsive_Design" target="_blank" rel="noopener noreferrer" class="badge">Responsive</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="about-info">
-                    <h3>Elevate Your Gallery Experience</h3>
-                    <p>3D Coverflow is brought to you by TemplateMo. Transform the way you present images with our cutting-edge 3D coverflow technology. Create immersive, interactive galleries that captivate your audience and leave a lasting impression.</p>
-                    <p>Whether you're showcasing portfolio pieces, product images, or creating an interactive story, our 3D coverflow brings your content to life with fluid animations and intuitive controls.</p>
-                    
-                    <ul class="feature-list">
-                        <li>Smooth 3D transitions with hardware acceleration</li>
-                        <li>Touch-enabled navigation for mobile devices</li>
-                        <li>Customizable autoplay and timing controls</li>
-                        <li>Keyboard navigation support</li>
-                        <li>Reflection effects for added depth</li>
-                    </ul>
-                    
-                    <a href="#contact" class="cta-button">
-                        Start Your Project
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M5 12h14m-7-7l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="stats-section">
-                <div class="stat-item">
-                    <div class="stat-number">60fps</div>
-                    <div class="stat-label">Smooth Performance</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Responsive Design</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">3D</div>
-                    <div class="stat-label">Visual Effects</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">∞</div>
-                    <div class="stat-label">Customization</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="section">
-        <div class="contact-content">
-            <div class="contact-header">
-                <h2>Get In Touch</h2>
-                <p>Have a project in mind? Let's create something amazing together.</p>
-            </div>
-            
-            <div class="contact-container">
-                <div class="contact-info-section">
-                    <h3>Let's Connect</h3>
-                    <p>We're here to help bring your vision to life. Whether you need a stunning gallery, a complete website redesign, or custom development work, we'd love to hear from you.</p>
-                    
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Email</h4>
-                                <p>hello@3dcoverflow.com</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Phone</h4>
-                                <p>+1 (555) 123-4567</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Address</h4>
-                                <p>123 Design Street, San Francisco, CA 94102</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Business Hours</h4>
-                                <p>Monday - Friday: 9:00 AM - 6:00 PM PST</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="social-links">
-                        <h4>Follow Us</h4>
-                        <div class="social-buttons">
-                            <a href="#" class="social-btn" title="Facebook">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="social-btn" title="Twitter">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="social-btn" title="LinkedIn">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="social-btn" title="Instagram">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/>
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="contact-form-section">
-                    <form class="contact-form" onsubmit="handleSubmit(event)">
-                        <div class="form-group">
-                            <label for="name">Your Name</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">Subject</label>
-                            <input type="text" id="subject" name="subject" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="message">Message</label>
-                            <textarea id="message" name="message" required></textarea>
-                        </div>
-                        <button type="submit" class="submit-btn">Send Message</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-copyright">
-                © 2025 3D Coverflow. All rights reserved. | Designed by <a href="https://templatemo.com" target="_blank" rel="noopener noreferrer">TemplateMo</a>
-            </div>
-            <div class="footer-links">
-                <a href="#privacy" onclick="event.preventDefault(); alert('Privacy Policy page would go here');">Privacy Policy</a>
-                <a href="#terms" onclick="event.preventDefault(); alert('Terms of Service page would go here');">Terms of Service</a>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Scroll to top button -->
-    <div class="scroll-to-top" id="scrollToTop">
-        <span>↑</span>
+<header class="app-header">
+  <div class="brand-block">
+    <div class="brand-mark"></div>
+    <div>
+      <div class="brand-text-main">學測自然科戰情室</div>
+      <div class="brand-text-sub">Visual Science Notes</div>
     </div>
+  </div>
+  <div class="header-right">
+    <div class="pill">無登入．純前端．即開即用</div>
+  </div>
+</header>
 
-<script src="templatemo-3d-coverflow-scripts.js"></script>
+<main>
+  <!-- Screen 1: 戰情室首頁 -->
+  <section id="screen-dashboard" class="screen active">
+    <div class="desk">
+      <div class="desk-column">
+        <div class="countdown-panel">
+          <div class="countdown-header">
+            <div>
+              <div class="countdown-title">學測自然科戰情室</div>
+              <div class="countdown-sub">把厚重的參考書變薄，把抽象的概念變活。</div>
+            </div>
+            <div class="countdown-sub" id="countdownStatus"></div>
+          </div>
+          <div class="countdown-display">
+            <div class="flip-days">
+              <div class="flip-days-inner">
+                <span id="daysRemaining">--</span>
+                <span class="flip-days-unit">天</span>
+              </div>
+            </div>
+            <div class="count-label-stack">
+              <div class="exam-date-pill">
+                <span>距離學測自然考試日</span>
+                <span id="examDateLabel"></span>
+              </div>
+              <div class="desk-note">還有多少天可以讓概念在腦中成形，就在這裡一頁一頁看見。</div>
+            </div>
+          </div>
+        </div>
 
+        <div class="subjects-panel">
+          <button type="button" class="subject-orb" data-subject="physics">
+            <div class="subject-badge-circle">PHY</div>
+            <div class="subject-text-block">
+              <div class="subject-label">物理魔法書</div>
+              <div class="subject-caption">從力與運動開始，理解世界的規律。</div>
+            </div>
+          </button>
+
+          <button type="button" class="subject-orb" data-subject="chemistry">
+            <div class="subject-badge-circle">CHE</div>
+            <div class="subject-text-block">
+              <div class="subject-label">化學魔法書</div>
+              <div class="subject-caption">讓元素與反應在視覺中動起來。</div>
+            </div>
+          </button>
+
+          <button type="button" class="subject-orb" data-subject="biology">
+            <div class="subject-badge-circle">BIO</div>
+            <div class="subject-text-block">
+              <div class="subject-label">生物魔法書</div>
+              <div class="subject-caption">從細胞到生態，一路串起生命故事。</div>
+            </div>
+          </button>
+
+          <button type="button" class="subject-orb" data-subject="earth">
+            <div class="subject-badge-circle">EAR</div>
+            <div class="subject-text-block">
+              <div class="subject-label">地科魔法書</div>
+              <div class="subject-caption">讀懂天空、大地與海洋的訊號。</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="toolbox-panel">
+          <div class="toolbox-title">TOOLS / 刷題工具箱</div>
+          <div>實作觀念之後，交給題目驗證你的理解。</div>
+          <a class="toolbox-link" href="https://www2.hl-ebook.com.tw/" target="_blank" rel="noopener noreferrer">
+            翰林雲端學院 — 立即前往刷題
+          </a>
+          <div class="desk-small-note">外部連結僅作為工具推薦，你可以依照自己的版本替換目標網址。</div>
+        </div>
+      </div>
+
+      <div class="desk-column">
+        <div class="subject-summary-card">
+          <div class="summary-heading">使用說明</div>
+          <div class="summary-sub">
+            左邊是你的「備考桌面」，點擊任一科「魔法書」圓形入口，就會展開那一科的精裝書。
+          </div>
+          <ul class="summary-list">
+            <li>每一科都是一本「魔法書」，打開後左頁是封面與精神標語，右頁是手寫感的目錄。</li>
+            <li>在目錄的搜尋框輸入關鍵字，即可即時從索引中過濾出相關單元。</li>
+            <li>點擊單元標題，書本會翻到該單元內頁：左頁是重點整理，右頁是可操作的互動小工具。</li>
+            <li>頁面右下角的「書籤」按鈕可以隨時帶你回到該科目錄；左上角按鈕則回到戰情室。</li>
+          </ul>
+          <div class="summary-heading" style="margin-top: 6px;">目前狀態：Phase 1 骨架</div>
+          <div class="summary-sub">
+            目前先完成頁面切換與搜尋框架，之後你提供每一科、每一單元的內容，我們再逐步填入並擴充互動元件。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 2: 學科魔法書 -->
+  <section id="screen-subject" class="screen">
+    <div class="book-wrapper">
+      <div class="book">
+        <!-- Left page: 封面 / 導引 -->
+        <div class="page page-left">
+          <div class="page-title-label">Subject Spellbook</div>
+          <div class="subject-emblem" id="subjectEmblem">SUB</div>
+          <div class="subject-cover-name" id="subjectName">科目魔法書</div>
+          <div class="subject-cover-tagline" id="subjectTagline">
+            選擇一個章節，讓概念變成可以操作的圖像。
+          </div>
+          <div class="subject-meta" id="subjectMeta">
+            每一頁都對應學測範圍內的核心觀念；搭配互動圖像，幫助你把公式變成直覺。
+          </div>
+
+          <div class="page-actions-row">
+            <button type="button" class="link-button" id="backToDeskBtn">
+              <span>← 回戰情室</span>
+            </button>
+            <div style="font-size: 11px; color: #9ca3af;">小提示：滑鼠移過右頁目錄會出現螢光筆劃記的效果。</div>
+          </div>
+        </div>
+
+        <!-- Right page: 目錄 + 搜尋 -->
+        <div class="page page-right">
+          <div class="toc-header">
+            <div>
+              <div class="toc-title">章節目錄</div>
+              <div style="font-size: 11px; color: #9ca3af;" id="tocCountLabel"></div>
+            </div>
+            <div class="toc-search">
+              <input id="tocSearchInput" class="toc-search-input" type="search"
+                     placeholder="輸入單元名稱或關鍵字（即時過濾）">
+            </div>
+          </div>
+          <ul id="tocList" class="toc-list"></ul>
+          <div class="toc-hint">
+            搜尋說明：此處使用一個全域 <code>searchIndex</code> 陣列，依照
+            <span id="subjectNameShort">科目</span> 篩出對應單元。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 3: 單元內頁 -->
+  <section id="screen-unit" class="screen">
+    <div class="book-wrapper">
+      <div class="book">
+        <!-- Left page: 文字觀念 -->
+        <div class="page page-left" style="display: flex; flex-direction: column;">
+          <div class="unit-breadcrumb" id="unitBreadcrumb">
+            <button type="button" class="unit-bookmark-btn" id="unitBackToTocBtn">
+              <span>⇤</span>
+              <span>回目錄</span>
+            </button>
+            <span id="unitBreadcrumbText"></span>
+          </div>
+          <div class="unit-title" id="unitTitle">單元標題</div>
+          <div class="unit-lead" id="unitLead">
+            這裡會放該單元的引言文字，用來把情境與觀念串在一起。
+          </div>
+          <ul class="unit-summary-list" id="unitSummaryList"></ul>
+
+          <div class="unit-nav">
+            <div>使用書籤回目錄，或從右頁互動畫布來回對照文字與圖像。</div>
+            <div class="unit-nav-buttons">
+              <button type="button" class="unit-nav-btn" id="unitPrevBtn">
+                <span>←</span><span>上一章</span>
+              </button>
+              <button type="button" class="unit-nav-btn" id="unitNextBtn">
+                <span>下一章</span><span>→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right page: 互動畫布 -->
+        <div class="page page-right">
+          <div class="interactive-header">Interactive Canvas</div>
+          <div class="interactive-canvas" id="interactiveCanvas">
+            <!-- 互動元件會由 JavaScript 動態注入 -->
+          </div>
+          <div class="interactive-caption" id="interactiveCaption">
+            這裡會根據單元內容切換為不同的互動圖表，讓你直接操作參數、觀察變化。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  學測自然科視覺化複習筆記網 — 單檔 HTML 版本．後端零依賴．歡迎依照需求調整與延伸。
+</footer>
+
+<script>
+  // -------------------------------
+  // 全域狀態與資料結構
+  // -------------------------------
+  const appState = {
+    currentSubject: null,
+    currentUnitId: null
+  };
+
+  const subjects = {
+    physics: {
+      id: "physics",
+      emblem: "PHY",
+      displayName: "物理魔法書",
+      shortName: "物理",
+      tagline: "用直覺讀懂力與運動，讓公式變成腦中的動畫。",
+      meta: "本書涵蓋學測自然中與力學、波動、電學等核心單元，著重圖像化與生活情境。",
+      accent: "#38bdf8"
+    },
+    chemistry: {
+      id: "chemistry",
+      emblem: "CHE",
+      displayName: "化學魔法書",
+      shortName: "化學",
+      tagline: "把分子世界拉進眼前，元素、反應一目了然。",
+      meta: "之後我們可以在這裡實作互動週期表、反應路徑圖等元件。",
+      accent: "#22c55e"
+    },
+    biology: {
+      id: "biology",
+      emblem: "BIO",
+      displayName: "生物魔法書",
+      shortName: "生物",
+      tagline: "從細胞到生態，將大量文字化成結構圖與流程圖。",
+      meta: "之後可以放細胞結構拼圖、代謝路徑開關等互動內容。",
+      accent: "#a855f7"
+    },
+    earth: {
+      id: "earth",
+      emblem: "EAR",
+      displayName: "地科魔法書",
+      shortName: "地科",
+      tagline: "讀懂天氣圖、地震波與宇宙視角的變化。",
+      meta: "之後可以加上板塊運動模擬、星空觀測路線圖等。",
+      accent: "#f97316"
+    }
+  };
+
+  // searchIndex: 之後擴充時，只要在這裡增加條目即可
+  const searchIndex = [
+    {
+      id: "physics_kinematics",
+      title: "CH1 直線運動",
+      shortTitle: "直線運動",
+      subject: "physics",
+      path: "/physics/kinematics",
+      keywords: ["直線運動", "位移", "速度", "加速度", "v-t 圖", "x-t 圖"],
+      lead: "一維空間中的位置、速度與加速度，搞懂這一章，後面力學的圖像才有根基。",
+      summaryPoints: [
+        "平均速度 v̄ 與瞬時速度 v 的意義與差異。",
+        "位移–時間（x–t）圖與速度–時間（v–t）圖的斜率解讀。",
+        "等速直線運動與等加速度直線運動的基本公式。",
+        "如何從圖像反推物體的運動敘述。"
+      ],
+      interactiveType: "kinematics_basic"
+    },
+    {
+      id: "physics_newton",
+      title: "CH2 牛頓運動定律（預留）",
+      shortTitle: "牛頓力學",
+      subject: "physics",
+      path: "/physics/newton",
+      keywords: ["牛頓", "受力圖", "運動定律", "作用力"],
+      lead: "這個單元先預留位置，之後我們可以一起設計受力圖互動元件。",
+      summaryPoints: [
+        "目前為占位單元，方便你日後補上正式內容。",
+        "預計可以實作：拖曳力向量、觀察合力與加速度的關係。",
+        "所有設定都可在 searchIndex 中修改。"
+      ],
+      interactiveType: "placeholder"
+    }
+    // 之後其他科目、其他單元可繼續在此陣列中擴充
+  ];
+
+  // -------------------------------
+  // 初始化
+  // -------------------------------
+  document.addEventListener("DOMContentLoaded", () => {
+    initCountdown();
+    initDashboard();
+    initSubjectBook();
+    initUnitPage();
+  });
+
+  // -------------------------------
+  // 倒數計時
+  // -------------------------------
+  function initCountdown() {
+    const examDate = new Date("2026-01-17T00:00:00+08:00"); // 可依實際考試日期調整
+    const daysSpan = document.getElementById("daysRemaining");
+    const dateLabel = document.getElementById("examDateLabel");
+    const statusLabel = document.getElementById("countdownStatus");
+
+    if (dateLabel) {
+      const y = examDate.getFullYear();
+      const m = (examDate.getMonth() + 1).toString().padStart(2, "0");
+      const d = examDate.getDate().toString().padStart(2, "0");
+      dateLabel.textContent = `${y}/${m}/${d}`;
+    }
+
+    function updateDays() {
+      const now = new Date();
+      const diffMs = examDate.getTime() - now.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const safeDays = diffDays < 0 ? 0 : diffDays;
+
+      if (daysSpan) {
+        daysSpan.textContent = safeDays.toString().padStart(2, "0");
+      }
+
+      if (statusLabel) {
+        if (diffMs > 0) {
+          statusLabel.textContent = "倒數進行中";
+        } else {
+          statusLabel.textContent = "已超過設定考試日";
+        }
+      }
+    }
+
+    updateDays();
+    // 每小時更新一次即可
+    setInterval(updateDays, 60 * 60 * 1000);
+  }
+
+  // -------------------------------
+  // 畫面切換
+  // -------------------------------
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach((el) => {
+      if (el.id === id) {
+        el.classList.add("active");
+      } else {
+        el.classList.remove("active");
+      }
+    });
+  }
+
+  // -------------------------------
+  // 戰情室首頁
+  // -------------------------------
+  function initDashboard() {
+    const subjectButtons = document.querySelectorAll(".subject-orb");
+    subjectButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const subjectId = btn.getAttribute("data-subject");
+        openSubject(subjectId);
+      });
+    });
+  }
+
+  // -------------------------------
+  // 學科魔法書
+  // -------------------------------
+  function initSubjectBook() {
+    const backBtn = document.getElementById("backToDeskBtn");
+    if (backBtn) {
+      backBtn.addEventListener("click", () => {
+        showScreen("screen-dashboard");
+      });
+    }
+
+    const searchInput = document.getElementById("tocSearchInput");
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        const q = searchInput.value || "";
+        if (!appState.currentSubject) return;
+        renderToc(appState.currentSubject, q);
+      });
+    }
+  }
+
+  function openSubject(subjectId) {
+    const subject = subjects[subjectId];
+    if (!subject) return;
+
+    appState.currentSubject = subjectId;
+    appState.currentUnitId = null;
+
+    // 設定主題色
+    document.documentElement.style.setProperty("--accent-color", subject.accent);
+
+    const emblemEl = document.getElementById("subjectEmblem");
+    const nameEl = document.getElementById("subjectName");
+    const taglineEl = document.getElementById("subjectTagline");
+    const metaEl = document.getElementById("subjectMeta");
+    const nameShortEl = document.getElementById("subjectNameShort");
+    const searchInput = document.getElementById("tocSearchInput");
+
+    if (emblemEl) emblemEl.textContent = subject.emblem;
+    if (nameEl) nameEl.textContent = subject.displayName;
+    if (taglineEl) taglineEl.textContent = subject.tagline;
+    if (metaEl) metaEl.textContent = subject.meta;
+    if (nameShortEl) nameShortEl.textContent = subject.shortName;
+    if (searchInput) searchInput.value = "";
+
+    renderToc(subjectId, "");
+    showScreen("screen-subject");
+  }
+
+  function renderToc(subjectId, query) {
+    const listEl = document.getElementById("tocList");
+    const countLabel = document.getElementById("tocCountLabel");
+    if (!listEl) return;
+
+    const normalizedQuery = (query || "").trim().toLowerCase();
+
+    const matches = searchIndex.filter((item) => {
+      if (item.subject !== subjectId) return false;
+      if (!normalizedQuery) return true;
+
+      const inTitle = item.title.toLowerCase().includes(normalizedQuery);
+      const inKeywords = (item.keywords || []).some((kw) =>
+        kw.toLowerCase().includes(normalizedQuery)
+      );
+      return inTitle || inKeywords;
+    });
+
+    listEl.innerHTML = "";
+    if (matches.length === 0) {
+      const li = document.createElement("li");
+      li.className = "toc-empty";
+      li.textContent = "目前沒有符合關鍵字的單元，可以試試換個關鍵字搜尋。";
+      listEl.appendChild(li);
+    } else {
+      matches.forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "toc-item";
+        li.dataset.unitId = item.id;
+        li.innerHTML = `
+          <div class="toc-line1">
+            <span>${item.title}</span>
+            <span class="toc-tag">${item.shortTitle}</span>
+          </div>
+          <div class="toc-line2">${(item.keywords || []).join(" · ")}</div>
+        `;
+        li.addEventListener("click", () => {
+          openUnit(item.subject, item.id);
+        });
+        listEl.appendChild(li);
+      });
+    }
+
+    if (countLabel) {
+      const allForSubject = searchIndex.filter((i) => i.subject === subjectId);
+      countLabel.textContent = `顯示 ${matches.length} / 共 ${allForSubject.length} 個單元`;
+    }
+  }
+
+  // -------------------------------
+  // 單元內頁
+  // -------------------------------
+  function initUnitPage() {
+    const backToTocBtn = document.getElementById("unitBackToTocBtn");
+    if (backToTocBtn) {
+      backToTocBtn.addEventListener("click", () => {
+        if (appState.currentSubject) {
+          openSubject(appState.currentSubject);
+        } else {
+          showScreen("screen-dashboard");
+        }
+      });
+    }
+
+    const prevBtn = document.getElementById("unitPrevBtn");
+    const nextBtn = document.getElementById("unitNextBtn");
+    if (prevBtn) {
+      prevBtn.addEventListener("click", () => navigateUnit(-1));
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => navigateUnit(1));
+    }
+  }
+
+  function openUnit(subjectId, unitId) {
+    const subject = subjects[subjectId];
+    const unit = searchIndex.find(
+      (item) => item.id === unitId && item.subject === subjectId
+    );
+    if (!subject || !unit) return;
+
+    appState.currentSubject = subjectId;
+    appState.currentUnitId = unitId;
+
+    const breadcrumbTextEl = document.getElementById("unitBreadcrumbText");
+    const titleEl = document.getElementById("unitTitle");
+    const leadEl = document.getElementById("unitLead");
+    const summaryListEl = document.getElementById("unitSummaryList");
+
+    if (breadcrumbTextEl) {
+      breadcrumbTextEl.textContent = `${subject.shortName} / ${unit.shortTitle}`;
+    }
+    if (titleEl) titleEl.textContent = unit.title;
+    if (leadEl) leadEl.textContent = unit.lead || "";
+    if (summaryListEl) {
+      summaryListEl.innerHTML = "";
+      (unit.summaryPoints || []).forEach((point) => {
+        const li = document.createElement("li");
+        li.textContent = point;
+        summaryListEl.appendChild(li);
+      });
+    }
+
+    renderInteractiveForUnit(unit);
+    updateUnitNavButtons();
+    showScreen("screen-unit");
+  }
+
+  function navigateUnit(offset) {
+    const subjectId = appState.currentSubject;
+    const currentUnitId = appState.currentUnitId;
+    if (!subjectId || !currentUnitId) return;
+
+    const subjectUnits = searchIndex.filter((u) => u.subject === subjectId);
+    const currentIndex = subjectUnits.findIndex((u) => u.id === currentUnitId);
+    if (currentIndex === -1) return;
+
+    const newIndex = currentIndex + offset;
+    if (newIndex < 0 || newIndex >= subjectUnits.length) return;
+
+    const target = subjectUnits[newIndex];
+    openUnit(subjectId, target.id);
+  }
+
+  function updateUnitNavButtons() {
+    const subjectId = appState.currentSubject;
+    const currentUnitId = appState.currentUnitId;
+    const prevBtn = document.getElementById("unitPrevBtn");
+    const nextBtn = document.getElementById("unitNextBtn");
+
+    if (!subjectId || !currentUnitId || !prevBtn || !nextBtn) return;
+
+    const subjectUnits = searchIndex.filter((u) => u.subject === subjectId);
+    const currentIndex = subjectUnits.findIndex((u) => u.id === currentUnitId);
+
+    if (currentIndex <= 0) {
+      prevBtn.disabled = true;
+    } else {
+      prevBtn.disabled = false;
+    }
+
+    if (currentIndex === -1 || currentIndex >= subjectUnits.length - 1) {
+      nextBtn.disabled = true;
+    } else {
+      nextBtn.disabled = false;
+    }
+  }
+
+  // -------------------------------
+  // 互動畫布：依單元切換
+  // -------------------------------
+  function renderInteractiveForUnit(unit) {
+    const canvas = document.getElementById("interactiveCanvas");
+    const caption = document.getElementById("interactiveCaption");
+    if (!canvas || !caption) return;
+
+    canvas.innerHTML = "";
+    caption.textContent = "";
+
+    if (unit.interactiveType === "kinematics_basic") {
+      renderKinematicsWidget(canvas, caption);
+    } else {
+      // 預設占位互動
+      const placeholder = document.createElement("div");
+      placeholder.style.fontSize = "12px";
+      placeholder.style.color = "#cbd5f5";
+      placeholder.textContent = "這個單元的互動內容尚未設定。之後我們可以在這裡加入你指定的圖表或模擬元件。";
+      canvas.appendChild(placeholder);
+      caption.textContent = "每一個單元都可以有自己專屬的互動元件，只要在 searchIndex 中指定類型即可。";
+    }
+  }
+
+  // DEMO：等速直線運動互動元件
+  function renderKinematicsWidget(container, captionEl) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "kinematics-widget";
+    wrapper.innerHTML = `
+      <div class="kin-track">
+        <div class="kin-lane"></div>
+        <div class="kin-object" id="kinObject"></div>
+        <div class="kin-marker-row">
+          <span>0 m</span>
+          <span id="kinPositionLabel">10 m</span>
+        </div>
+      </div>
+      <div class="kin-label-row">
+        <div>速度 v：<span id="kinVelocityLabel">2</span> m/s（等速直線運動）</div>
+        <div>觀察：同樣經過 5 秒，位移 s = v × t</div>
+      </div>
+      <input type="range" min="1" max="5" value="2" id="kinVelocitySlider" class="kin-slider">
+      <div class="kin-footnote">
+        拖曳上方滑桿，想像一個物體在水平直線上作等速直線運動。
+        速度變大時，同樣 5 秒內的位移會如何改變？
+      </div>
+    `;
+    container.appendChild(wrapper);
+
+    const slider = wrapper.querySelector("#kinVelocitySlider");
+    const vLabel = wrapper.querySelector("#kinVelocityLabel");
+    const pLabel = wrapper.querySelector("#kinPositionLabel");
+    const obj = wrapper.querySelector("#kinObject");
+
+    function update() {
+      const v = Number(slider.value || 0);
+      const t = 5; // 固定 5 秒
+      const s = v * t;
+      vLabel.textContent = v.toString();
+      pLabel.textContent = `${s} m`;
+
+      // 物體位置轉換成軌道上的位移百分比（簡單視覺效果，非實際比例）
+      const minOffset = 0;
+      const maxOffset = 70;
+      const ratio = (v - 1) / (5 - 1); // 1~5 對應 0~1
+      const translatePercent = minOffset + (maxOffset - minOffset) * ratio;
+      obj.style.transform = `translateX(${translatePercent}%)`;
+    }
+
+    slider.addEventListener("input", update);
+    update();
+
+    captionEl.textContent =
+      "示範：固定觀察 5 秒內的等速直線運動，拖曳速度滑桿，體會「斜率越大，位移成長越快」的概念。";
+  }
+</script>
 </body>
 </html>
