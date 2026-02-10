@@ -3,8 +3,788 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Coverflow - One Page Portfolio</title>
+    <title>學測自然科視覺化複習筆記網 Visual Science Notes</title>
     <link href="templatemo-3d-coverflow.css" rel="stylesheet">
+    <style>
+      /* Visual Science Notes - namespaced under .vsn-app */
+      .vsn-app {
+        min-height: 100vh;
+        padding: 24px 16px 32px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+        background: radial-gradient(circle at top left, #e0f2fe 0%, #eef2ff 35%, #e5e7eb 100%);
+        color: #0f172a;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", sans-serif;
+      }
+
+      .vsn-app .vsn-header,
+      .vsn-app .vsn-main,
+      .vsn-app .vsn-footer {
+        width: 100%;
+        max-width: 1100px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .vsn-app .vsn-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .vsn-app .vsn-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+      }
+
+      .vsn-app .vsn-brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        background: conic-gradient(from 180deg at 50% 50%, #4f46e5 0deg, #22d3ee 120deg, #a855f7 240deg, #4f46e5 360deg);
+        box-shadow: 0 12px 25px rgba(79, 70, 229, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .vsn-app .vsn-brand-text-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+
+      .vsn-app .vsn-brand-text-sub {
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      .vsn-app .vsn-header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.85rem;
+      }
+
+      .vsn-app .vsn-header-badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.06);
+        border: 1px solid rgba(15, 23, 42, 0.1);
+      }
+
+      .vsn-app .vsn-button {
+        border-radius: 999px;
+        border: none;
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: #ffffff;
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      }
+
+      .vsn-app .vsn-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 28px rgba(79, 70, 229, 0.35);
+      }
+
+      .vsn-app .vsn-button:active {
+        transform: translateY(0);
+        box-shadow: 0 6px 14px rgba(79, 70, 229, 0.25);
+      }
+
+      .vsn-app .vsn-button-ghost {
+        background: rgba(15, 23, 42, 0.02);
+        color: #1e293b;
+        border: 1px solid rgba(148, 163, 184, 0.9);
+        box-shadow: none;
+      }
+
+      .vsn-app .vsn-button-ghost:hover {
+        background: rgba(15, 23, 42, 0.06);
+        box-shadow: none;
+      }
+
+      .vsn-app .vsn-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      /* Dashboard */
+
+      .vsn-app .vsn-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .vsn-app .vsn-dashboard-main {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: stretch;
+        justify-content: space-between;
+      }
+
+      .vsn-app .vsn-dashboard-text {
+        flex: 1 1 260px;
+        max-width: 420px;
+      }
+
+      .vsn-app .vsn-dashboard-title {
+        font-size: 1.8rem;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+      }
+
+      .vsn-app .vsn-dashboard-title span {
+        display: inline-block;
+        background: linear-gradient(135deg, #4f46e5, #22c55e);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .vsn-app .vsn-dashboard-subtitle {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #475569;
+      }
+
+      .vsn-app .vsn-countdown-card {
+        flex: 1 1 280px;
+        background: radial-gradient(circle at top left, rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.98));
+        border-radius: 22px;
+        padding: 18px 20px 20px;
+        box-shadow:
+          0 18px 30px rgba(15, 23, 42, 0.18),
+          0 0 0 1px rgba(148, 163, 184, 0.4);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .vsn-app .vsn-countdown-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(129, 140, 248, 0.35), transparent 55%);
+        opacity: 0.9;
+        pointer-events: none;
+      }
+
+      .vsn-app .vsn-countdown-inner {
+        position: relative;
+        z-index: 1;
+      }
+
+      .vsn-app .vsn-countdown-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4f46e5;
+        margin-bottom: 4px;
+      }
+
+      .vsn-app .vsn-countdown-subtitle {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 14px;
+      }
+
+      .vsn-app .vsn-countdown-grid {
+        display: flex;
+        gap: 12px;
+      }
+
+      .vsn-app .vsn-flip-segment {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .vsn-app .vsn-flip-number {
+        width: 100%;
+        text-align: center;
+        padding: 10px 0;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #020617, #0f172a);
+        color: #e2e8f0;
+        font-variant-numeric: tabular-nums;
+        font-size: 1.4rem;
+        font-weight: 700;
+        box-shadow:
+          inset 0 1px 0 rgba(148, 163, 184, 0.35),
+          0 14px 22px rgba(15, 23, 42, 0.8);
+        position: relative;
+      }
+
+      .vsn-app .vsn-flip-number::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(to right, transparent, rgba(15, 23, 42, 0.9), transparent);
+        opacity: 0.9;
+      }
+
+      .vsn-app .vsn-flip-label {
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #94a3b8;
+      }
+
+      .vsn-app .vsn-dashboard-bottom {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .vsn-app .vsn-subject-portals {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        flex: 1 1 260px;
+      }
+
+      .vsn-app .vsn-subject-circle {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        border: 2px solid var(--vsn-subject-color, #4f46e5);
+        background: rgba(15, 23, 42, 0.02);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35);
+        animation: vsn-portal-breathe 4s ease-in-out infinite;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      }
+
+      .vsn-app .vsn-subject-circle:hover {
+        transform: translateY(-4px) scale(1.04);
+        background: rgba(15, 23, 42, 0.04);
+        box-shadow:
+          0 16px 35px rgba(15, 23, 42, 0.2),
+          0 0 20px rgba(79, 70, 229, 0.4);
+      }
+
+      .vsn-app .vsn-subject-icon {
+        font-size: 1.7rem;
+      }
+
+      .vsn-app .vsn-subject-label {
+        text-align: center;
+        font-size: 0.8rem;
+        line-height: 1.3;
+      }
+
+      .vsn-app .vsn-subject-label-zh {
+        display: block;
+        font-weight: 600;
+      }
+
+      .vsn-app .vsn-subject-label-en {
+        display: block;
+        color: #64748b;
+      }
+
+      @keyframes vsn-portal-breathe {
+        0% {
+          box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35);
+          transform: translateY(0) scale(1);
+        }
+        50% {
+          box-shadow: 0 0 0 14px rgba(79, 70, 229, 0);
+          transform: translateY(-3px) scale(1.05);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35);
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .vsn-app .vsn-ehanlin-link {
+        flex: 0 0 230px;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 18px;
+        padding: 14px 16px;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        box-shadow: 0 16px 32px rgba(248, 120, 48, 0.45);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .vsn-app .vsn-ehanlin-link::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0.35),
+          transparent 40%,
+          transparent 60%,
+          rgba(254, 243, 199, 0.45)
+        );
+        opacity: 0.9;
+        pointer-events: none;
+      }
+
+      .vsn-app .vsn-ehanlin-inner {
+        position: relative;
+        z-index: 1;
+      }
+
+      .vsn-app .vsn-ehanlin-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .vsn-app .vsn-ehanlin-desc {
+        font-size: 0.8rem;
+      }
+
+      /* Book views (Subject & Unit) */
+
+      .vsn-app .vsn-book-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .vsn-app .vsn-book-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .vsn-app .vsn-subject-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        background: rgba(15, 23, 42, 0.04);
+        border: 1px solid rgba(148, 163, 184, 0.8);
+        color: #1f2933;
+      }
+
+      .vsn-app .vsn-subject-pill::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        margin-right: 6px;
+        background-color: var(--vsn-subject-color, #4f46e5);
+      }
+
+      .vsn-app .vsn-book {
+        position: relative;
+        background: #fdf9f3;
+        border-radius: 26px;
+        padding: 20px 22px;
+        box-shadow:
+          0 26px 50px rgba(15, 23, 42, 0.35),
+          0 0 0 1px rgba(148, 163, 184, 0.5);
+        display: flex;
+        gap: 18px;
+        align-items: stretch;
+        transform-origin: center bottom;
+        animation: vsn-book-open 0.6s cubic-bezier(0.24, 0.82, 0.25, 1);
+      }
+
+      .vsn-app .vsn-book::before {
+        content: "";
+        position: absolute;
+        inset: 8px 50%;
+        width: 2px;
+        background: linear-gradient(
+          to bottom,
+          rgba(148, 163, 184, 0.5),
+          rgba(148, 163, 184, 0.15),
+          rgba(148, 163, 184, 0.5)
+        );
+        transform: translateX(-1px);
+      }
+
+      @keyframes vsn-book-open {
+        0% {
+          transform: perspective(1200px) rotateX(14deg) translateY(18px) scale(0.95);
+          opacity: 0;
+        }
+        100% {
+          transform: perspective(1200px) rotateX(0deg) translateY(0) scale(1);
+          opacity: 1;
+        }
+      }
+
+      .vsn-app .vsn-book-page {
+        flex: 1 1 0;
+        position: relative;
+        padding: 12px 16px;
+        border-radius: 18px;
+        background: radial-gradient(circle at top left, #fefce8, #fefce8 55%, #fef9c3 100%);
+        box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.16);
+        box-sizing: border-box;
+      }
+
+      .vsn-app .vsn-book-page-right {
+        background: radial-gradient(circle at top right, #eff6ff, #e0f2fe 55%, #e5e7eb 100%);
+        box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.3);
+      }
+
+      .vsn-app .vsn-book-left-inner,
+      .vsn-app .vsn-book-right-inner {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .vsn-app .vsn-book-totem {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 12px;
+      }
+
+      .vsn-app .vsn-book-title {
+        font-size: 1.4rem;
+        margin-bottom: 6px;
+      }
+
+      .vsn-app .vsn-book-title span {
+        font-size: 0.9rem;
+        margin-left: 4px;
+        color: #64748b;
+      }
+
+      .vsn-app .vsn-book-slogan {
+        font-size: 0.9rem;
+        color: #6b7280;
+        line-height: 1.6;
+        max-width: 18em;
+      }
+
+      .vsn-app .vsn-search-label {
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+
+      .vsn-app .vsn-search-input {
+        margin-top: 4px;
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.9);
+        font-size: 0.85rem;
+        outline: none;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 0 0 1px transparent;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+      }
+
+      .vsn-app .vsn-search-input:focus {
+        border-color: #4f46e5;
+        box-shadow:
+          0 0 0 1px rgba(79, 70, 229, 0.6),
+          0 10px 20px rgba(129, 140, 248, 0.35);
+        background: #ffffff;
+      }
+
+      .vsn-app .vsn-search-hint {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-bottom: 8px;
+      }
+
+      .vsn-app .vsn-unit-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow-y: auto;
+        max-height: 260px;
+      }
+
+      .vsn-app .vsn-unit-item {
+        width: 100%;
+        border-radius: 999px;
+        border: 1px dashed rgba(148, 163, 184, 0.9);
+        background: rgba(255, 255, 255, 0.7);
+        padding: 7px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-family: "Noto Sans TC", system-ui, sans-serif;
+        text-align: left;
+        transition: background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease, border-color 0.16s ease;
+      }
+
+      .vsn-app .vsn-unit-item:hover {
+        background: linear-gradient(90deg, rgba(253, 224, 71, 0.35), rgba(253, 186, 116, 0.25));
+        border-style: solid;
+        border-color: rgba(234, 179, 8, 0.95);
+        box-shadow: 0 10px 22px rgba(250, 204, 21, 0.4);
+        transform: translateY(-1px);
+      }
+
+      .vsn-app .vsn-unit-code {
+        font-weight: 700;
+        color: #b45309;
+      }
+
+      .vsn-app .vsn-unit-title {
+        flex: 1;
+      }
+
+      .vsn-app .vsn-unit-empty {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        padding: 8px 4px;
+      }
+
+      /* Unit page */
+
+      .vsn-app .vsn-book-page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .vsn-app .vsn-bookmark-btn {
+        border-radius: 999px 999px 6px 999px;
+        border: none;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #ecfdf5;
+        box-shadow: 0 12px 20px rgba(16, 185, 129, 0.4);
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+      }
+
+      .vsn-app .vsn-bookmark-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 26px rgba(16, 185, 129, 0.5);
+      }
+
+      .vsn-app .vsn-unit-heading {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        font-size: 1.1rem;
+      }
+
+      .vsn-app .vsn-unit-title-main {
+        font-weight: 600;
+      }
+
+      .vsn-app .vsn-unit-notes {
+        margin-top: 4px;
+      }
+
+      .vsn-app .vsn-notes-textarea {
+        width: 100%;
+        min-height: 170px;
+        resize: vertical;
+        border-radius: 12px;
+        border: 1px dashed rgba(148, 163, 184, 0.9);
+        padding: 8px 10px;
+        font-size: 0.85rem;
+        font-family: inherit;
+        outline: none;
+        background: rgba(254, 249, 195, 0.4);
+      }
+
+      .vsn-app .vsn-notes-textarea:focus {
+        border-style: solid;
+        border-color: rgba(245, 158, 11, 0.95);
+        box-shadow: 0 12px 24px rgba(251, 191, 36, 0.5);
+        background: rgba(254, 243, 199, 0.9);
+      }
+
+      .vsn-app .vsn-unit-nav {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .vsn-app .vsn-nav-arrow {
+        border-radius: 8px;
+        border: none;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        background: rgba(15, 23, 42, 0.06);
+        color: #111827;
+        transition: background 0.16s ease, transform 0.16s ease;
+      }
+
+      .vsn-app .vsn-nav-arrow:hover {
+        background: rgba(15, 23, 42, 0.12);
+        transform: translateY(-1px);
+      }
+
+      /* Interactive widget placeholder */
+
+      .vsn-app .vsn-widget {
+        border-radius: 16px;
+        padding: 12px 14px;
+        border: 1px solid rgba(148, 163, 184, 0.9);
+        background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.25);
+        height: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .vsn-app .vsn-widget-concept {
+        background: linear-gradient(135deg, #dcfce7, #e0f2fe);
+      }
+
+      .vsn-app .vsn-widget-examples {
+        background: linear-gradient(135deg, #fee2e2, #fef3c7);
+      }
+
+      .vsn-app .vsn-widget-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .vsn-app .vsn-widget-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .vsn-app .vsn-widget-caption {
+        font-size: 0.78rem;
+        color: #4b5563;
+        margin-top: 2px;
+      }
+
+      .vsn-app .vsn-widget-toggle {
+        display: inline-flex;
+        padding: 3px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.1);
+      }
+
+      .vsn-app .vsn-toggle-pill {
+        border-radius: 999px;
+        border: none;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        background: transparent;
+        color: #e5e7eb;
+        cursor: pointer;
+        transition: background 0.16s ease, color 0.16s ease, transform 0.12s ease;
+      }
+
+      .vsn-app .vsn-toggle-pill.is-active {
+        background: #ffffff;
+        color: #111827;
+        transform: translateY(-1px);
+      }
+
+      .vsn-app .vsn-widget-body {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: #111827;
+        padding: 10px;
+        border-radius: 12px;
+        background: rgba(248, 250, 252, 0.75);
+        flex: 1;
+      }
+
+      /* Footer */
+
+      .vsn-app .vsn-footer {
+        margin-top: 24px;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-align: right;
+      }
+
+      .vsn-app .vsn-footer a {
+        color: inherit;
+      }
+
+      /* Small screens */
+
+      @media (max-width: 768px) {
+        .vsn-app {
+          padding: 18px 10px 24px;
+        }
+
+        .vsn-app .vsn-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .vsn-app .vsn-dashboard-main {
+          flex-direction: column;
+        }
+
+        .vsn-app .vsn-countdown-card {
+          order: -1;
+        }
+
+        .vsn-app .vsn-book {
+          flex-direction: column;
+        }
+
+        .vsn-app .vsn-book::before {
+          display: none;
+        }
+
+        .vsn-app .vsn-book-page {
+          min-height: 180px;
+        }
+      }
+    </style>
 <!--
 
 TemplateMo 595 3d coverflow
@@ -14,322 +794,639 @@ https://templatemo.com/tm-595-3d-coverflow
 -->
 </head>
 <body>
-    <!-- Header -->
-    <header class="header" id="header">
-        <a href="#home" class="logo-container">
-            <div class="logo">
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <rect x="10" y="25" width="15" height="50" fill="url(#grad1)" transform="rotate(-15 17.5 50)" />
-                    <rect x="35" y="15" width="15" height="70" fill="url(#grad1)" />
-                    <rect x="60" y="25" width="15" height="50" fill="url(#grad1)" transform="rotate(15 67.5 50)" />
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#grad1)" stroke-width="2" opacity="0.5" />
-                </svg>
-            </div>
-            <div class="logo-text">3D Coverflow</div>
-        </a>
-        
-        <nav class="main-menu" id="mainMenu">
-            <a href="#home" class="menu-item active">Home</a>
-            <a href="#about" class="menu-item">About</a>
-            <a href="#contact" class="menu-item">Contact</a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="menu-item external">GitHub</a>
-        </nav>
-        
-        <div class="menu-toggle" id="menuToggle">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </header>
+    <div id="vsn-root" class="vsn-app"></div>
 
-    <!-- Home Section -->
-    <section id="home" class="section">
-        <div class="coverflow-wrapper">
-            <div class="info">
-                <h2 id="current-title">Mountain Landscape</h2>
-                <p id="current-description">Majestic peaks covered in snow during golden hour</p>
+    <!-- React 18 UMD + ReactDOM 18 + Babel Standalone -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel" data-presets="env,react">
+      const { useState, useEffect, useMemo } = React;
+
+      // --- Data constants ---
+      const SUBJECTS = [
+        {
+          id: 'physics',
+          nameZh: '物理',
+          nameEn: 'Physics',
+          icon: 'PHY',
+          color: '#4f46e5',
+          slogan: '從運動軌跡到能量守恆，把自然界的規律變成你手中的工具。'
+        },
+        {
+          id: 'chemistry',
+          nameZh: '化學',
+          nameEn: 'Chemistry',
+          icon: 'CHEM',
+          color: '#f97316',
+          slogan: '從原子到反應速率，把看不見的微觀世界視覺化。'
+        },
+        {
+          id: 'biology',
+          nameZh: '生物',
+          nameEn: 'Biology',
+          icon: 'BIO',
+          color: '#22c55e',
+          slogan: '細胞、遺傳與演化，把生命故事整理成清晰結構。'
+        },
+        {
+          id: 'earth',
+          nameZh: '地科',
+          nameEn: 'Earth Science',
+          icon: 'EARTH',
+          color: '#0ea5e9',
+          slogan: '從雲圖到板塊，讀懂地球系統的節奏與變化。'
+        }
+      ];
+
+      const UNITS = {
+        physics: [
+          { id: 'phy-ch1-kinematics', code: 'CH1', title: '直線運動' },
+          { id: 'phy-ch2-newton', code: 'CH2', title: '牛頓運動定律' },
+          { id: 'phy-ch3-energy', code: 'CH3', title: '功與能' }
+        ],
+        chemistry: [
+          { id: 'chem-ch1-formula', code: 'CH1', title: '化學式與命名' },
+          { id: 'chem-ch2-mole', code: 'CH2', title: '莫耳與化學計量' },
+          { id: 'chem-ch3-solution', code: 'CH3', title: '溶液與濃度' }
+        ],
+        biology: [
+          { id: 'bio-ch1-cell', code: 'CH1', title: '細胞構造與功能' },
+          { id: 'bio-ch2-genetics', code: 'CH2', title: '遺傳與基因表現' },
+          { id: 'bio-ch3-evolution', code: 'CH3', title: '演化與物種多樣性' }
+        ],
+        earth: [
+          { id: 'earth-ch1-weather', code: 'CH1', title: '天氣與氣候系統' },
+          { id: 'earth-ch2-plate', code: 'CH2', title: '板塊構造與地表變動' },
+          { id: 'earth-ch3-astronomy', code: 'CH3', title: '太陽系與宇宙觀測' }
+        ]
+      };
+
+      const SEARCH_INDEX = [
+        {
+          title: '直線運動',
+          subject: 'physics',
+          unitId: 'phy-ch1-kinematics',
+          keywords: ['位移', '速度', '加速度', 'v-t 圖', '等加速度運動']
+        },
+        {
+          title: '牛頓運動定律',
+          subject: 'physics',
+          unitId: 'phy-ch2-newton',
+          keywords: ['受力分析', 'F=ma', '慣性', '作用力與反作用力']
+        },
+        {
+          title: '功與能',
+          subject: 'physics',
+          unitId: 'phy-ch3-energy',
+          keywords: ['動能', '位能', '能量守恆', '功率']
+        },
+        {
+          title: '化學式與命名',
+          subject: 'chemistry',
+          unitId: 'chem-ch1-formula',
+          keywords: ['價數', '離子', '共價鍵', '命名規則']
+        },
+        {
+          title: '莫耳與化學計量',
+          subject: 'chemistry',
+          unitId: 'chem-ch2-mole',
+          keywords: ['莫耳', '阿伏加德羅常數', '質量守恆', '化學反應式']
+        },
+        {
+          title: '溶液與濃度',
+          subject: 'chemistry',
+          unitId: 'chem-ch3-solution',
+          keywords: ['莫耳濃度', '稀釋', '溶解度', '質量百分濃度']
+        },
+        {
+          title: '細胞構造與功能',
+          subject: 'biology',
+          unitId: 'bio-ch1-cell',
+          keywords: ['細胞膜', '細胞核', '粒線體', '葉綠體']
+        },
+        {
+          title: '遺傳與基因表現',
+          subject: 'biology',
+          unitId: 'bio-ch2-genetics',
+          keywords: ['孟德爾', '分離定律', 'DNA', '轉錄', '翻譯']
+        },
+        {
+          title: '演化與物種多樣性',
+          subject: 'biology',
+          unitId: 'bio-ch3-evolution',
+          keywords: ['自然選擇', '適應', '物種形成']
+        },
+        {
+          title: '天氣與氣候系統',
+          subject: 'earth',
+          unitId: 'earth-ch1-weather',
+          keywords: ['鋒面', '氣團', '梅雨', '聖嬰', '氣候變遷']
+        },
+        {
+          title: '板塊構造與地表變動',
+          subject: 'earth',
+          unitId: 'earth-ch2-plate',
+          keywords: ['地殼板塊', '聚合型邊界', '隱沒帶', '地震']
+        },
+        {
+          title: '太陽系與宇宙觀測',
+          subject: 'earth',
+          unitId: 'earth-ch3-astronomy',
+          keywords: ['行星', '光年', '望遠鏡', '星等']
+        }
+      ];
+
+      // --- Helpers ---
+      function computeTimeLeft() {
+        const targetDate = new Date('2026-01-17T00:00:00+08:00');
+        const now = new Date();
+        const diffMs = targetDate.getTime() - now.getTime();
+
+        if (diffMs <= 0) {
+          return { days: 0, hours: 0, minutes: 0 };
+        }
+
+        const totalMinutes = Math.floor(diffMs / (1000 * 60));
+        const days = Math.floor(totalMinutes / (60 * 24));
+        const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+        const minutes = totalMinutes % 60;
+
+        return { days, hours, minutes };
+      }
+
+      function pad2(num) {
+        return String(num).padStart(2, '0');
+      }
+
+      // --- Layout components ---
+      function Header({ view, subject, onBackHome, onBrandClick }) {
+        const isDashboard = view === 'dashboard';
+
+        return (
+          <header className="vsn-header">
+            <div
+              className="vsn-brand"
+              onClick={onBrandClick}
+            >
+              <div className="vsn-brand-mark">VSN</div>
+              <div>
+                <div className="vsn-brand-text-title">學測自然科筆記</div>
+                <div className="vsn-brand-text-sub">Visual Science Notes</div>
+              </div>
+            </div>
+            <div className="vsn-header-right">
+              <div className="vsn-header-badge">v0.3 · 學測戰情室</div>
+              {subject && !isDashboard && (
+                <span>{subject.nameZh} · {subject.nameEn}</span>
+              )}
+              <button
+                type="button"
+                className="vsn-button vsn-button-ghost"
+                onClick={onBackHome}
+              >
+                {isDashboard ? '回首頁' : '回戰情室'}
+              </button>
+            </div>
+          </header>
+        );
+      }
+
+      function Footer() {
+        return (
+          <footer className="vsn-footer">
+            學測自然科視覺化複習筆記網 · Frontend Prototype
+            {' '}· Visual Science Notes
+          </footer>
+        );
+      }
+
+      // --- Views ---
+      function DashboardView({ onEnterSubject }) {
+        const [timeLeft, setTimeLeft] = useState(() => computeTimeLeft());
+
+        useEffect(() => {
+          const id = setInterval(() => {
+            setTimeLeft(computeTimeLeft());
+          }, 1000);
+          return () => clearInterval(id);
+        }, []);
+
+        return (
+          <section className="vsn-dashboard">
+            <div className="vsn-dashboard-main">
+              <div className="vsn-dashboard-text">
+                <h1 className="vsn-dashboard-title">
+                  學測自然 × <span>視覺化戰情室</span>
+                </h1>
+                <p className="vsn-dashboard-subtitle">
+                  把分散在講義、題本和腦海中的自然科概念，重新整理成一套可視化的「戰鬥地圖」。
+                  先從整體節奏與單元關聯開始，逐步補上圖像化筆記與互動小工具。
+                </p>
+              </div>
+
+              <div className="vsn-countdown-card">
+                <div className="vsn-countdown-inner">
+                  <div className="vsn-countdown-title">TAIWAN GSAT · 自然科</div>
+                  <div className="vsn-countdown-subtitle">
+                    距離 2026 學測自然科，只剩這些可以好好安排的時間。
+                  </div>
+                  <div className="vsn-countdown-grid">
+                    <div className="vsn-flip-segment">
+                      <div className="vsn-flip-number">{pad2(timeLeft.days)}</div>
+                      <div className="vsn-flip-label">Days</div>
+                    </div>
+                    <div className="vsn-flip-segment">
+                      <div className="vsn-flip-number">{pad2(timeLeft.hours)}</div>
+                      <div className="vsn-flip-label">Hours</div>
+                    </div>
+                    <div className="vsn-flip-segment">
+                      <div className="vsn-flip-number">{pad2(timeLeft.minutes)}</div>
+                      <div className="vsn-flip-label">Minutes</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="coverflow-container" tabindex="0">
-                <div class="coverflow" id="coverflow">
-                    <div class="coverflow-item" data-index="0">
-                        <div class="cover image-loading">
-                            <img src="images/mountain-landscape.jpg" alt="Mountain Landscape" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
+            <div className="vsn-dashboard-bottom">
+              <div className="vsn-subject-portals">
+                {SUBJECTS.map((subject) => (
+                  <button
+                    key={subject.id}
+                    type="button"
+                    className="vsn-subject-circle"
+                    style={{ '--vsn-subject-color': subject.color }}
+                    onClick={() => onEnterSubject(subject.id)}
+                  >
+                    <div className="vsn-subject-icon">{subject.icon}</div>
+                    <div className="vsn-subject-label">
+                      <span className="vsn-subject-label-zh">{subject.nameZh}</span>
+                      <span className="vsn-subject-label-en">{subject.nameEn}</span>
                     </div>
-                    <div class="coverflow-item" data-index="1">
-                        <div class="cover image-loading">
-                            <img src="images/forest-path.jpg" alt="Forest Path" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="2">
-                        <div class="cover image-loading">
-                            <img src="images/serene-water-mirroring.jpg" alt="Lake Reflection" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="3">
-                        <div class="cover image-loading">
-                            <img src="images/ocean-sunset-golden-hour.jpg" alt="Ocean Sunset" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="4">
-                        <div class="cover image-loading">
-                            <img src="images/rolling-sand-dunes.jpg" alt="Desert Dunes" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="5">
-                        <div class="cover image-loading">
-                            <img src="images/starry-night.jpg" alt="Starry Night" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                    <div class="coverflow-item" data-index="6">
-                        <div class="cover image-loading">
-                            <img src="images/cascading-waterfall.jpg" alt="Waterfall" loading="lazy">
-                        </div>
-                        <div class="reflection"></div>
-                    </div>
-                </div>
+                  </button>
+                ))}
+              </div>
 
-                <button class="nav-button prev" onclick="navigate(-1)">‹</button>
-                <button class="nav-button next" onclick="navigate(1)">›</button>
-
-                <div class="dots-container" id="dots"></div>
-                
-                <!-- Play/Pause Button -->
-                <button class="play-pause-button" id="playPauseBtn" onclick="toggleAutoplay()">
-                    <span class="play-icon">▶</span>
-                    <span class="pause-icon" style="display: none;">❚❚</span>
-                </button>
+              <a
+                className="vsn-ehanlin-link"
+                href="https://www.ehanlin.com.tw/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="vsn-ehanlin-inner">
+                  <div className="vsn-ehanlin-title">翰林雲端學院 · 專心刷題入口</div>
+                  <div className="vsn-ehanlin-desc">
+                    視覺化筆記負責幫你整理結構，題目練習交給專業題庫平台。
+                  </div>
+                </div>
+              </a>
             </div>
-        </div>
-    </section>
+          </section>
+        );
+      }
 
-    <!-- About Section -->
-    <section id="about" class="section">
-        <div class="about-content">
-            <div class="about-header">
-                <h2>Discover 3D Coverflow</h2>
-                <p>A revolutionary way to showcase your visual content with stunning 3D effects and seamless interactions</p>
+      function SubjectBookView({ subject, units, onBackHome, onOpenUnit }) {
+        const [searchQuery, setSearchQuery] = useState('');
+
+        const filteredUnits = useMemo(() => {
+          const trimmed = searchQuery.trim();
+          if (!trimmed) {
+            return units;
+          }
+          const q = trimmed.toLowerCase();
+
+          const matchedUnitIds = new Set(
+            SEARCH_INDEX
+              .filter((entry) => {
+                if (entry.subject !== subject.id) return false;
+                const titleMatch = entry.title.toLowerCase().includes(q);
+                const keywordsMatch = (entry.keywords || []).some((kw) =>
+                  String(kw).toLowerCase().includes(q)
+                );
+                return titleMatch || keywordsMatch;
+              })
+              .map((entry) => entry.unitId)
+          );
+
+          return units.filter((unit) => matchedUnitIds.has(unit.id));
+        }, [searchQuery, subject.id, units]);
+
+        const hasQuery = searchQuery.trim().length > 0;
+        const hasResult = filteredUnits.length > 0;
+
+        return (
+          <section
+            className="vsn-book-shell"
+            style={{ '--vsn-subject-color': subject.color }}
+          >
+            <div className="vsn-book-toolbar">
+              <div className="vsn-subject-pill">
+                {subject.nameZh} · {subject.nameEn}
+              </div>
+              <button
+                type="button"
+                className="vsn-button vsn-button-ghost"
+                onClick={onBackHome}
+              >
+                回戰情室
+              </button>
             </div>
-            
-            <div class="about-main">
-                <div class="about-visual">
-                    <div class="showcase-display">
-                        <div class="showcase-main">
-                            <div class="corner-decoration top-left"></div>
-                            <div class="corner-decoration bottom-right"></div>
-                            
-                            <div class="showcase-logo">
-                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="10" y="25" width="15" height="50" fill="white" transform="rotate(-15 17.5 50)" opacity="0.9" />
-                                    <rect x="35" y="15" width="15" height="70" fill="white" />
-                                    <rect x="60" y="25" width="15" height="50" fill="white" transform="rotate(15 67.5 50)" opacity="0.9" />
-                                    <circle cx="50" cy="50" r="45" fill="none" stroke="white" stroke-width="2" opacity="0.3" />
-                                </svg>
-                            </div>
-                            
-                            <h3 class="showcase-title">3D Coverflow</h3>
-                            <p class="showcase-subtitle">Transform your image galleries into immersive 3D experiences</p>
-                            
-                            <div class="showcase-badges">
-                                <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank" rel="noopener noreferrer" class="badge">HTML5</a>
-                                <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank" rel="noopener noreferrer" class="badge">CSS3</a>
-                                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer" class="badge">JavaScript</a>
-                                <a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Responsive_Design" target="_blank" rel="noopener noreferrer" class="badge">Responsive</a>
-                            </div>
-                        </div>
+
+            <div className="vsn-book">
+              <div className="vsn-book-page">
+                <div className="vsn-book-left-inner">
+                  <div className="vsn-book-totem">{subject.icon}</div>
+                  <div className="vsn-book-title">
+                    {subject.nameZh}
+                    <span>{subject.nameEn}</span>
+                  </div>
+                  <div className="vsn-book-slogan">{subject.slogan}</div>
+                </div>
+              </div>
+
+              <div className="vsn-book-page vsn-book-page-right">
+                <div className="vsn-book-right-inner">
+                  <label className="vsn-search-label">
+                    搜尋單元關鍵字
+                    <input
+                      className="vsn-search-input"
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="例如：速度、莫耳、遺傳、板塊…"
+                    />
+                  </label>
+                  <div className="vsn-search-hint">
+                    會從該科目的單元標題與關鍵字中比對；不分大小寫，中英文皆可。
+                  </div>
+
+                  <ul className="vsn-unit-list">
+                    {(hasQuery ? filteredUnits : units).map((unit) => (
+                      <li
+                        key={unit.id}
+                        className="vsn-unit-item"
+                        onClick={() => onOpenUnit(subject.id, unit.id)}
+                      >
+                        <span className="vsn-unit-code">{unit.code}</span>
+                        <span className="vsn-unit-title">{unit.title}</span>
+                      </li>
+                    ))}
+
+                    {hasQuery && !hasResult && (
+                      <li className="vsn-unit-empty">
+                        找不到符合「{searchQuery}」的單元，試試其他關鍵字或回到完整目錄。
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      function UnitPageView({ subject, unit, onBackToToc, onNavigateUnit }) {
+        const [notes, setNotes] = useState('');
+        const [mode, setMode] = useState('concept'); // 'concept' | 'examples'
+
+        const widgetClassName =
+          'vsn-widget ' + (mode === 'concept' ? 'vsn-widget-concept' : 'vsn-widget-examples');
+
+        return (
+          <section
+            className="vsn-book-shell"
+            style={{ '--vsn-subject-color': subject.color }}
+          >
+            <div className="vsn-book-toolbar">
+              <div className="vsn-subject-pill">
+                {subject.nameZh} · {subject.nameEn}
+              </div>
+              <button
+                type="button"
+                className="vsn-button vsn-button-ghost"
+                onClick={onBackToToc}
+              >
+                回目錄
+              </button>
+            </div>
+
+            <div className="vsn-book">
+              <div className="vsn-book-page">
+                <div className="vsn-book-left-inner">
+                  <div className="vsn-book-page-header">
+                    <div className="vsn-unit-heading">
+                      <span className="vsn-unit-code">{unit.code}</span>
+                      <span className="vsn-unit-title-main">{unit.title}</span>
                     </div>
-                </div>
-                
-                <div class="about-info">
-                    <h3>Elevate Your Gallery Experience</h3>
-                    <p>3D Coverflow is brought to you by TemplateMo. Transform the way you present images with our cutting-edge 3D coverflow technology. Create immersive, interactive galleries that captivate your audience and leave a lasting impression.</p>
-                    <p>Whether you're showcasing portfolio pieces, product images, or creating an interactive story, our 3D coverflow brings your content to life with fluid animations and intuitive controls.</p>
-                    
-                    <ul class="feature-list">
-                        <li>Smooth 3D transitions with hardware acceleration</li>
-                        <li>Touch-enabled navigation for mobile devices</li>
-                        <li>Customizable autoplay and timing controls</li>
-                        <li>Keyboard navigation support</li>
-                        <li>Reflection effects for added depth</li>
-                    </ul>
-                    
-                    <a href="#contact" class="cta-button">
-                        Start Your Project
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M5 12h14m-7-7l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="stats-section">
-                <div class="stat-item">
-                    <div class="stat-number">60fps</div>
-                    <div class="stat-label">Smooth Performance</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Responsive Design</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">3D</div>
-                    <div class="stat-label">Visual Effects</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">∞</div>
-                    <div class="stat-label">Customization</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="section">
-        <div class="contact-content">
-            <div class="contact-header">
-                <h2>Get In Touch</h2>
-                <p>Have a project in mind? Let's create something amazing together.</p>
-            </div>
-            
-            <div class="contact-container">
-                <div class="contact-info-section">
-                    <h3>Let's Connect</h3>
-                    <p>We're here to help bring your vision to life. Whether you need a stunning gallery, a complete website redesign, or custom development work, we'd love to hear from you.</p>
-                    
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Email</h4>
-                                <p>hello@3dcoverflow.com</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Phone</h4>
-                                <p>+1 (555) 123-4567</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Address</h4>
-                                <p>123 Design Street, San Francisco, CA 94102</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <h4>Business Hours</h4>
-                                <p>Monday - Friday: 9:00 AM - 6:00 PM PST</p>
-                            </div>
-                        </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button
+                        type="button"
+                        className="vsn-bookmark-btn"
+                        onClick={onBackToToc}
+                      >
+                        回目錄 Bookmark
+                      </button>
+                      <div className="vsn-unit-nav">
+                        <button
+                          type="button"
+                          className="vsn-nav-arrow"
+                          onClick={() => onNavigateUnit(-1)}
+                        >
+                          上一單元
+                        </button>
+                        <button
+                          type="button"
+                          className="vsn-nav-arrow"
+                          onClick={() => onNavigateUnit(1)}
+                        >
+                          下一單元
+                        </button>
+                      </div>
                     </div>
-                    
-                    <div class="social-links">
-                        <h4>Follow Us</h4>
-                        <div class="social-buttons">
-                            <a href="#" class="social-btn" title="Facebook">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="social-btn" title="Twitter">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="social-btn" title="LinkedIn">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="social-btn" title="Instagram">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/>
-                                </svg>
-                            </a>
+                  </div>
+
+                  <div className="vsn-unit-notes">
+                    <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: 6 }}>
+                      這裡會放入更完整的圖像化整理、關鍵公式與易混淆觀念對照。現在先當作草稿空間，練習把你自己的話寫成「考前一眼就懂」的版本。
+                    </p>
+                    <textarea
+                      className="vsn-notes-textarea"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="試著用自己的話，整理這一章的三個關鍵概念與一個常見陷阱…"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="vsn-book-page vsn-book-page-right">
+                <div className="vsn-book-right-inner">
+                  <div className={widgetClassName}>
+                    <div className="vsn-widget-header">
+                      <div>
+                        <div className="vsn-widget-title">
+                          {mode === 'concept'
+                            ? '概念視圖 · Concept View'
+                            : '例題視窗 · Practice View'}
                         </div>
+                        <div className="vsn-widget-caption">
+                          {mode === 'concept'
+                            ? '未來會在這裡放入圖層式示意圖、流程圖與動態標記，幫助你一眼看清變因與條件。'
+                            : '這裡將會整理歷屆試題與變化題型，搭配步驟提示與常見錯誤提醒。現在先用文字占位，測試狀態切換。'}
+                        </div>
+                      </div>
+                      <div className="vsn-widget-toggle">
+                        <button
+                          type="button"
+                          className={
+                            'vsn-toggle-pill' + (mode === 'concept' ? ' is-active' : '')
+                          }
+                          onClick={() => setMode('concept')}
+                        >
+                          概念
+                        </button>
+                        <button
+                          type="button"
+                          className={
+                            'vsn-toggle-pill' + (mode === 'examples' ? ' is-active' : '')
+                          }
+                          onClick={() => setMode('examples')}
+                        >
+                          例題
+                        </button>
+                      </div>
                     </div>
+
+                    <div className="vsn-widget-body">
+                      {mode === 'concept' ? (
+                        <ul style={{ paddingLeft: '1.1em', margin: 0 }}>
+                          <li>用圖像化方式標記本單元中最重要的物理量／化學量／生物結構。</li>
+                          <li>挑出兩個最易混淆的概念，放在同一張圖上比較差異。</li>
+                          <li>之後可以加入動畫或互動控制滑桿，讓「條件改變」帶來的影響一目了然。</li>
+                        </ul>
+                      ) : (
+                        <ul style={{ paddingLeft: '1.1em', margin: 0 }}>
+                          <li>選一題歷屆試題，拆成三到四個小步驟，每一步只專注一個轉換。</li>
+                          <li>標記「常見粗心點」與「必檢查單位／方向」等提醒。</li>
+                          <li>未來可以讓學生在這裡點選「顯示提示」或「顯示詳解」，自行控制學習節奏。</li>
+                        </ul>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                
-                <div class="contact-form-section">
-                    <form class="contact-form" onsubmit="handleSubmit(event)">
-                        <div class="form-group">
-                            <label for="name">Your Name</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">Subject</label>
-                            <input type="text" id="subject" name="subject" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="message">Message</label>
-                            <textarea id="message" name="message" required></textarea>
-                        </div>
-                        <button type="submit" class="submit-btn">Send Message</button>
-                    </form>
-                </div>
+              </div>
             </div>
-        </div>
-    </section>
+          </section>
+        );
+      }
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-copyright">
-                © 2025 3D Coverflow. All rights reserved. | Designed by <a href="https://templatemo.com" target="_blank" rel="noopener noreferrer">TemplateMo</a>
-            </div>
-            <div class="footer-links">
-                <a href="#privacy" onclick="event.preventDefault(); alert('Privacy Policy page would go here');">Privacy Policy</a>
-                <a href="#terms" onclick="event.preventDefault(); alert('Terms of Service page would go here');">Terms of Service</a>
-            </div>
-        </div>
-    </footer>
+      // --- Root App ---
+      function App() {
+        const [view, setView] = useState('dashboard'); // 'dashboard' | 'subject' | 'unit'
+        const [currentSubjectId, setCurrentSubjectId] = useState(null);
+        const [currentUnitId, setCurrentUnitId] = useState(null);
 
-    <!-- Scroll to top button -->
-    <div class="scroll-to-top" id="scrollToTop">
-        <span>↑</span>
-    </div>
+        const currentSubject = useMemo(
+          () => SUBJECTS.find((s) => s.id === currentSubjectId) || null,
+          [currentSubjectId]
+        );
 
-<script src="templatemo-3d-coverflow-scripts.js"></script>
+        const currentUnits = useMemo(
+          () => (currentSubjectId ? UNITS[currentSubjectId] || [] : []),
+          [currentSubjectId]
+        );
+
+        const currentUnit = useMemo(() => {
+          if (!currentSubjectId || !currentUnitId) return null;
+          const list = UNITS[currentSubjectId] || [];
+          return list.find((u) => u.id === currentUnitId) || null;
+        }, [currentSubjectId, currentUnitId]);
+
+        const handleEnterSubject = (subjectId) => {
+          setCurrentSubjectId(subjectId);
+          const units = UNITS[subjectId] || [];
+          setCurrentUnitId(units.length > 0 ? units[0].id : null);
+          setView('subject');
+        };
+
+        const handleOpenUnit = (subjectId, unitId) => {
+          setCurrentSubjectId(subjectId);
+          setCurrentUnitId(unitId);
+          setView('unit');
+        };
+
+        const handleBackToToc = () => {
+          if (currentSubjectId) {
+            setView('subject');
+          } else {
+            setView('dashboard');
+          }
+        };
+
+        const handleBackHome = () => {
+          setView('dashboard');
+          setCurrentSubjectId(null);
+          setCurrentUnitId(null);
+        };
+
+        const handleUnitNav = (direction) => {
+          if (!currentSubjectId || !currentUnitId) return;
+          const list = UNITS[currentSubjectId] || [];
+          const index = list.findIndex((u) => u.id === currentUnitId);
+          if (index === -1) return;
+          const nextIndex = index + direction;
+          if (nextIndex < 0 || nextIndex >= list.length) return;
+          const nextUnit = list[nextIndex];
+          setCurrentUnitId(nextUnit.id);
+          setView('unit');
+        };
+
+        const effectiveView = (() => {
+          if (view === 'subject' && !currentSubject) return 'dashboard';
+          if (view === 'unit' && (!currentSubject || !currentUnit)) return 'dashboard';
+          return view;
+        })();
+
+        return (
+          <>
+            <Header
+              view={effectiveView}
+              subject={currentSubject}
+              onBackHome={handleBackHome}
+              onBrandClick={handleBackHome}
+            />
+            <main className="vsn-main">
+              {effectiveView === 'dashboard' && (
+                <DashboardView onEnterSubject={handleEnterSubject} />
+              )}
+              {effectiveView === 'subject' && currentSubject && (
+                <SubjectBookView
+                  subject={currentSubject}
+                  units={currentUnits}
+                  onBackHome={handleBackHome}
+                  onOpenUnit={handleOpenUnit}
+                />
+              )}
+              {effectiveView === 'unit' && currentSubject && currentUnit && (
+                <UnitPageView
+                  subject={currentSubject}
+                  unit={currentUnit}
+                  onBackToToc={handleBackToToc}
+                  onNavigateUnit={handleUnitNav}
+                />
+              )}
+            </main>
+            <Footer />
+          </>
+        );
+      }
+
+      const rootElement = document.getElementById('vsn-root');
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(<App />);
+    </script>
 
 </body>
 </html>
