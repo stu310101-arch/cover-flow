@@ -5,7 +5,6 @@
   <title>學測自然科視覺化複習筆記網</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Reset & base */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -30,8 +29,7 @@
     }
 
     :root {
-      --accent-color: #38bdf8; /* 預設主色，會依科目覆蓋 */
-      --accent-soft: rgba(56, 189, 248, 0.22);
+      --accent-color: #38bdf8;
       --paper-bg: #0f172a;
       --paper-border: rgba(148, 163, 184, 0.45);
       --ink-soft: #cbd5f5;
@@ -57,8 +55,6 @@
       justify-content: center;
       padding: 16px;
     }
-
-    /* Header */
 
     .app-header {
       display: flex;
@@ -159,8 +155,6 @@
       transform: translateY(-1px);
     }
 
-    /* Screens */
-
     .screen {
       width: 100%;
       max-width: 1120px;
@@ -172,8 +166,6 @@
     .screen.active {
       display: block;
     }
-
-    /* Dashboard / War room */
 
     .desk {
       position: relative;
@@ -216,8 +208,6 @@
       position: relative;
       z-index: 1;
     }
-
-    /* Countdown block */
 
     .countdown-panel {
       background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95));
@@ -312,8 +302,6 @@
       opacity: 0.9;
     }
 
-    /* Subject orbs */
-
     .subjects-panel {
       margin-top: 18px;
       display: grid;
@@ -399,8 +387,6 @@
       color: #9ca3af;
     }
 
-    /* Toolbox with Hanlin link */
-
     .toolbox-panel {
       margin-top: 18px;
       padding: 12px 14px;
@@ -453,8 +439,6 @@
       color: #9ca3af;
     }
 
-    /* Right column: subject summary */
-
     .subject-summary-card {
       background: rgba(15, 23, 42, 0.96);
       border-radius: 18px;
@@ -494,8 +478,6 @@
       color: rgba(56, 189, 248, 0.8);
     }
 
-    /* BOOK LAYOUT (Subject & Unit) */
-
     .book-wrapper {
       position: relative;
       padding: 18px;
@@ -534,10 +516,6 @@
 
     .page-left {
       border-right: 1px solid rgba(15, 23, 42, 0.9);
-      position: relative;
-    }
-
-    .page-right {
       position: relative;
     }
 
@@ -608,7 +586,9 @@
       transform: translateY(-1px);
     }
 
-    /* TOC right page */
+    .page-right {
+      position: relative;
+    }
 
     .toc-header {
       display: flex;
@@ -730,8 +710,6 @@
       color: #9ca3af;
     }
 
-    /* UNIT PAGE */
-
     .unit-breadcrumb {
       font-size: 11px;
       color: #9ca3af;
@@ -825,8 +803,6 @@
       transform: translateY(-1px);
     }
 
-    /* Interactive canvas (right page of unit) */
-
     .interactive-header {
       font-size: 12px;
       color: #9ca3af;
@@ -852,8 +828,6 @@
       font-size: 12px;
       color: #9ca3af;
     }
-
-    /* DEMO WIDGET: 等速直線運動 */
 
     .kinematics-widget {
       display: flex;
@@ -940,8 +914,6 @@
       color: #9ca3af;
     }
 
-    /* Footer */
-
     footer {
       padding: 10px 18px 16px;
       font-size: 11px;
@@ -961,11 +933,14 @@
   </div>
   <div class="header-right">
     <div class="pill">無登入．純前端．即開即用</div>
+    <button type="button" class="header-home-btn" id="headerHomeBtn">
+      <span class="icon">⌂</span>
+      <span>回戰情室</span>
+    </button>
   </div>
 </header>
 
 <main>
-  <!-- Screen 1: 戰情室首頁 -->
   <section id="screen-dashboard" class="screen active">
     <div class="desk">
       <div class="desk-column">
@@ -1059,11 +1034,9 @@
     </div>
   </section>
 
-  <!-- Screen 2: 學科魔法書 -->
   <section id="screen-subject" class="screen">
     <div class="book-wrapper">
       <div class="book">
-        <!-- Left page: 封面 / 導引 -->
         <div class="page page-left">
           <div class="page-title-label">Subject Spellbook</div>
           <div class="subject-emblem" id="subjectEmblem">SUB</div>
@@ -1079,11 +1052,10 @@
             <button type="button" class="link-button" id="backToDeskBtn">
               <span>← 回戰情室</span>
             </button>
-            <div style="font-size: 11px; color: #9ca3af;">小提示：滑鼠移過右頁目錄會出現螢光筆劃記的效果。</div>
+            <div style="font-size: 11px; color: #9ca3af;">提示：滑鼠移過右頁目錄會出現螢光筆劃記的效果。</div>
           </div>
         </div>
 
-        <!-- Right page: 目錄 + 搜尋 -->
         <div class="page page-right">
           <div class="toc-header">
             <div>
@@ -1105,11 +1077,9 @@
     </div>
   </section>
 
-  <!-- Screen 3: 單元內頁 -->
   <section id="screen-unit" class="screen">
     <div class="book-wrapper">
       <div class="book">
-        <!-- Left page: 文字觀念 -->
         <div class="page page-left" style="display: flex; flex-direction: column;">
           <div class="unit-breadcrumb" id="unitBreadcrumb">
             <button type="button" class="unit-bookmark-btn" id="unitBackToTocBtn">
@@ -1137,12 +1107,9 @@
           </div>
         </div>
 
-        <!-- Right page: 互動畫布 -->
         <div class="page page-right">
           <div class="interactive-header">Interactive Canvas</div>
-          <div class="interactive-canvas" id="interactiveCanvas">
-            <!-- 互動元件會由 JavaScript 動態注入 -->
-          </div>
+          <div class="interactive-canvas" id="interactiveCanvas"></div>
           <div class="interactive-caption" id="interactiveCaption">
             這裡會根據單元內容切換為不同的互動圖表，讓你直接操作參數、觀察變化。
           </div>
@@ -1157,9 +1124,6 @@
 </footer>
 
 <script>
-  // -------------------------------
-  // 全域狀態與資料結構
-  // -------------------------------
   const appState = {
     currentSubject: null,
     currentUnitId: null
@@ -1204,7 +1168,6 @@
     }
   };
 
-  // searchIndex: 之後擴充時，只要在這裡增加條目即可
   const searchIndex = [
     {
       id: "physics_kinematics",
@@ -1237,12 +1200,8 @@
       ],
       interactiveType: "placeholder"
     }
-    // 之後其他科目、其他單元可繼續在此陣列中擴充
   ];
 
-  // -------------------------------
-  // 初始化
-  // -------------------------------
   document.addEventListener("DOMContentLoaded", () => {
     initCountdown();
     initDashboard();
@@ -1250,11 +1209,8 @@
     initUnitPage();
   });
 
-  // -------------------------------
-  // 倒數計時
-  // -------------------------------
   function initCountdown() {
-    const examDate = new Date("2026-01-17T00:00:00+08:00"); // 可依實際考試日期調整
+    const examDate = new Date("2026-01-17T00:00:00+08:00");
     const daysSpan = document.getElementById("daysRemaining");
     const dateLabel = document.getElementById("examDateLabel");
     const statusLabel = document.getElementById("countdownStatus");
@@ -1286,13 +1242,9 @@
     }
 
     updateDays();
-    // 每小時更新一次即可
     setInterval(updateDays, 60 * 60 * 1000);
   }
 
-  // -------------------------------
-  // 畫面切換
-  // -------------------------------
   function showScreen(id) {
     document.querySelectorAll(".screen").forEach((el) => {
       if (el.id === id) {
@@ -1303,9 +1255,6 @@
     });
   }
 
-  // -------------------------------
-  // 戰情室首頁
-  // -------------------------------
   function initDashboard() {
     const subjectButtons = document.querySelectorAll(".subject-orb");
     subjectButtons.forEach((btn) => {
@@ -1314,11 +1263,15 @@
         openSubject(subjectId);
       });
     });
+
+    const headerHomeBtn = document.getElementById("headerHomeBtn");
+    if (headerHomeBtn) {
+      headerHomeBtn.addEventListener("click", () => {
+        showScreen("screen-dashboard");
+      });
+    }
   }
 
-  // -------------------------------
-  // 學科魔法書
-  // -------------------------------
   function initSubjectBook() {
     const backBtn = document.getElementById("backToDeskBtn");
     if (backBtn) {
@@ -1344,7 +1297,6 @@
     appState.currentSubject = subjectId;
     appState.currentUnitId = null;
 
-    // 設定主題色
     document.documentElement.style.setProperty("--accent-color", subject.accent);
 
     const emblemEl = document.getElementById("subjectEmblem");
@@ -1414,9 +1366,6 @@
     }
   }
 
-  // -------------------------------
-  // 單元內頁
-  // -------------------------------
   function initUnitPage() {
     const backToTocBtn = document.getElementById("unitBackToTocBtn");
     if (backToTocBtn) {
@@ -1500,22 +1449,10 @@
     const subjectUnits = searchIndex.filter((u) => u.subject === subjectId);
     const currentIndex = subjectUnits.findIndex((u) => u.id === currentUnitId);
 
-    if (currentIndex <= 0) {
-      prevBtn.disabled = true;
-    } else {
-      prevBtn.disabled = false;
-    }
-
-    if (currentIndex === -1 || currentIndex >= subjectUnits.length - 1) {
-      nextBtn.disabled = true;
-    } else {
-      nextBtn.disabled = false;
-    }
+    prevBtn.disabled = currentIndex <= 0;
+    nextBtn.disabled = currentIndex === -1 || currentIndex >= subjectUnits.length - 1;
   }
 
-  // -------------------------------
-  // 互動畫布：依單元切換
-  // -------------------------------
   function renderInteractiveForUnit(unit) {
     const canvas = document.getElementById("interactiveCanvas");
     const caption = document.getElementById("interactiveCaption");
@@ -1527,7 +1464,6 @@
     if (unit.interactiveType === "kinematics_basic") {
       renderKinematicsWidget(canvas, caption);
     } else {
-      // 預設占位互動
       const placeholder = document.createElement("div");
       placeholder.style.fontSize = "12px";
       placeholder.style.color = "#cbd5f5";
@@ -1537,7 +1473,6 @@
     }
   }
 
-  // DEMO：等速直線運動互動元件
   function renderKinematicsWidget(container, captionEl) {
     const wrapper = document.createElement("div");
     wrapper.className = "kinematics-widget";
@@ -1569,15 +1504,14 @@
 
     function update() {
       const v = Number(slider.value || 0);
-      const t = 5; // 固定 5 秒
+      const t = 5;
       const s = v * t;
       vLabel.textContent = v.toString();
       pLabel.textContent = `${s} m`;
 
-      // 物體位置轉換成軌道上的位移百分比（簡單視覺效果，非實際比例）
       const minOffset = 0;
       const maxOffset = 70;
-      const ratio = (v - 1) / (5 - 1); // 1~5 對應 0~1
+      const ratio = (v - 1) / (5 - 1);
       const translatePercent = minOffset + (maxOffset - minOffset) * ratio;
       obj.style.transform = `translateX(${translatePercent}%)`;
     }
@@ -1589,5 +1523,6 @@
       "示範：固定觀察 5 秒內的等速直線運動，拖曳速度滑桿，體會「斜率越大，位移成長越快」的概念。";
   }
 </script>
+
 </body>
 </html>
