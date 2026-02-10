@@ -54,7 +54,7 @@ const SUBJECTS = {
   }
 };
 
-const UNITS_PER_PAGE = 5; // 目錄頁一頁顯示 5 個單元
+const UNITS_PER_PAGE = 10; // 目錄頁一頁顯示 10 個單元
 
 // 搜尋索引：用在首頁搜尋列
 const searchIndex = [];
