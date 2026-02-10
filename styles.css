@@ -340,26 +340,86 @@ main {
 .subject-bio { background: linear-gradient(135deg, #22c55e, #16a34a); }
 .subject-ear { background: linear-gradient(135deg, #f97316, #ea580c); }
 
-/* Book view：科目目錄（筆記本風，一頁 5 個單元） */
+/* Book view：科目目錄（A4 筆記本風，一頁 5 個單元） */
 .book-container {
   margin: 20px auto;
-  max-width: 1000px;
-  border-radius: 24px;
+  max-width: 960px;
+  min-height: 620px;
+  border-radius: 18px;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
-  padding: 18px 20px 20px;
+  padding: 18px 22px 16px;
+  background-color: #fdfcf9;
   background-image:
-    linear-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px),
-    radial-gradient(circle at top, #f9fafb, #f3f4f6 55%, #e5e7eb 100%);
-  background-size: 100% 28px, 100% 100%;
-  background-position: 0 52px, 0 0;
+    linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px), /* 橫線 */
+    linear-gradient(to right, rgba(248, 250, 252, 0.85), rgba(241, 245, 249, 0.95));
+  background-size: 100% 30px, 100% 100%;
+  background-position: 0 70px, 0 0;
 }
 
 .book-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   gap: 10px;
+}
+
+.book-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+  gap: 24px;
+  align-items: flex-start;
+  padding: 8px 4px 16px;
+}
+
+@media (max-width: 800px) {
+  .book-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.book-left {
+  padding-right: 12px;
+  border-right: 2px solid rgba(148, 163, 184, 0.3);
+}
+
+@media (max-width: 800px) {
+  .book-left {
+    border-right: none;
+    border-bottom: 2px solid rgba(148, 163, 184, 0.3);
+    padding-right: 0;
+    padding-bottom: 12px;
+  }
+}
+
+.book-left-subject {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.book-left-note {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.7;
+}
+
+.book-right-title {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.book-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
 }
 
 .book-back-btn {
@@ -432,32 +492,27 @@ main {
 }
 
 .book-unit-list {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  margin-top: 8px;
+  list-style: none;
 }
 
 .book-unit-item {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: baseline;
+  gap: 8px;
   width: 100%;
-  text-align: left;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid #e5e7eb;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 8px 18px rgba(148, 163, 184, 0.35);
+  padding: 6px 4px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+  color: #111827;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  text-decoration: none;
+  background: transparent;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .book-unit-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 16px 40px rgba(148, 163, 184, 0.5);
-  border-color: #6366f1;
-  background: linear-gradient(to right, #eef2ff, #ffffff);
+  background: rgba(239, 246, 255, 0.7);
+  color: #1f2937;
 }
 
 .book-unit-index {
@@ -480,21 +535,15 @@ main {
 }
 
 .book-unit-empty {
-  grid-column: 1 / -1;
-  padding: 12px;
+  padding: 12px 4px;
   font-size: 13px;
   color: #9ca3af;
   text-align: center;
-  border-radius: 12px;
-  border: 1px dashed #d1d5db;
-  background: #f9fafb;
 }
 
 .book-footer-hint {
-  margin-top: 10px;
   font-size: 11px;
   color: #6b7280;
-  text-align: right;
 }
 
 /* Note view */
