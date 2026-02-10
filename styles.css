@@ -354,6 +354,8 @@ main {
     linear-gradient(to right, rgba(248, 250, 252, 0.85), rgba(241, 245, 249, 0.95));
   background-size: 100% 30px, 100% 100%;
   background-position: 0 70px, 0 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .book-header {
@@ -370,11 +372,12 @@ main {
   gap: 24px;
   align-items: flex-start;
   padding: 8px 4px 16px;
+  flex: 1;
 }
 
 @media (max-width: 800px) {
   .book-inner {
-    grid-template-columns: minmax(0, 1fr);
+    /* 手機版也維持左右排版 */
   }
 }
 
@@ -385,10 +388,7 @@ main {
 
 @media (max-width: 800px) {
   .book-left {
-    border-right: none;
-    border-bottom: 2px solid rgba(148, 163, 184, 0.3);
-    padding-right: 0;
-    padding-bottom: 12px;
+    /* 手機版一樣保留右側分隔線 */
   }
 }
 
@@ -419,7 +419,8 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
+  margin-top: auto;
+  padding-top: 8px;
 }
 
 .book-back-btn {
@@ -523,10 +524,10 @@ main {
 }
 
 .book-unit-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .book-unit-note {
