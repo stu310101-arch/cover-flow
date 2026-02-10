@@ -352,14 +352,14 @@
     .subject-bio { background: linear-gradient(135deg, #22c55e, #16a34a); }
     .subject-ear { background: linear-gradient(135deg, #f97316, #ea580c); }
 
-    /* Book view */
+    /* Book view：科目目錄（放大＋可翻頁） */
     .book-container {
-      margin: 12px auto;
+      margin: 20px auto;
       max-width: 1000px;
       background: radial-gradient(circle at top, #f9fafb, #f3f4f6 55%, #e5e7eb 100%);
-      border-radius: 20px;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
-      padding: 16px 18px 18px;
+      border-radius: 24px;
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
+      padding: 18px 20px 20px;
     }
 
     .book-header {
@@ -367,6 +367,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 14px;
+      gap: 10px;
     }
 
     .book-back-btn {
@@ -388,112 +389,117 @@
     }
 
     .book-subject-title {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: #111827;
+      text-align: center;
+      flex: 1;
     }
 
-    .book-header-spacer {
-      width: 60px;
-    }
-
-    .book-pages {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-      background: #fefcf7;
-    }
-
-    @media (max-width: 800px) {
-      .book-pages {
-        grid-template-columns: 1fr;
-      }
-
-      .book-header-spacer {
-        display: none;
-      }
-    }
-
-    .book-page {
-      padding: 14px 16px 16px;
-      position: relative;
-    }
-
-    .book-page::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: linear-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
-      background-size: 100% 22px;
-      opacity: 0.55;
-      pointer-events: none;
-    }
-
-    .book-page-inner {
-      position: relative;
-      z-index: 1;
-    }
-
-    .book-page-title {
-      font-size: 12px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #9ca3af;
-      margin-bottom: 6px;
-    }
-
-    .book-list {
-      list-style: none;
+    .book-page-controls {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 6px;
-      font-size: 13px;
+      font-size: 12px;
+      color: #4b5563;
     }
 
-    .book-list-item {
-      padding: 4px 8px;
-      border-bottom: 1px dashed #d1d5db;
-      cursor: pointer;
-      display: flex;
-      gap: 8px;
-      align-items: baseline;
-      transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+    .page-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #4b5563;
+      transition: background 0.12s ease, transform 0.08s ease, border-color 0.12s ease;
     }
 
-    .book-list-item:hover {
-      background: rgba(219, 234, 254, 0.8);
-      border-bottom-style: solid;
-      border-bottom-color: #60a5fa;
+    .page-btn:hover:not(:disabled) {
+      background: #eef2ff;
+      border-color: #6366f1;
       transform: translateY(-1px);
     }
 
-    .book-list-index {
+    .page-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .page-info {
+      min-width: 60px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .book-unit-list {
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .book-unit-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(148, 163, 184, 0.35);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+
+    .book-unit-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(148, 163, 184, 0.5);
+      border-color: #6366f1;
+      background: linear-gradient(to right, #eef2ff, #ffffff);
+    }
+
+    .book-unit-index {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 11px;
       color: #9ca3af;
-      min-width: 26px;
+      margin-bottom: 2px;
     }
 
-    .book-list-title {
+    .book-unit-title {
+      font-size: 15px;
+      font-weight: 600;
       color: #111827;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin-bottom: 4px;
     }
 
-    .book-list-empty {
-      padding: 10px 8px;
+    .book-unit-note {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .book-unit-empty {
+      grid-column: 1 / -1;
+      padding: 12px;
       font-size: 13px;
       color: #9ca3af;
+      text-align: center;
+      border-radius: 12px;
+      border: 1px dashed #d1d5db;
+      background: #f9fafb;
     }
 
     .book-footer-hint {
-      margin-top: 8px;
+      margin-top: 10px;
       font-size: 11px;
       color: #6b7280;
       text-align: right;
@@ -916,6 +922,11 @@
   let activeUnitId = null;
   let activeUnitTitle = "";
 
+  // 目錄頁翻頁狀態
+  let currentUnits = [];
+  let currentBookPage = 0;
+  const UNITS_PER_PAGE = 8;
+
   // Firebase / Auth 狀態
   let firebaseReady = false;
   let auth = null;
@@ -942,7 +953,9 @@
     activeSubjectId = subjectId;
     activeUnitId = null;
     activeUnitTitle = "";
-    renderBook(subject);
+    currentUnits = subject.units || [];
+    currentBookPage = 0;
+    renderBook();
     showView("book");
   }
 
@@ -1048,54 +1061,84 @@
   }
 
   // ===== 5. Book (科目目錄) =====
-  function renderBook(subject) {
+  function renderBook() {
+    const subject = SUBJECTS[activeSubjectId];
     const titleEl = document.getElementById("bookSubjectTitle");
-    const leftList = document.getElementById("bookListLeft");
-    const rightList = document.getElementById("bookListRight");
-    if (!titleEl || !leftList || !rightList) return;
+    const listEl = document.getElementById("bookUnitList");
+    const pageInfoEl = document.getElementById("bookPageInfo");
+    const prevBtn = document.getElementById("bookPrevPageBtn");
+    const nextBtn = document.getElementById("bookNextPageBtn");
+
+    if (!subject || !titleEl || !listEl || !pageInfoEl || !prevBtn || !nextBtn) return;
 
     titleEl.textContent = subject.name + " 筆記本";
 
-    leftList.innerHTML = "";
-    rightList.innerHTML = "";
+    const units = currentUnits || [];
+    const totalPages = Math.max(1, Math.ceil(units.length / UNITS_PER_PAGE));
 
-    const units = subject.units || [];
-    if (!units.length) {
-      const li = document.createElement("li");
-      li.className = "book-list-empty";
-      li.textContent = "此科目前尚未建立單元。";
-      leftList.appendChild(li);
-      return;
-    }
+    if (currentBookPage >= totalPages) currentBookPage = totalPages - 1;
+    if (currentBookPage < 0) currentBookPage = 0;
 
-    const half = Math.ceil(units.length / 2);
+    const start = currentBookPage * UNITS_PER_PAGE;
+    const pageUnits = units.slice(start, start + UNITS_PER_PAGE);
 
-    function addUnitRow(listEl, unit, index) {
-      const li = document.createElement("li");
-      li.className = "book-list-item";
-      const idx = document.createElement("span");
-      idx.className = "book-list-index";
-      idx.textContent = String(index + 1).padStart(2, "0") + ".";
-      const title = document.createElement("span");
-      title.className = "book-list-title";
-      title.textContent = unit.title;
-      li.appendChild(idx);
-      li.appendChild(title);
-      li.addEventListener("click", () => {
-        openUnit(subject.id, unit.id, unit.title);
+    listEl.innerHTML = "";
+    if (!pageUnits.length) {
+      const div = document.createElement("div");
+      div.className = "book-unit-empty";
+      div.textContent = "此科目前尚未建立單元。";
+      listEl.appendChild(div);
+    } else {
+      pageUnits.forEach((unit, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "book-unit-item";
+        const idx = document.createElement("div");
+        idx.className = "book-unit-index";
+        idx.textContent = String(start + index + 1).padStart(2, "0");
+        const title = document.createElement("div");
+        title.className = "book-unit-title";
+        title.textContent = unit.title;
+        const note = document.createElement("div");
+        note.className = "book-unit-note";
+        note.textContent = "點擊開啟本單元頁面與個人筆記";
+        card.appendChild(idx);
+        card.appendChild(title);
+        card.appendChild(note);
+        card.addEventListener("click", () => {
+          openUnit(subject.id, unit.id, unit.title);
+        });
+        listEl.appendChild(card);
       });
-      listEl.appendChild(li);
     }
 
-    units.slice(0, half).forEach((unit, i) => addUnitRow(leftList, unit, i));
-    units.slice(half).forEach((unit, i) => addUnitRow(rightList, unit, half + i));
+    pageInfoEl.textContent = (currentBookPage + 1) + " / " + totalPages;
+    prevBtn.disabled = currentBookPage === 0;
+    nextBtn.disabled = currentBookPage >= totalPages - 1;
   }
 
   function initBookNav() {
     const backBtn = document.getElementById("bookBackBtn");
+    const prevBtn = document.getElementById("bookPrevPageBtn");
+    const nextBtn = document.getElementById("bookNextPageBtn");
+
     if (backBtn) {
       backBtn.addEventListener("click", () => {
         showView("home");
+      });
+    }
+    if (prevBtn) {
+      prevBtn.addEventListener("click", () => {
+        if (currentBookPage > 0) {
+          currentBookPage -= 1;
+          renderBook();
+        }
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        currentBookPage += 1;
+        renderBook();
       });
     }
   }
@@ -1126,10 +1169,7 @@
     if (backBtn) {
       backBtn.addEventListener("click", () => {
         if (activeSubjectId) {
-          const subject = SUBJECTS[activeSubjectId];
-          if (subject) {
-            renderBook(subject);
-          }
+          renderBook();
         }
         showView("book");
       });
