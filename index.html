@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>學測自然科視覺化複習筆記網</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學習筆記庫 - 學測自然科視覺化筆記</title>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -18,22 +18,11 @@
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      color: #f9fafb;
-      background:
-        radial-gradient(circle at top, rgba(148, 163, 184, 0.3), transparent 55%),
-        radial-gradient(circle at bottom, rgba(56, 189, 248, 0.25), transparent 55%),
-        #020617;
+      background: radial-gradient(circle at top, #e5e7eb, #f1f5f9 55%, #e5e7eb 100%);
+      color: #0f172a;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-    }
-
-    :root {
-      --accent-color: #38bdf8;
-      --paper-bg: #0f172a;
-      --paper-border: rgba(148, 163, 184, 0.45);
-      --ink-soft: #cbd5f5;
-      --ink-strong: #e5e7eb;
     }
 
     a {
@@ -51,1068 +40,790 @@
     main {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
       padding: 16px;
     }
 
+    /* Header */
     .app-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
-      backdrop-filter: blur(16px);
-      background: linear-gradient(
-        to right,
-        rgba(15, 23, 42, 0.88),
-        rgba(15, 23, 42, 0.65)
-      );
-      border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.6);
+      background: linear-gradient(to right, #0f172a, #020617);
+      color: #e5e7eb;
       position: sticky;
       top: 0;
       z-index: 50;
     }
 
-    .brand-block {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .brand-mark {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      background:
-        conic-gradient(from 200deg, rgba(56, 189, 248, 0.8), rgba(59, 130, 246, 0.9), rgba(244, 114, 182, 0.9), rgba(56, 189, 248, 0.8));
-      position: relative;
-      box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 0.8),
-        0 10px 30px rgba(15, 23, 42, 0.8);
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: conic-gradient(from 210deg, #38bdf8, #6366f1, #f97316, #22c55e, #38bdf8);
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .brand-mark::after {
-      content: "";
-      width: 20px;
-      height: 20px;
-      border-radius: 6px;
-      border: 2px solid rgba(15, 23, 42, 0.95);
-      background: radial-gradient(circle at top, rgba(248, 250, 252, 0.9), rgba(15, 23, 42, 0.9));
-    }
-
-    .brand-text-main {
-      font-weight: 600;
-      font-size: 16px;
-      letter-spacing: 0.08em;
-    }
-
-    .brand-text-sub {
-      font-size: 11px;
-      color: #9ca3af;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-      color: #94a3b8;
-    }
-
-    .pill {
-      border-radius: 999px;
-      padding: 4px 10px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15, 23, 42, 0.75);
-    }
-
-    .header-home-btn {
-      border-radius: 999px;
-      padding: 6px 12px;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-    }
-
-    .header-home-btn span.icon {
-      font-size: 14px;
-      transform: translateY(-0.5px);
-    }
-
-    .header-home-btn:hover {
-      background: rgba(15, 23, 42, 0.9);
-      border-color: #e5e7eb;
-      transform: translateY(-1px);
-    }
-
-    .screen {
-      width: 100%;
-      max-width: 1120px;
-      max-height: 640px;
-      position: relative;
-      display: none;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    .desk {
-      position: relative;
-      padding: 20px;
-      background:
-        radial-gradient(circle at top left, rgba(148, 163, 184, 0.32), transparent 52%),
-        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.35), transparent 55%),
-        linear-gradient(135deg, #020617, #020617 40%, #0b1120 100%);
-      border-radius: 24px;
       box-shadow:
-        0 32px 80px rgba(15, 23, 42, 0.9),
-        0 0 0 1px rgba(148, 163, 184, 0.4);
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 16px;
+        0 0 0 1px rgba(15, 23, 42, 0.9),
+        0 10px 20px rgba(15, 23, 42, 0.9);
     }
 
-    @media (max-width: 860px) {
-      .desk {
-        grid-template-columns: 1fr;
-        max-height: none;
-      }
+    .brand-mark-inner {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      background: radial-gradient(circle at top, #f9fafb, #020617);
+      border: 2px solid rgba(15, 23, 42, 0.96);
     }
 
-    .desk::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
-      background-size: 32px 32px;
-      opacity: 0.6;
-      mix-blend-mode: soft-light;
-      pointer-events: none;
-    }
-
-    .desk-column {
-      position: relative;
-      z-index: 1;
-    }
-
-    .countdown-panel {
-      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95));
-      border-radius: 18px;
-      padding: 18px 18px 16px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.95);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .countdown-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-
-    .countdown-title {
-      font-size: 15px;
+    .brand-title {
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #e5e7eb;
     }
 
-    .countdown-sub {
+    .brand-subtitle {
       font-size: 11px;
-      color: #9ca3af;
-    }
-
-    .countdown-display {
-      margin-top: 8px;
-      display: flex;
-      align-items: flex-end;
-      gap: 18px;
-    }
-
-    .flip-days {
-      position: relative;
-      width: 150px;
-      height: 90px;
-      border-radius: 18px;
-      background: radial-gradient(circle at top, #020617, #020617 40%, #020617);
-      overflow: hidden;
-      box-shadow:
-        0 10px 26px rgba(15, 23, 42, 0.85),
-        inset 0 0 0 1px rgba(148, 163, 184, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .flip-days-inner {
-      font-variant-numeric: tabular-nums;
-      font-size: 42px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      color: #e5e7eb;
-    }
-
-    .flip-days-unit {
-      font-size: 15px;
-      color: #9ca3af;
-      letter-spacing: 0.45em;
-    }
-
-    .count-label-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-      color: #cbd5f5;
-    }
-
-    .exam-date-pill {
-      border-radius: 999px;
-      padding: 3px 10px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .desk-note {
-      font-size: 12px;
-      color: #cbd5f5;
-      opacity: 0.9;
-    }
-
-    .subjects-panel {
-      margin-top: 18px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .subject-orb {
-      position: relative;
-      border-radius: 999px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.35), rgba(15, 23, 42, 0.95));
-      border: 1px solid rgba(148, 163, 184, 0.65);
-      box-shadow:
-        0 12px 25px rgba(15, 23, 42, 0.85),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
-      overflow: hidden;
-      transition:
-        transform 0.18s ease-out,
-        box-shadow 0.18s ease-out,
-        border-color 0.18s ease-out,
-        background 0.18s ease-out;
-    }
-
-    .subject-orb::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.4), transparent 55%);
-      opacity: 0;
-      transition: opacity 0.2s ease-out;
-      pointer-events: none;
-    }
-
-    .subject-orb:hover {
-      transform: translateY(-2px) translateZ(0);
-      border-color: #e5e7eb;
-      box-shadow:
-        0 16px 32px rgba(15, 23, 42, 1),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
-      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.4), rgba(15, 23, 42, 0.98));
-    }
-
-    .subject-orb:hover::before {
-      opacity: 1;
-    }
-
-    .subject-badge-circle {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      background: radial-gradient(circle at top, rgba(248, 250, 252, 0.9), rgba(15, 23, 42, 0.95));
-      box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 1),
-        0 0 0 6px rgba(15, 23, 42, 0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      color: #020617;
-    }
-
-    .subject-text-block {
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .subject-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .subject-caption {
-      font-size: 11px;
-      color: #9ca3af;
-    }
-
-    .toolbox-panel {
-      margin-top: 18px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px dashed rgba(148, 163, 184, 0.8);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 12px;
-      color: #cbd5f5;
-    }
-
-    .toolbox-title {
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #e5e7eb;
-    }
-
-    .toolbox-link {
-      align-self: flex-start;
-      border-radius: 999px;
-      padding: 6px 12px;
-      border: 1px solid rgba(56, 189, 248, 0.8);
-      background: rgba(15, 23, 42, 0.95);
-      color: #e0f2fe;
-      font-size: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
-      box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4);
-    }
-
-    .toolbox-link::after {
-      content: "↗";
-      font-size: 11px;
-    }
-
-    .toolbox-link:hover {
-      background: rgba(15, 23, 42, 1);
-      transform: translateY(-1px);
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6),
-                  0 10px 18px rgba(15, 23, 42, 0.9);
-    }
-
-    .desk-small-note {
-      font-size: 11px;
-      color: #9ca3af;
-    }
-
-    .subject-summary-card {
-      background: rgba(15, 23, 42, 0.96);
-      border-radius: 18px;
-      padding: 16px 18px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      height: 100%;
-    }
-
-    .summary-heading {
-      font-size: 14px;
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .summary-sub {
-      font-size: 12px;
-      color: #9ca3af;
-    }
-
-    .summary-list {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #cbd5f5;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .summary-list li::before {
-      content: "•";
-      margin-right: 6px;
-      color: rgba(56, 189, 248, 0.8);
-    }
-
-    .book-wrapper {
-      position: relative;
-      padding: 18px;
-      background:
-        radial-gradient(circle at top, rgba(148, 163, 184, 0.25), transparent 56%),
-        radial-gradient(circle at bottom, rgba(56, 189, 248, 0.2), transparent 55%),
-        linear-gradient(135deg, #020617, #020617 40%, #020617);
-      border-radius: 24px;
-      box-shadow:
-        0 32px 80px rgba(15, 23, 42, 0.95),
-        0 0 0 1px rgba(148, 163, 184, 0.5);
-    }
-
-    .book {
-      position: relative;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-      gap: 0;
-      border-radius: 18px;
-      overflow: hidden;
-      background: #020617;
-    }
-
-    @media (max-width: 860px) {
-      .book {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .page {
-      padding: 18px 18px 16px;
-      background: var(--paper-bg);
-      border: 1px solid var(--paper-border);
-      color: var(--ink-soft);
-    }
-
-    .page-left {
-      border-right: 1px solid rgba(15, 23, 42, 0.9);
-      position: relative;
-    }
-
-    .page-title-label {
-      font-size: 11px;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       color: #9ca3af;
-      margin-bottom: 6px;
     }
 
-    .subject-cover-name {
-      font-size: 22px;
-      color: var(--ink-strong);
-      margin-bottom: 4px;
-    }
-
-    .subject-cover-tagline {
-      font-size: 13px;
-      color: #cbd5f5;
-      margin-bottom: 14px;
-    }
-
-    .subject-emblem {
-      width: 64px;
-      height: 64px;
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.8);
+    .auth-panel {
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin-bottom: 8px;
-      background: radial-gradient(circle at top, rgba(248, 250, 252, 0.95), rgba(15, 23, 42, 0.96));
-      color: #020617;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      font-size: 13px;
-    }
-
-    .subject-meta {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-bottom: 10px;
-    }
-
-    .page-actions-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-    }
-
-    .link-button {
-      font-size: 11px;
-      padding: 4px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: background 0.18s ease, transform 0.12s ease;
-    }
-
-    .link-button:hover {
-      background: rgba(15, 23, 42, 1);
-      transform: translateY(-1px);
-    }
-
-    .page-right {
-      position: relative;
-    }
-
-    .toc-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 10px;
-    }
-
-    .toc-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--ink-strong);
-    }
-
-    .toc-search {
-      flex: 1;
-      max-width: 260px;
-    }
-
-    .toc-search-input {
-      width: 100%;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.9);
-      padding: 6px 10px;
-      font-size: 12px;
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      outline: none;
-    }
-
-    .toc-search-input::placeholder {
-      color: #6b7280;
-    }
-
-    .toc-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 260px;
-      overflow: auto;
-      padding-right: 4px;
-      margin-bottom: 8px;
-    }
-
-    .toc-item {
-      position: relative;
-      padding: 7px 12px;
-      border-radius: 12px;
-      cursor: pointer;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(30, 64, 175, 0.4);
-      overflow: hidden;
-      transition:
-        transform 0.12s ease,
-        box-shadow 0.12s ease,
-        border-color 0.12s ease,
-        background 0.12s ease;
-    }
-
-    .toc-item::before {
-      content: "";
-      position: absolute;
-      inset: auto -8px 0;
-      height: 50%;
-      background: rgba(250, 250, 150, 0.4);
-      transform: translateX(-115%);
-      transition: transform 0.3s ease-out;
-      mix-blend-mode: screen;
-      pointer-events: none;
-    }
-
-    .toc-item:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.9);
-      border-color: rgba(56, 189, 248, 0.9);
-      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
-    }
-
-    .toc-item:hover::before {
-      transform: translateX(0);
-    }
-
-    .toc-line1 {
-      font-size: 12px;
-      color: var(--ink-strong);
-      display: flex;
-      justify-content: space-between;
       gap: 8px;
-      margin-bottom: 2px;
+      font-size: 12px;
     }
 
-    .toc-line2 {
-      font-size: 11px;
-      color: #9ca3af;
+    .auth-user-label {
+      color: #cbd5f5;
+      max-width: 200px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .toc-tag {
-      font-size: 10px;
-      color: rgba(148, 163, 184, 0.9);
-    }
-
-    .toc-empty {
-      font-size: 12px;
-      color: #9ca3af;
-      text-align: center;
-      padding: 20px 8px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px dashed rgba(148, 163, 184, 0.7);
-    }
-
-    .toc-hint {
-      font-size: 11px;
-      color: #9ca3af;
-    }
-
-    .unit-breadcrumb {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .unit-title {
-      font-size: 19px;
-      color: var(--ink-strong);
-      margin-bottom: 4px;
-    }
-
-    .unit-lead {
-      font-size: 13px;
-      color: #cbd5f5;
-      margin-bottom: 10px;
-    }
-
-    .unit-summary-list {
-      font-size: 12px;
-      color: #cbd5f5;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 12px;
-    }
-
-    .unit-summary-list li::before {
-      content: "–";
-      margin-right: 6px;
-      color: rgba(148, 163, 184, 0.9);
-    }
-
-    .unit-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: auto;
-      padding-top: 6px;
-      border-top: 1px dashed rgba(148, 163, 184, 0.6);
-      font-size: 11px;
-    }
-
-    .unit-nav-buttons {
-      display: flex;
-      gap: 6px;
-    }
-
-    .unit-nav-btn {
-      padding: 3px 9px;
+    .auth-btn {
+      padding: 4px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.9);
       color: #e5e7eb;
+      font-size: 12px;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      transition: background 0.16s ease, transform 0.12s ease, opacity 0.1s ease;
+      transition: background 0.16s ease, transform 0.1s ease, border-color 0.16s ease;
     }
 
-    .unit-nav-btn[disabled] {
-      opacity: 0.35;
+    .auth-btn:hover:not(:disabled) {
+      background: rgba(15, 23, 42, 1);
+      border-color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .auth-btn:disabled {
+      opacity: 0.5;
       cursor: default;
     }
 
-    .unit-nav-btn:not([disabled]):hover {
-      background: rgba(15, 23, 42, 1);
+    /* Views */
+    .view {
+      width: 100%;
+      max-width: 1100px;
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Home view */
+    .home-container {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .home-title {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .home-title h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .home-title p {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .search-area {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 32px;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 14px 10px 34px;
+      border-radius: 999px;
+      border: 2px solid #e5e7eb;
+      font-size: 14px;
+      outline: none;
+      box-shadow: 0 4px 10px rgba(148, 163, 184, 0.3);
+    }
+
+    .search-input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.4), 0 10px 25px rgba(148, 163, 184, 0.4);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: #9ca3af;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .search-results {
+      position: absolute;
+      left: 0;
+      right: 0;
+      margin-top: 6px;
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+      border: 1px solid #e5e7eb;
+      max-height: 260px;
+      overflow-y: auto;
+      display: none;
+      z-index: 20;
+    }
+
+    .search-result-item {
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover {
+      background: #eef2ff;
+    }
+
+    .search-result-main {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .search-result-title {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .search-result-subject {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .search-result-empty {
+      padding: 10px 12px;
+      font-size: 13px;
+      color: #9ca3af;
+      text-align: center;
+    }
+
+    .subject-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 150px));
+      gap: 18px;
+      justify-content: center;
+    }
+
+    @media (max-width: 520px) {
+      .subject-grid {
+        grid-template-columns: repeat(2, minmax(0, 130px));
+      }
+    }
+
+    .subject-card {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      border-radius: 999px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+      overflow: hidden;
+    }
+
+    .subject-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(249, 250, 251, 0.28), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .subject-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 22px 52px rgba(15, 23, 42, 0.32);
+      filter: brightness(1.03);
+    }
+
+    .subject-card:hover::before {
+      opacity: 1;
+    }
+
+    .subject-abbr {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+    }
+
+    .subject-name {
+      margin-top: 4px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      font-size: 12px;
+    }
+
+    .subject-caption {
+      font-size: 11px;
+      opacity: 0.9;
+      margin-top: 2px;
+      padding: 0 12px;
+      text-align: center;
+    }
+
+    .subject-phy { background: linear-gradient(135deg, #38bdf8, #1d4ed8); }
+    .subject-che { background: linear-gradient(135deg, #a855f7, #4f46e5); }
+    .subject-bio { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .subject-ear { background: linear-gradient(135deg, #f97316, #ea580c); }
+
+    /* Book view */
+    .book-container {
+      margin: 12px auto;
+      max-width: 1000px;
+      background: radial-gradient(circle at top, #f9fafb, #f3f4f6 55%, #e5e7eb 100%);
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
+      padding: 16px 18px 18px;
+    }
+
+    .book-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .book-back-btn {
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #374151;
+      transition: background 0.16s ease, transform 0.1s ease;
+    }
+
+    .book-back-btn:hover {
+      background: #f9fafb;
       transform: translateY(-1px);
     }
 
-    .unit-bookmark-btn {
+    .book-subject-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #111827;
+    }
+
+    .book-header-spacer {
+      width: 60px;
+    }
+
+    .book-pages {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background: #fefcf7;
+    }
+
+    @media (max-width: 800px) {
+      .book-pages {
+        grid-template-columns: 1fr;
+      }
+
+      .book-header-spacer {
+        display: none;
+      }
+    }
+
+    .book-page {
+      padding: 14px 16px 16px;
+      position: relative;
+    }
+
+    .book-page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+      background-size: 100% 22px;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .book-page-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .book-page-title {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .book-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .book-list-item {
+      padding: 4px 8px;
+      border-bottom: 1px dashed #d1d5db;
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+    }
+
+    .book-list-item:hover {
+      background: rgba(219, 234, 254, 0.8);
+      border-bottom-style: solid;
+      border-bottom-color: #60a5fa;
+      transform: translateY(-1px);
+    }
+
+    .book-list-index {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 11px;
-      padding: 3px 9px;
+      color: #9ca3af;
+      min-width: 26px;
+    }
+
+    .book-list-title {
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-list-empty {
+      padding: 10px 8px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .book-footer-hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #6b7280;
+      text-align: right;
+    }
+
+    /* Note view */
+    .note-wrapper {
+      margin: 12px auto 16px;
+      max-width: 900px;
+      background: #f9fafb;
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .note-header {
+      background: linear-gradient(to right, #4f46e5, #7c3aed);
+      color: #f9fafb;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .note-back-btn {
+      font-size: 13px;
+      padding: 4px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(191, 219, 254, 0.9);
+      background: rgba(15, 23, 42, 0.12);
       color: #e5e7eb;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      transition: background 0.16s ease, transform 0.12s ease;
+      transition: background 0.16s ease, transform 0.1s ease;
     }
 
-    .unit-bookmark-btn:hover {
-      background: rgba(15, 23, 42, 1);
+    .note-back-btn:hover {
+      background: rgba(15, 23, 42, 0.24);
       transform: translateY(-1px);
     }
 
-    .interactive-header {
+    .note-breadcrumb {
       font-size: 12px;
-      color: #9ca3af;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
+      max-width: 420px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .note-subject-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(219, 234, 254, 0.9);
+      background: rgba(15, 23, 42, 0.08);
+    }
+
+    .note-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .note-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 8px;
+      margin-bottom: 4px;
+    }
+
+    .note-sections {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .note-sections {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .section-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 12px 14px 14px;
+      font-size: 13px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 6px;
     }
 
-    .interactive-canvas {
-      border-radius: 16px;
-      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), #020617);
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      padding: 12px 14px;
-      min-height: 200px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.95);
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #4b5563;
     }
 
-    .interactive-caption {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #9ca3af;
-    }
-
-    .kinematics-widget {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 12px;
-      color: #e5e7eb;
-    }
-
-    .kin-track {
-      position: relative;
-      height: 78px;
-      border-radius: 999px;
-      background: linear-gradient(
-        90deg,
-        rgba(15, 23, 42, 1),
-        rgba(15, 23, 42, 0.95)
-      );
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      overflow: hidden;
-      padding: 0 18px;
-      display: flex;
-      align-items: center;
-    }
-
-    .kin-lane {
-      position: absolute;
-      inset: 26px 18px 32px;
-      border-radius: 999px;
-      background: linear-gradient(
-        90deg,
-        rgba(148, 163, 184, 0.28),
-        rgba(148, 163, 184, 0.08)
-      );
-    }
-
-    .kin-object {
-      position: relative;
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      background: radial-gradient(circle at top, #e0f2fe, #0f172a);
-      box-shadow:
-        0 0 0 2px rgba(15, 23, 42, 1),
-        0 10px 18px rgba(15, 23, 42, 0.9);
-      z-index: 2;
-      transform: translateX(0);
-      transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
-    }
-
-    .kin-object::after {
-      content: "";
-      position: absolute;
-      inset: 4px;
-      border-radius: inherit;
-      border: 2px solid rgba(56, 189, 248, 0.9);
-    }
-
-    .kin-marker-row {
-      position: absolute;
-      inset: auto 18px 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: #9ca3af;
-      z-index: 1;
-    }
-
-    .kin-label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-    }
-
-    .kin-slider {
-      width: 100%;
-      accent-color: var(--accent-color);
-    }
-
-    .kin-footnote {
+    .section-subtitle {
       font-size: 11px;
       color: #9ca3af;
+    }
+
+    .hint-placeholder {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .user-note-header-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .note-status-text {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .note-textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      line-height: 1.5;
+      background: #f9fafb;
+    }
+
+    .note-textarea:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.3);
+      background: #ffffff;
+    }
+
+    .note-textarea:disabled {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+
+    .note-actions {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      font-size: 12px;
+      align-items: center;
+    }
+
+    .note-save-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      color: #f9fafb;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 10px 30px rgba(79, 70, 229, 0.35);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+    }
+
+    .note-save-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 40px rgba(79, 70, 229, 0.45);
+      filter: brightness(1.04);
+    }
+
+    .note-save-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .note-footer-line {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: right;
     }
 
     footer {
-      padding: 10px 18px 16px;
+      padding: 10px 16px 12px;
       font-size: 11px;
-      color: #6b7280;
+      color: #9ca3af;
       text-align: center;
     }
   </style>
 </head>
 <body>
 <header class="app-header">
-  <div class="brand-block">
-    <div class="brand-mark"></div>
+  <div class="brand">
+    <div class="brand-mark"><div class="brand-mark-inner"></div></div>
     <div>
-      <div class="brand-text-main">學測自然科戰情室</div>
-      <div class="brand-text-sub">Visual Science Notes</div>
+      <div class="brand-title">學習筆記庫</div>
+      <div class="brand-subtitle">Visual Science Notes</div>
     </div>
   </div>
-  <div class="header-right">
-    <div class="pill">無登入．純前端．即開即用</div>
-    <button type="button" class="header-home-btn" id="headerHomeBtn">
-      <span class="icon">⌂</span>
-      <span>回戰情室</span>
-    </button>
+  <div class="auth-panel">
+    <span id="authUserLabel" class="auth-user-label">尚未登入</span>
+    <button type="button" id="loginBtn" class="auth-btn">登入</button>
+    <button type="button" id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
   </div>
 </header>
 
 <main>
-  <section id="screen-dashboard" class="screen active">
-    <div class="desk">
-      <div class="desk-column">
-        <div class="countdown-panel">
-          <div class="countdown-header">
-            <div>
-              <div class="countdown-title">學測自然科戰情室</div>
-              <div class="countdown-sub">把厚重的參考書變薄，把抽象的概念變活。</div>
-            </div>
-            <div class="countdown-sub" id="countdownStatus"></div>
-          </div>
-          <div class="countdown-display">
-            <div class="flip-days">
-              <div class="flip-days-inner">
-                <span id="daysRemaining">--</span>
-                <span class="flip-days-unit">天</span>
-              </div>
-            </div>
-            <div class="count-label-stack">
-              <div class="exam-date-pill">
-                <span>距離學測自然考試日</span>
-                <span id="examDateLabel"></span>
-              </div>
-              <div class="desk-note">還有多少天可以讓概念在腦中成形，就在這裡一頁一頁看見。</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="subjects-panel">
-          <button type="button" class="subject-orb" data-subject="physics">
-            <div class="subject-badge-circle">PHY</div>
-            <div class="subject-text-block">
-              <div class="subject-label">物理魔法書</div>
-              <div class="subject-caption">從力與運動開始，理解世界的規律。</div>
-            </div>
-          </button>
-
-          <button type="button" class="subject-orb" data-subject="chemistry">
-            <div class="subject-badge-circle">CHE</div>
-            <div class="subject-text-block">
-              <div class="subject-label">化學魔法書</div>
-              <div class="subject-caption">讓元素與反應在視覺中動起來。</div>
-            </div>
-          </button>
-
-          <button type="button" class="subject-orb" data-subject="biology">
-            <div class="subject-badge-circle">BIO</div>
-            <div class="subject-text-block">
-              <div class="subject-label">生物魔法書</div>
-              <div class="subject-caption">從細胞到生態，一路串起生命故事。</div>
-            </div>
-          </button>
-
-          <button type="button" class="subject-orb" data-subject="earth">
-            <div class="subject-badge-circle">EAR</div>
-            <div class="subject-text-block">
-              <div class="subject-label">地科魔法書</div>
-              <div class="subject-caption">讀懂天空、大地與海洋的訊號。</div>
-            </div>
-          </button>
-        </div>
-
-        <div class="toolbox-panel">
-          <div class="toolbox-title">TOOLS / 刷題工具箱</div>
-          <div>實作觀念之後，交給題目驗證你的理解。</div>
-          <a class="toolbox-link" href="https://www2.hl-ebook.com.tw/" target="_blank" rel="noopener noreferrer">
-            翰林雲端學院 — 立即前往刷題
-          </a>
-          <div class="desk-small-note">外部連結僅作為工具推薦，你可以依照自己的版本替換目標網址。</div>
-        </div>
+  <!-- View: Home -->
+  <section id="view-home" class="view active">
+    <div class="home-container">
+      <div class="home-title">
+        <h1>學習筆記庫</h1>
+        <p>選擇一個科目，或直接搜尋單元名稱</p>
       </div>
 
-      <div class="desk-column">
-        <div class="subject-summary-card">
-          <div class="summary-heading">使用說明</div>
-          <div class="summary-sub">
-            左邊是你的「備考桌面」，點擊任一科「魔法書」圓形入口，就會展開那一科的精裝書。
-          </div>
-          <ul class="summary-list">
-            <li>每一科都是一本「魔法書」，打開後左頁是封面與精神標語，右頁是手寫感的目錄。</li>
-            <li>在目錄的搜尋框輸入關鍵字，即可即時從索引中過濾出相關單元。</li>
-            <li>點擊單元標題，書本會翻到該單元內頁：左頁是重點整理，右頁是可操作的互動小工具。</li>
-            <li>頁面右下角的「書籤」按鈕可以隨時帶你回到該科目錄；左上角按鈕則回到戰情室。</li>
-          </ul>
-          <div class="summary-heading" style="margin-top: 6px;">目前狀態：Phase 1 骨架</div>
-          <div class="summary-sub">
-            目前先完成頁面切換與搜尋框架，之後你提供每一科、每一單元的內容，我們再逐步填入並擴充互動元件。
-          </div>
+      <div id="searchArea" class="search-area">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input id="searchInput" class="search-input" type="search" placeholder="搜尋單元、關鍵字...">
+          <button id="searchClearBtn" class="search-clear-btn" title="清除搜尋">✕</button>
         </div>
+        <div id="searchResults" class="search-results"></div>
+      </div>
+
+      <div class="subject-grid">
+        <button type="button" class="subject-card subject-phy" data-subject="physics">
+          <div class="subject-abbr">PHY</div>
+          <div class="subject-name">物理</div>
+          <div class="subject-caption">從力與運動開始，理解世界規律。</div>
+        </button>
+        <button type="button" class="subject-card subject-che" data-subject="chemistry">
+          <div class="subject-abbr">CHE</div>
+          <div class="subject-name">化學</div>
+          <div class="subject-caption">讓元素與反應在視覺中動起來。</div>
+        </button>
+        <button type="button" class="subject-card subject-bio" data-subject="biology">
+          <div class="subject-abbr">BIO</div>
+          <div class="subject-name">生物</div>
+          <div class="subject-caption">從細胞到生態，一路串起生命故事。</div>
+        </button>
+        <button type="button" class="subject-card subject-ear" data-subject="earth_science">
+          <div class="subject-abbr">EAR</div>
+          <div class="subject-name">地科</div>
+          <div class="subject-caption">讀懂天空、大地與海洋的訊號。</div>
+        </button>
       </div>
     </div>
   </section>
 
-  <section id="screen-subject" class="screen">
-    <div class="book-wrapper">
-      <div class="book">
-        <div class="page page-left">
-          <div class="page-title-label">Subject Spellbook</div>
-          <div class="subject-emblem" id="subjectEmblem">SUB</div>
-          <div class="subject-cover-name" id="subjectName">科目魔法書</div>
-          <div class="subject-cover-tagline" id="subjectTagline">
-            選擇一個章節，讓概念變成可以操作的圖像。
-          </div>
-          <div class="subject-meta" id="subjectMeta">
-            每一頁都對應學測範圍內的核心觀念；搭配互動圖像，幫助你把公式變成直覺。
-          </div>
-
-          <div class="page-actions-row">
-            <button type="button" class="link-button" id="backToDeskBtn">
-              <span>← 回戰情室</span>
-            </button>
-            <div style="font-size: 11px; color: #9ca3af;">提示：滑鼠移過右頁目錄會出現螢光筆劃記的效果。</div>
+  <!-- View: Book / subject notebook -->
+  <section id="view-book" class="view">
+    <div class="book-container">
+      <div class="book-header">
+        <button type="button" id="bookBackBtn" class="book-back-btn">← 返回大廳</button>
+        <div id="bookSubjectTitle" class="book-subject-title">科目筆記本</div>
+        <div class="book-header-spacer"></div>
+      </div>
+      <div class="book-pages">
+        <div class="book-page">
+          <div class="book-page-inner">
+            <div class="book-page-title">左頁目錄</div>
+            <ul id="bookListLeft" class="book-list"></ul>
           </div>
         </div>
-
-        <div class="page page-right">
-          <div class="toc-header">
-            <div>
-              <div class="toc-title">章節目錄</div>
-              <div style="font-size: 11px; color: #9ca3af;" id="tocCountLabel"></div>
-            </div>
-            <div class="toc-search">
-              <input id="tocSearchInput" class="toc-search-input" type="search"
-                     placeholder="輸入單元名稱或關鍵字（即時過濾）">
-            </div>
-          </div>
-          <ul id="tocList" class="toc-list"></ul>
-          <div class="toc-hint">
-            搜尋說明：此處使用一個全域 <code>searchIndex</code> 陣列，依照
-            <span id="subjectNameShort">科目</span> 篩出對應單元。
+        <div class="book-page">
+          <div class="book-page-inner">
+            <div class="book-page-title">右頁目錄</div>
+            <ul id="bookListRight" class="book-list"></ul>
           </div>
         </div>
       </div>
+      <div class="book-footer-hint">提示：點擊任一單元標題進入詳細頁面與個人筆記。</div>
     </div>
   </section>
 
-  <section id="screen-unit" class="screen">
-    <div class="book-wrapper">
-      <div class="book">
-        <div class="page page-left" style="display: flex; flex-direction: column;">
-          <div class="unit-breadcrumb" id="unitBreadcrumb">
-            <button type="button" class="unit-bookmark-btn" id="unitBackToTocBtn">
-              <span>⇤</span>
-              <span>回目錄</span>
-            </button>
-            <span id="unitBreadcrumbText"></span>
-          </div>
-          <div class="unit-title" id="unitTitle">單元標題</div>
-          <div class="unit-lead" id="unitLead">
-            這裡會放該單元的引言文字，用來把情境與觀念串在一起。
-          </div>
-          <ul class="unit-summary-list" id="unitSummaryList"></ul>
-
-          <div class="unit-nav">
-            <div>使用書籤回目錄，或從右頁互動畫布來回對照文字與圖像。</div>
-            <div class="unit-nav-buttons">
-              <button type="button" class="unit-nav-btn" id="unitPrevBtn">
-                <span>←</span><span>上一章</span>
-              </button>
-              <button type="button" class="unit-nav-btn" id="unitNextBtn">
-                <span>下一章</span><span>→</span>
-              </button>
+  <!-- View: Note / unit page -->
+  <section id="view-note" class="view">
+    <div class="note-wrapper">
+      <div class="note-header">
+        <button type="button" id="noteBackBtn" class="note-back-btn">← 返回目錄</button>
+        <div id="noteBreadcrumb" class="note-breadcrumb"></div>
+        <div id="noteSubjectTag" class="note-subject-tag"></div>
+      </div>
+      <div class="note-body">
+        <div id="noteUnitTitle" class="note-title">單元標題</div>
+        <div class="note-sections">
+          <!-- 小提點（原本的靜態筆記內容，之後你再提供） -->
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">小提點</div>
+              <div class="section-subtitle">作者整理，使用者無法編輯</div>
             </div>
-          </div>
-        </div>
+            <div id="hintContent" class="hint-placeholder">
+              這裡之後會放本單元的小提點（關鍵觀念、易錯點等），由你提供文字內容。
+            </div>
+          </section>
 
-        <div class="page page-right">
-          <div class="interactive-header">Interactive Canvas</div>
-          <div class="interactive-canvas" id="interactiveCanvas"></div>
-          <div class="interactive-caption" id="interactiveCaption">
-            這裡會根據單元內容切換為不同的互動圖表，讓你直接操作參數、觀察變化。
-          </div>
+          <!-- 個人雲端筆記 -->
+          <section class="section-card">
+            <div class="user-note-header-line">
+              <div class="section-title">我的筆記</div>
+              <div id="noteStatusText" class="note-status-text">請先登入以編輯並儲存筆記。</div>
+            </div>
+            <textarea id="noteTextarea" class="note-textarea" placeholder="登入後即可在這裡為本單元留下自己的整理與心得。" disabled></textarea>
+            <div class="note-actions">
+              <button type="button" id="noteSaveBtn" class="note-save-btn" disabled>💾 儲存筆記</button>
+            </div>
+            <div id="noteFooterInfo" class="note-footer-line"></div>
+          </section>
         </div>
       </div>
     </div>
@@ -1120,134 +831,104 @@
 </main>
 
 <footer>
-  學測自然科視覺化複習筆記網 — 單檔 HTML 版本．後端零依賴．歡迎依照需求調整與延伸。
+  學測自然科視覺化複習筆記網 · 單檔 HTML 版本 · Firebase 登入＋個人雲端筆記
 </footer>
 
-<script>
-  const appState = {
-    currentSubject: null,
-    currentUnitId: null
-  };
+<!-- Firebase SDK（若要啟用登入與雲端筆記，請先在下方填入自己的 firebaseConfig） -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  const subjects = {
+<script>
+  // ===== 1. 本地資料：科目與單元（只保留標題，筆記內容之後你再決定） =====
+  const SUBJECTS = {
     physics: {
       id: "physics",
-      emblem: "PHY",
-      displayName: "物理魔法書",
-      shortName: "物理",
-      tagline: "用直覺讀懂力與運動，讓公式變成腦中的動畫。",
-      meta: "本書涵蓋學測自然中與力學、波動、電學等核心單元，著重圖像化與生活情境。",
-      accent: "#38bdf8"
+      name: "物理",
+      colorClass: "subject-phy",
+      units: [
+        { id: "p1", title: "牛頓第一運動定律" },
+        { id: "p2", title: "牛頓第二運動定律" },
+        { id: "p3", title: "牛頓第三運動定律" },
+        { id: "p4", title: "熱力學第一定律" },
+        { id: "p5", title: "萬有引力" },
+        { id: "p6", title: "光學：折射與反射" },
+        { id: "p7", title: "電磁感應" },
+        { id: "p8", title: "量子力學基礎" }
+      ]
     },
     chemistry: {
       id: "chemistry",
-      emblem: "CHE",
-      displayName: "化學魔法書",
-      shortName: "化學",
-      tagline: "把分子世界拉進眼前，元素、反應一目了然。",
-      meta: "之後我們可以在這裡實作互動週期表、反應路徑圖等元件。",
-      accent: "#22c55e"
+      name: "化學",
+      colorClass: "subject-che",
+      units: [
+        { id: "c_periodic", title: "元素週期表" },
+        { id: "c1", title: "原子結構" },
+        { id: "c2", title: "化學鍵結" },
+        { id: "c3", title: "酸鹼中和" },
+        { id: "c4", title: "氧化還原反應" },
+        { id: "c5", title: "有機化學導論" }
+      ]
     },
     biology: {
       id: "biology",
-      emblem: "BIO",
-      displayName: "生物魔法書",
-      shortName: "生物",
-      tagline: "從細胞到生態，將大量文字化成結構圖與流程圖。",
-      meta: "之後可以放細胞結構拼圖、代謝路徑開關等互動內容。",
-      accent: "#a855f7"
+      name: "生物",
+      colorClass: "subject-bio",
+      units: [
+        { id: "b1", title: "細胞構造" },
+        { id: "b2", title: "光合作用" },
+        { id: "b3", title: "遺傳學：孟德爾定律" },
+        { id: "b4", title: "人體循環系統" },
+        { id: "b5", title: "神經系統" }
+      ]
     },
-    earth: {
-      id: "earth",
-      emblem: "EAR",
-      displayName: "地科魔法書",
-      shortName: "地科",
-      tagline: "讀懂天氣圖、地震波與宇宙視角的變化。",
-      meta: "之後可以加上板塊運動模擬、星空觀測路線圖等。",
-      accent: "#f97316"
+    earth_science: {
+      id: "earth_science",
+      name: "地科",
+      colorClass: "subject-ear",
+      units: [
+        { id: "e1", title: "地球氣體與大氣層" },
+        { id: "e2", title: "板塊構造學說" },
+        { id: "e3", title: "天文：太陽系" },
+        { id: "e4", title: "岩石循環" },
+        { id: "e5", title: "氣象觀測" }
+      ]
     }
   };
 
-  const searchIndex = [
-    {
-      id: "physics_kinematics",
-      title: "CH1 直線運動",
-      shortTitle: "直線運動",
-      subject: "physics",
-      path: "/physics/kinematics",
-      keywords: ["直線運動", "位移", "速度", "加速度", "v-t 圖", "x-t 圖"],
-      lead: "一維空間中的位置、速度與加速度，搞懂這一章，後面力學的圖像才有根基。",
-      summaryPoints: [
-        "平均速度 v̄ 與瞬時速度 v 的意義與差異。",
-        "位移–時間（x–t）圖與速度–時間（v–t）圖的斜率解讀。",
-        "等速直線運動與等加速度直線運動的基本公式。",
-        "如何從圖像反推物體的運動敘述。"
-      ],
-      interactiveType: "kinematics_basic"
-    },
-    {
-      id: "physics_newton",
-      title: "CH2 牛頓運動定律（預留）",
-      shortTitle: "牛頓力學",
-      subject: "physics",
-      path: "/physics/newton",
-      keywords: ["牛頓", "受力圖", "運動定律", "作用力"],
-      lead: "這個單元先預留位置，之後我們可以一起設計受力圖互動元件。",
-      summaryPoints: [
-        "目前為占位單元，方便你日後補上正式內容。",
-        "預計可以實作：拖曳力向量、觀察合力與加速度的關係。",
-        "所有設定都可在 searchIndex 中修改。"
-      ],
-      interactiveType: "placeholder"
-    }
-  ];
-
-  document.addEventListener("DOMContentLoaded", () => {
-    initCountdown();
-    initDashboard();
-    initSubjectBook();
-    initUnitPage();
+  // 全域搜尋索引：只用單元標題與科目名稱
+  const searchIndex = [];
+  Object.keys(SUBJECTS).forEach((key) => {
+    const subject = SUBJECTS[key];
+    (subject.units || []).forEach((unit) => {
+      searchIndex.push({
+        subjectId: subject.id,
+        subjectName: subject.name,
+        unitId: unit.id,
+        unitTitle: unit.title
+      });
+    });
   });
 
-  function initCountdown() {
-    const examDate = new Date("2026-01-17T00:00:00+08:00");
-    const daysSpan = document.getElementById("daysRemaining");
-    const dateLabel = document.getElementById("examDateLabel");
-    const statusLabel = document.getElementById("countdownStatus");
+  // ===== 2. UI 狀態 =====
+  let currentView = "home";
+  let activeSubjectId = null;
+  let activeUnitId = null;
+  let activeUnitTitle = "";
 
-    if (dateLabel) {
-      const y = examDate.getFullYear();
-      const m = (examDate.getMonth() + 1).toString().padStart(2, "0");
-      const d = examDate.getDate().toString().padStart(2, "0");
-      dateLabel.textContent = `${y}/${m}/${d}`;
-    }
+  // Firebase / Auth 狀態
+  let firebaseReady = false;
+  let auth = null;
+  let db = null;
+  let currentUser = null;
 
-    function updateDays() {
-      const now = new Date();
-      const diffMs = examDate.getTime() - now.getTime();
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const safeDays = diffDays < 0 ? 0 : diffDays;
-
-      if (daysSpan) {
-        daysSpan.textContent = safeDays.toString().padStart(2, "0");
-      }
-
-      if (statusLabel) {
-        if (diffMs > 0) {
-          statusLabel.textContent = "倒數進行中";
-        } else {
-          statusLabel.textContent = "已超過設定考試日";
-        }
-      }
-    }
-
-    updateDays();
-    setInterval(updateDays, 60 * 60 * 1000);
-  }
-
-  function showScreen(id) {
-    document.querySelectorAll(".screen").forEach((el) => {
-      if (el.id === id) {
+  // ===== 3. 基礎 UI 切換 =====
+  function showView(viewId) {
+    currentView = viewId;
+    ["view-home", "view-book", "view-note"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === "view-" + viewId) {
         el.classList.add("active");
       } else {
         el.classList.remove("active");
@@ -1255,8 +936,38 @@
     });
   }
 
-  function initDashboard() {
-    const subjectButtons = document.querySelectorAll(".subject-orb");
+  function openSubject(subjectId) {
+    const subject = SUBJECTS[subjectId];
+    if (!subject) return;
+    activeSubjectId = subjectId;
+    activeUnitId = null;
+    activeUnitTitle = "";
+    renderBook(subject);
+    showView("book");
+  }
+
+  function openUnit(subjectId, unitId, unitTitle) {
+    const subject = SUBJECTS[subjectId];
+    if (!subject) return;
+    activeSubjectId = subjectId;
+    activeUnitId = unitId;
+    activeUnitTitle = unitTitle;
+    renderNote(subject, unitTitle);
+    showView("note");
+    updateNoteEditorState();
+    if (firebaseReady && currentUser && db) {
+      loadUserNote();
+    } else {
+      const textarea = document.getElementById("noteTextarea");
+      if (textarea && !textarea.disabled) {
+        textarea.value = "";
+      }
+    }
+  }
+
+  // ===== 4. Home 初始化與搜尋 =====
+  function initHome() {
+    const subjectButtons = document.querySelectorAll(".subject-card");
     subjectButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const subjectId = btn.getAttribute("data-subject");
@@ -1264,265 +975,375 @@
       });
     });
 
-    const headerHomeBtn = document.getElementById("headerHomeBtn");
-    if (headerHomeBtn) {
-      headerHomeBtn.addEventListener("click", () => {
-        showScreen("screen-dashboard");
-      });
-    }
-  }
+    const searchInput = document.getElementById("searchInput");
+    const searchClearBtn = document.getElementById("searchClearBtn");
+    const searchResultsBox = document.getElementById("searchResults");
+    const searchArea = document.getElementById("searchArea");
 
-  function initSubjectBook() {
-    const backBtn = document.getElementById("backToDeskBtn");
-    if (backBtn) {
-      backBtn.addEventListener("click", () => {
-        showScreen("screen-dashboard");
-      });
-    }
+    if (!searchInput || !searchResultsBox || !searchArea || !searchClearBtn) return;
 
-    const searchInput = document.getElementById("tocSearchInput");
-    if (searchInput) {
-      searchInput.addEventListener("input", () => {
-        const q = searchInput.value || "";
-        if (!appState.currentSubject) return;
-        renderToc(appState.currentSubject, q);
-      });
-    }
-  }
-
-  function openSubject(subjectId) {
-    const subject = subjects[subjectId];
-    if (!subject) return;
-
-    appState.currentSubject = subjectId;
-    appState.currentUnitId = null;
-
-    document.documentElement.style.setProperty("--accent-color", subject.accent);
-
-    const emblemEl = document.getElementById("subjectEmblem");
-    const nameEl = document.getElementById("subjectName");
-    const taglineEl = document.getElementById("subjectTagline");
-    const metaEl = document.getElementById("subjectMeta");
-    const nameShortEl = document.getElementById("subjectNameShort");
-    const searchInput = document.getElementById("tocSearchInput");
-
-    if (emblemEl) emblemEl.textContent = subject.emblem;
-    if (nameEl) nameEl.textContent = subject.displayName;
-    if (taglineEl) taglineEl.textContent = subject.tagline;
-    if (metaEl) metaEl.textContent = subject.meta;
-    if (nameShortEl) nameShortEl.textContent = subject.shortName;
-    if (searchInput) searchInput.value = "";
-
-    renderToc(subjectId, "");
-    showScreen("screen-subject");
-  }
-
-  function renderToc(subjectId, query) {
-    const listEl = document.getElementById("tocList");
-    const countLabel = document.getElementById("tocCountLabel");
-    if (!listEl) return;
-
-    const normalizedQuery = (query || "").trim().toLowerCase();
-
-    const matches = searchIndex.filter((item) => {
-      if (item.subject !== subjectId) return false;
-      if (!normalizedQuery) return true;
-
-      const inTitle = item.title.toLowerCase().includes(normalizedQuery);
-      const inKeywords = (item.keywords || []).some((kw) =>
-        kw.toLowerCase().includes(normalizedQuery)
+    function renderSearchResults(query) {
+      const q = (query || "").trim().toLowerCase();
+      searchResultsBox.innerHTML = "";
+      if (!q) {
+        searchResultsBox.style.display = "none";
+        return;
+      }
+      const matches = searchIndex.filter((item) =>
+        item.unitTitle.toLowerCase().includes(q) ||
+        item.subjectName.toLowerCase().includes(q)
       );
-      return inTitle || inKeywords;
+      if (!matches.length) {
+        const div = document.createElement("div");
+        div.className = "search-result-empty";
+        div.textContent = "找不到相關單元";
+        searchResultsBox.appendChild(div);
+      } else {
+        matches.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "search-result-item";
+          const main = document.createElement("div");
+          main.className = "search-result-main";
+          const title = document.createElement("div");
+          title.className = "search-result-title";
+          title.textContent = item.unitTitle;
+          const sub = document.createElement("div");
+          sub.className = "search-result-subject";
+          sub.textContent = item.subjectName;
+          main.appendChild(title);
+          main.appendChild(sub);
+          const arrow = document.createElement("div");
+          arrow.textContent = "→";
+          arrow.style.fontSize = "12px";
+          arrow.style.color = "#9ca3af";
+          row.appendChild(main);
+          row.appendChild(arrow);
+          row.addEventListener("click", () => {
+            searchInput.value = "";
+            searchResultsBox.style.display = "none";
+            openUnit(item.subjectId, item.unitId, item.unitTitle);
+          });
+          searchResultsBox.appendChild(row);
+        });
+      }
+      searchResultsBox.style.display = "block";
+    }
+
+    searchInput.addEventListener("input", () => {
+      renderSearchResults(searchInput.value);
     });
 
-    listEl.innerHTML = "";
-    if (matches.length === 0) {
+    searchClearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      renderSearchResults("");
+      searchInput.focus();
+    });
+
+    // 點擊外部關閉搜尋結果
+    document.addEventListener("click", (e) => {
+      if (!searchArea.contains(e.target)) {
+        searchResultsBox.style.display = "none";
+      }
+    });
+  }
+
+  // ===== 5. Book (科目目錄) =====
+  function renderBook(subject) {
+    const titleEl = document.getElementById("bookSubjectTitle");
+    const leftList = document.getElementById("bookListLeft");
+    const rightList = document.getElementById("bookListRight");
+    if (!titleEl || !leftList || !rightList) return;
+
+    titleEl.textContent = subject.name + " 筆記本";
+
+    leftList.innerHTML = "";
+    rightList.innerHTML = "";
+
+    const units = subject.units || [];
+    if (!units.length) {
       const li = document.createElement("li");
-      li.className = "toc-empty";
-      li.textContent = "目前沒有符合關鍵字的單元，可以試試換個關鍵字搜尋。";
-      listEl.appendChild(li);
-    } else {
-      matches.forEach((item) => {
-        const li = document.createElement("li");
-        li.className = "toc-item";
-        li.dataset.unitId = item.id;
-        li.innerHTML = `
-          <div class="toc-line1">
-            <span>${item.title}</span>
-            <span class="toc-tag">${item.shortTitle}</span>
-          </div>
-          <div class="toc-line2">${(item.keywords || []).join(" · ")}</div>
-        `;
-        li.addEventListener("click", () => {
-          openUnit(item.subject, item.id);
-        });
-        listEl.appendChild(li);
-      });
+      li.className = "book-list-empty";
+      li.textContent = "此科目前尚未建立單元。";
+      leftList.appendChild(li);
+      return;
     }
 
-    if (countLabel) {
-      const allForSubject = searchIndex.filter((i) => i.subject === subjectId);
-      countLabel.textContent = `顯示 ${matches.length} / 共 ${allForSubject.length} 個單元`;
+    const half = Math.ceil(units.length / 2);
+
+    function addUnitRow(listEl, unit, index) {
+      const li = document.createElement("li");
+      li.className = "book-list-item";
+      const idx = document.createElement("span");
+      idx.className = "book-list-index";
+      idx.textContent = String(index + 1).padStart(2, "0") + ".";
+      const title = document.createElement("span");
+      title.className = "book-list-title";
+      title.textContent = unit.title;
+      li.appendChild(idx);
+      li.appendChild(title);
+      li.addEventListener("click", () => {
+        openUnit(subject.id, unit.id, unit.title);
+      });
+      listEl.appendChild(li);
+    }
+
+    units.slice(0, half).forEach((unit, i) => addUnitRow(leftList, unit, i));
+    units.slice(half).forEach((unit, i) => addUnitRow(rightList, unit, half + i));
+  }
+
+  function initBookNav() {
+    const backBtn = document.getElementById("bookBackBtn");
+    if (backBtn) {
+      backBtn.addEventListener("click", () => {
+        showView("home");
+      });
     }
   }
 
-  function initUnitPage() {
-    const backToTocBtn = document.getElementById("unitBackToTocBtn");
-    if (backToTocBtn) {
-      backToTocBtn.addEventListener("click", () => {
-        if (appState.currentSubject) {
-          openSubject(appState.currentSubject);
-        } else {
-          showScreen("screen-dashboard");
+  // ===== 6. Note (單元頁 + 雲端筆記) =====
+  function renderNote(subject, unitTitle) {
+    const breadcrumbEl = document.getElementById("noteBreadcrumb");
+    const subjectTagEl = document.getElementById("noteSubjectTag");
+    const unitTitleEl = document.getElementById("noteUnitTitle");
+    const hintEl = document.getElementById("hintContent");
+
+    if (breadcrumbEl) {
+      breadcrumbEl.textContent = subject.name + " / " + unitTitle;
+    }
+    if (subjectTagEl) {
+      subjectTagEl.textContent = subject.name;
+    }
+    if (unitTitleEl) {
+      unitTitleEl.textContent = unitTitle;
+    }
+    if (hintEl) {
+      hintEl.textContent = "這裡之後會放本單元的小提點，由你提供內容。";
+    }
+  }
+
+  function initNoteNav() {
+    const backBtn = document.getElementById("noteBackBtn");
+    if (backBtn) {
+      backBtn.addEventListener("click", () => {
+        if (activeSubjectId) {
+          const subject = SUBJECTS[activeSubjectId];
+          if (subject) {
+            renderBook(subject);
+          }
+        }
+        showView("book");
+      });
+    }
+  }
+
+  // ===== 7. Firebase 初始化與登入 =====
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  function initFirebaseAndAuth() {
+    const userLabel = document.getElementById("authUserLabel");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (!window.firebase) {
+      if (userLabel) userLabel.textContent = "尚未登入（Firebase SDK 未載入）";
+      if (loginBtn) loginBtn.disabled = true;
+      return;
+    }
+
+    try {
+      const placeholder = !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY";
+      if (placeholder) {
+        if (userLabel) userLabel.textContent = "尚未登入（請先在程式中設定 firebaseConfig）";
+        if (loginBtn) loginBtn.disabled = true;
+        return;
+      }
+
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      firebaseReady = true;
+    } catch (e) {
+      console.error("Firebase 初始化失敗：", e);
+      if (userLabel) userLabel.textContent = "尚未登入（Firebase 初始化失敗）";
+      if (loginBtn) loginBtn.disabled = true;
+      return;
+    }
+
+    if (loginBtn) {
+      loginBtn.addEventListener("click", () => {
+        if (!firebaseReady || !auth) {
+          alert("尚未設定有效的 Firebase 設定，請先在程式碼中填入 firebaseConfig。");
+          return;
+        }
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch((err) => {
+          console.error("登入失敗", err);
+          alert("登入失敗：" + (err && err.message ? err.message : "請稍後再試"));
+        });
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        if (!auth) return;
+        auth.signOut().catch((err) => {
+          console.error("登出失敗", err);
+        });
+      });
+    }
+
+    if (auth) {
+      auth.onAuthStateChanged((user) => {
+        currentUser = user || null;
+        if (userLabel) {
+          if (user) {
+            userLabel.textContent = "已登入：" + (user.displayName || user.email || "匿名使用者");
+          } else {
+            userLabel.textContent = "尚未登入";
+          }
+        }
+        if (loginBtn) loginBtn.style.display = user ? "none" : "inline-flex";
+        if (logoutBtn) logoutBtn.style.display = user ? "inline-flex" : "none";
+        updateNoteEditorState();
+        if (currentView === "note" && activeUnitId && firebaseReady && db) {
+          loadUserNote();
         }
       });
     }
-
-    const prevBtn = document.getElementById("unitPrevBtn");
-    const nextBtn = document.getElementById("unitNextBtn");
-    if (prevBtn) {
-      prevBtn.addEventListener("click", () => navigateUnit(-1));
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener("click", () => navigateUnit(1));
-    }
   }
 
-  function openUnit(subjectId, unitId) {
-    const subject = subjects[subjectId];
-    const unit = searchIndex.find(
-      (item) => item.id === unitId && item.subject === subjectId
-    );
-    if (!subject || !unit) return;
+  // ===== 8. 個人雲端筆記：載入 / 儲存 =====
+  function updateNoteEditorState() {
+    const textarea = document.getElementById("noteTextarea");
+    const saveBtn = document.getElementById("noteSaveBtn");
+    const status = document.getElementById("noteStatusText");
 
-    appState.currentSubject = subjectId;
-    appState.currentUnitId = unitId;
+    if (!textarea || !saveBtn || !status) return;
 
-    const breadcrumbTextEl = document.getElementById("unitBreadcrumbText");
-    const titleEl = document.getElementById("unitTitle");
-    const leadEl = document.getElementById("unitLead");
-    const summaryListEl = document.getElementById("unitSummaryList");
-
-    if (breadcrumbTextEl) {
-      breadcrumbTextEl.textContent = `${subject.shortName} / ${unit.shortTitle}`;
+    if (!firebaseReady) {
+      textarea.disabled = true;
+      saveBtn.disabled = true;
+      status.textContent = "Firebase 尚未設定，因此暫不提供雲端筆記功能。";
+      return;
     }
-    if (titleEl) titleEl.textContent = unit.title;
-    if (leadEl) leadEl.textContent = unit.lead || "";
-    if (summaryListEl) {
-      summaryListEl.innerHTML = "";
-      (unit.summaryPoints || []).forEach((point) => {
-        const li = document.createElement("li");
-        li.textContent = point;
-        summaryListEl.appendChild(li);
+
+    if (!currentUser) {
+      textarea.disabled = true;
+      saveBtn.disabled = true;
+      status.textContent = "請先登入以編輯並儲存筆記。";
+      return;
+    }
+
+    textarea.disabled = false;
+    saveBtn.disabled = false;
+    status.textContent = "已登入，可以編輯筆記並儲存到個人帳號。";
+  }
+
+  function loadUserNote() {
+    const textarea = document.getElementById("noteTextarea");
+    const status = document.getElementById("noteStatusText");
+    const footerInfo = document.getElementById("noteFooterInfo");
+
+    if (!firebaseReady || !db || !currentUser || !activeUnitId) return;
+    if (!textarea || !status) return;
+
+    status.textContent = "讀取雲端筆記中...";
+    footerInfo.textContent = "";
+
+    const docRef = db.collection("userNotes").doc(currentUser.uid).collection("units").doc(activeUnitId);
+    docRef.get().then((doc) => {
+      if (doc.exists) {
+        const data = doc.data() || {};
+        textarea.value = data.noteText || "";
+        status.textContent = "已從雲端載入筆記。";
+        if (data.updatedAt && data.updatedAt.toDate) {
+          const d = data.updatedAt.toDate();
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          const hh = String(d.getHours()).padStart(2, "0");
+          const mm = String(d.getMinutes()).padStart(2, "0");
+          footerInfo.textContent = "上次儲存時間：" + `${y}/${m}/${dd} ${hh}:${mm}`;
+        }
+      } else {
+        textarea.value = "";
+        status.textContent = "尚未建立筆記，可以開始撰寫。";
+      }
+    }).catch((err) => {
+      console.error("載入筆記失敗", err);
+      status.textContent = "載入筆記時發生錯誤。";
+    });
+  }
+
+  function initNoteEditor() {
+    const saveBtn = document.getElementById("noteSaveBtn");
+    const textarea = document.getElementById("noteTextarea");
+    const status = document.getElementById("noteStatusText");
+    const footerInfo = document.getElementById("noteFooterInfo");
+
+    if (!saveBtn || !textarea || !status) return;
+
+    saveBtn.addEventListener("click", () => {
+      if (!firebaseReady || !db || !auth) {
+        alert("Firebase 尚未設定，無法儲存到雲端。");
+        return;
+      }
+      if (!currentUser) {
+        alert("請先登入再儲存筆記。");
+        return;
+      }
+      if (!activeUnitId) {
+        alert("目前沒有選定單元。");
+        return;
+      }
+
+      const noteText = textarea.value || "";
+      const docRef = db.collection("userNotes").doc(currentUser.uid).collection("units").doc(activeUnitId);
+      saveBtn.disabled = true;
+      status.textContent = "儲存中...";
+
+      docRef.set({
+        noteText: noteText,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        subjectId: activeSubjectId,
+        unitTitle: activeUnitTitle
+      }, { merge: true }).then(() => {
+        status.textContent = "已儲存到雲端。";
+        if (footerInfo) {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = String(now.getMonth() + 1).padStart(2, "0");
+          const d = String(now.getDate()).padStart(2, "0");
+          const hh = String(now.getHours()).padStart(2, "0");
+          const mm = String(now.getMinutes()).padStart(2, "0");
+          footerInfo.textContent = "上次儲存時間：" + `${y}/${m}/${d} ${hh}:${mm}`;
+        }
+      }).catch((err) => {
+        console.error("儲存筆記失敗", err);
+        alert("儲存筆記失敗：" + (err && err.message ? err.message : "請稍後再試"));
+        status.textContent = "儲存時發生錯誤。";
+      }).finally(() => {
+        saveBtn.disabled = false;
       });
-    }
-
-    renderInteractiveForUnit(unit);
-    updateUnitNavButtons();
-    showScreen("screen-unit");
+    });
   }
 
-  function navigateUnit(offset) {
-    const subjectId = appState.currentSubject;
-    const currentUnitId = appState.currentUnitId;
-    if (!subjectId || !currentUnitId) return;
-
-    const subjectUnits = searchIndex.filter((u) => u.subject === subjectId);
-    const currentIndex = subjectUnits.findIndex((u) => u.id === currentUnitId);
-    if (currentIndex === -1) return;
-
-    const newIndex = currentIndex + offset;
-    if (newIndex < 0 || newIndex >= subjectUnits.length) return;
-
-    const target = subjectUnits[newIndex];
-    openUnit(subjectId, target.id);
-  }
-
-  function updateUnitNavButtons() {
-    const subjectId = appState.currentSubject;
-    const currentUnitId = appState.currentUnitId;
-    const prevBtn = document.getElementById("unitPrevBtn");
-    const nextBtn = document.getElementById("unitNextBtn");
-
-    if (!subjectId || !currentUnitId || !prevBtn || !nextBtn) return;
-
-    const subjectUnits = searchIndex.filter((u) => u.subject === subjectId);
-    const currentIndex = subjectUnits.findIndex((u) => u.id === currentUnitId);
-
-    prevBtn.disabled = currentIndex <= 0;
-    nextBtn.disabled = currentIndex === -1 || currentIndex >= subjectUnits.length - 1;
-  }
-
-  function renderInteractiveForUnit(unit) {
-    const canvas = document.getElementById("interactiveCanvas");
-    const caption = document.getElementById("interactiveCaption");
-    if (!canvas || !caption) return;
-
-    canvas.innerHTML = "";
-    caption.textContent = "";
-
-    if (unit.interactiveType === "kinematics_basic") {
-      renderKinematicsWidget(canvas, caption);
-    } else {
-      const placeholder = document.createElement("div");
-      placeholder.style.fontSize = "12px";
-      placeholder.style.color = "#cbd5f5";
-      placeholder.textContent = "這個單元的互動內容尚未設定。之後我們可以在這裡加入你指定的圖表或模擬元件。";
-      canvas.appendChild(placeholder);
-      caption.textContent = "每一個單元都可以有自己專屬的互動元件，只要在 searchIndex 中指定類型即可。";
-    }
-  }
-
-  function renderKinematicsWidget(container, captionEl) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "kinematics-widget";
-    wrapper.innerHTML = `
-      <div class="kin-track">
-        <div class="kin-lane"></div>
-        <div class="kin-object" id="kinObject"></div>
-        <div class="kin-marker-row">
-          <span>0 m</span>
-          <span id="kinPositionLabel">10 m</span>
-        </div>
-      </div>
-      <div class="kin-label-row">
-        <div>速度 v：<span id="kinVelocityLabel">2</span> m/s（等速直線運動）</div>
-        <div>觀察：同樣經過 5 秒，位移 s = v × t</div>
-      </div>
-      <input type="range" min="1" max="5" value="2" id="kinVelocitySlider" class="kin-slider">
-      <div class="kin-footnote">
-        拖曳上方滑桿，想像一個物體在水平直線上作等速直線運動。
-        速度變大時，同樣 5 秒內的位移會如何改變？
-      </div>
-    `;
-    container.appendChild(wrapper);
-
-    const slider = wrapper.querySelector("#kinVelocitySlider");
-    const vLabel = wrapper.querySelector("#kinVelocityLabel");
-    const pLabel = wrapper.querySelector("#kinPositionLabel");
-    const obj = wrapper.querySelector("#kinObject");
-
-    function update() {
-      const v = Number(slider.value || 0);
-      const t = 5;
-      const s = v * t;
-      vLabel.textContent = v.toString();
-      pLabel.textContent = `${s} m`;
-
-      const minOffset = 0;
-      const maxOffset = 70;
-      const ratio = (v - 1) / (5 - 1);
-      const translatePercent = minOffset + (maxOffset - minOffset) * ratio;
-      obj.style.transform = `translateX(${translatePercent}%)`;
-    }
-
-    slider.addEventListener("input", update);
-    update();
-
-    captionEl.textContent =
-      "示範：固定觀察 5 秒內的等速直線運動，拖曳速度滑桿，體會「斜率越大，位移成長越快」的概念。";
-  }
+  // ===== 9. DOM 準備完成後初始化 =====
+  document.addEventListener("DOMContentLoaded", () => {
+    initHome();
+    initBookNav();
+    initNoteNav();
+    initNoteEditor();
+    initFirebaseAndAuth();
+    showView("home");
+  });
 </script>
-
 </body>
 </html>
