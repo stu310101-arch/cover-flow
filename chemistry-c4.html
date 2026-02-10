@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>化學 CH4 氧化還原反應 - 學習筆記庫</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="unit"
+      data-subject-id="chemistry"
+      data-subject-name="化學"
+      data-subject-file="chemistry.html"
+      data-unit-id="c4"
+      data-unit-title="氧化還原反應">
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-mark"><div class="brand-mark-inner"></div></div>
+    <div>
+      <div class="brand-title">學習筆記庫</div>
+      <div class="brand-subtitle">Visual Science Notes</div>
+    </div>
+  </div>
+  <div class="auth-panel">
+    <span id="authUserLabel" class="auth-user-label">尚未登入</span>
+    <button type="button" id="loginBtn" class="auth-btn">登入</button>
+    <button type="button" id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
+  </div>
+</header>
+
+<main>
+  <section class="view active">
+    <div class="note-wrapper">
+      <div class="note-header">
+        <button type="button" id="noteBackBtn" class="note-back-btn">← 返回目錄</button>
+        <div id="noteBreadcrumb" class="note-breadcrumb"></div>
+        <div id="noteSubjectTag" class="note-subject-tag"></div>
+      </div>
+      <div class="note-body">
+        <div id="noteUnitTitle" class="note-title"></div>
+        <div class="note-sections">
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">小提點</div>
+              <div class="section-subtitle">作者整理，使用者無法編輯</div>
+            </div>
+            <div id="hintContent" class="hint-placeholder">
+              這裡之後會放本單元的小提點（關鍵觀念、易錯點等），由你提供文字內容。
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="user-note-header-line">
+              <div class="section-title">我的筆記</div>
+              <div id="noteStatusText" class="note-status-text">請先登入以編輯並儲存筆記。</div>
+            </div>
+            <textarea id="noteTextarea" class="note-textarea" placeholder="登入後即可在這裡為本單元留下自己的整理與心得。" disabled></textarea>
+            <div class="note-actions">
+              <button type="button" id="noteSaveBtn" class="note-save-btn" disabled>💾 儲存筆記</button>
+            </div>
+            <div id="noteFooterInfo" class="note-footer-line"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  學測自然科視覺化複習筆記網 · 化學 CH4 氧化還原反應
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="common.js"></script>
+</body>
+</html>

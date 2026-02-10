@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物理筆記本 - 學習筆記庫</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="subject" data-subject-id="physics">
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-mark"><div class="brand-mark-inner"></div></div>
+    <div>
+      <div class="brand-title">學習筆記庫</div>
+      <div class="brand-subtitle">Visual Science Notes</div>
+    </div>
+  </div>
+  <div class="auth-panel">
+    <span id="authUserLabel" class="auth-user-label">尚未登入</span>
+    <button type="button" id="loginBtn" class="auth-btn">登入</button>
+    <button type="button" id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
+  </div>
+</header>
+
+<main>
+  <section class="view active">
+    <div class="book-container">
+      <div class="book-header">
+        <button type="button" id="bookBackBtn" class="book-back-btn">← 返回大廳</button>
+        <div id="bookSubjectTitle" class="book-subject-title">物理筆記本</div>
+        <div class="book-page-controls">
+          <button type="button" id="bookPrevPageBtn" class="page-btn">←</button>
+          <span id="bookPageInfo" class="page-info">1 / 1</span>
+          <button type="button" id="bookNextPageBtn" class="page-btn">→</button>
+        </div>
+      </div>
+      <div id="bookUnitList" class="book-unit-list"></div>
+      <div class="book-footer-hint">提示：一頁顯示 5 個單元，使用左右箭頭翻頁；點擊單元進入詳細頁與個人筆記。</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  學測自然科視覺化複習筆記網 · 物理科筆記本
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="common.js"></script>
+</body>
+</html>
