@@ -615,7 +615,7 @@ main {
 
 .timeline-dot {
   position: absolute;
-  top: 30px; /* 圓點「坐在」時間線上方，底部貼線 */
+  top: 39px; /* 圓點中心與時間線對齊，讓圓點「套」在箭頭線上 */
   left: 50%;
   transform: translateX(-50%);
   width: 14px;
@@ -669,7 +669,7 @@ main {
   margin: 0;
   font-size: 12px;
   color: #4b5563;
-  line-height: 1.5;
+  line-height: 1.35; /* 文字行距稍微變緊湊一點 */
 }
 
 .timeline-tooltip ul {
@@ -677,7 +677,7 @@ main {
 }
 
 .timeline-tooltip li {
-  margin-bottom: 2px;
+  margin-bottom: 1px; /* 各條目之間的間隔再縮小一些 */
 }
 
 .timeline-node:hover .timeline-tooltip {
