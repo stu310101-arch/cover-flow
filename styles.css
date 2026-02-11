@@ -664,8 +664,15 @@ main {
 .timeline-tooltip strong {
   display: block;
   font-size: 18px; /* 標題字級維持放大 */
-  margin: 0; /* 標題與下一行之間不要多餘空格，只保留換行本身 */
+  margin: 0;
   line-height: 1.2;
+}
+
+.timeline-subline {
+  display: block;      /* 讓年份獨立一行，緊貼標題下方 */
+  font-size: 18px;     /* 與內文字級一致 */
+  margin: 0;           /* 不額外增加上下間距 */
+  padding: 0;
 }
 
 .timeline-tooltip p,
