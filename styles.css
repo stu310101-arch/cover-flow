@@ -770,14 +770,14 @@ main {
 }
 
 .note-sections {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+  display: flex;           /* 固定上下排版 */
+  flex-direction: column;  /* 小提點在上、我的筆記在下 */
   gap: 16px;
 }
 
 @media (max-width: 800px) {
   .note-sections {
-    grid-template-columns: minmax(0, 1fr);
+    flex-direction: column; /* 手機也維持上下排 */
   }
 }
 
