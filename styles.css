@@ -134,7 +134,7 @@ main {
 /* Views */
 .view {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1300px; /* 整體內容區放寬，讓時間線可以更寬 */
 }
 
 /* Home view */
@@ -603,7 +603,7 @@ main {
 .timeline-label {
   font-size: 18px; /* 原本 12px，放大約 1.5 倍 */
   margin-bottom: 10px;
-  white-space: nowrap;
+  white-space: normal; /* 允許中文＋英文自動換行，避免整排黏在一起超出 */
 }
 
 .timeline-label-en {
@@ -692,7 +692,7 @@ main {
 /* Note view */
 .note-wrapper {
   margin: 12px auto 16px;
-  max-width: 900px;
+  max-width: 1200px; /* 原本 900px，放大整張卡片寬度 */
   background: #f9fafb;
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
