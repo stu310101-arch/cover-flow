@@ -590,23 +590,10 @@ main {
   flex: 1;
 }
 
-.timeline-node-left .timeline-tooltip {
-  left: 0;
-  transform: translateX(0) translateY(4px);
-}
-
-.timeline-node-left:hover .timeline-tooltip {
-  transform: translateX(0) translateY(0);
-}
-
+/* 左右兩端節點預留 class，實際邊界限制交由 JS 動態計算 */
+.timeline-node-left .timeline-tooltip,
 .timeline-node-right .timeline-tooltip {
-  left: auto;
-  right: 0;
-  transform: translateX(0) translateY(4px);
-}
-
-.timeline-node-right:hover .timeline-tooltip {
-  transform: translateX(0) translateY(0);
+  /* 預設行為與一般節點相同，讓 JS 來調整位置 */
 }
 
 .timeline-label {
@@ -678,13 +665,6 @@ main {
 
 .timeline-tooltip p,
 .timeline-tooltip ul {
-  margin: 0;
-  font-size: 12px;
-  color: #4b5563;
-  line-height: 1.5;
-}
-
-.timeline-tooltip ul {
   padding-left: 16px;
 }
 
@@ -694,8 +674,19 @@ main {
 
 .timeline-node:hover .timeline-tooltip {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
+}
+
+/* Note view */
+.note-wrapper {
+  margin: 12px auto 16px;
+  max-width: 900px;
+  background: #f9fafb;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
+  overflow: visible; /* 允許時間線提示框超出卡片邊界顯示 */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Note view */

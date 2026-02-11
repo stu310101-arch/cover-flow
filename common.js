@@ -333,6 +333,49 @@ function initSubjectPage() {
   renderPage();
 }
 
+// 調整細胞學說時間線 tooltip，避免超出視窗左右邊界
+function initTimelineTooltips() {
+  const nodes = document.querySelectorAll(".timeline-node");
+  if (!nodes.length) return;
+
+  function clampTooltip(tooltip) {
+    if (!tooltip) return;
+    // 先用預設置中定位
+    tooltip.style.left = "50%";
+    tooltip.style.right = "";
+    tooltip.style.transform = "translateX(-50%) translateY(0)";
+
+    const rect = tooltip.getBoundingClientRect();
+    const margin = 4; // 與視窗邊緣保留一點間距
+    const viewportLeft = 0 + margin;
+    const viewportRight = window.innerWidth - margin;
+
+    let shift = 0;
+    if (rect.left < viewportLeft) {
+      shift = viewportLeft - rect.left;
+    } else if (rect.right > viewportRight) {
+      shift = viewportRight - rect.right;
+    }
+
+    if (shift !== 0) {
+      tooltip.style.transform = `translateX(calc(-50% + ${shift}px)) translateY(0)`;
+    }
+  }
+
+  nodes.forEach((node) => {
+    const tooltip = node.querySelector(".timeline-tooltip");
+    if (!tooltip) return;
+
+    node.addEventListener("mouseenter", () => {
+      clampTooltip(tooltip);
+    });
+
+    window.addEventListener("resize", () => {
+      clampTooltip(tooltip);
+    });
+  });
+}
+
 // ===== 單元頁：小提點 + 個人雲端筆記 =====
 function initUnitPage() {
   const ds = document.body.dataset;
@@ -372,6 +415,9 @@ function initUnitPage() {
 
   initNoteEditor();
   updateNoteEditorState();
+  // 若有時間線元件，初始化 tooltip 邊界調整
+  initTimelineTooltips();
+
   if (firebaseReady && currentUser && db && activeUnitId) {
     loadUserNote();
   }
