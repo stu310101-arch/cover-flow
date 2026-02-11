@@ -664,7 +664,7 @@ main {
 .timeline-tooltip strong {
   display: block;
   font-size: 18px; /* 標題字級維持放大 */
-  margin: 0 0 2px; /* 與下面內容只留一點點距離，不要一大格 */
+  margin: 0; /* 標題與下一行之間不要多餘空格，只保留換行本身 */
   line-height: 1.2;
 }
 
