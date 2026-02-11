@@ -663,9 +663,9 @@ main {
 
 .timeline-tooltip strong {
   display: block;
-  font-size: 18px; /* 原本 12px，放大約 1.5 倍 */
-  margin: 0 0 6px; /* 標題和第一個項目之間的距離再拉大一點 */
-  line-height: 1.35;
+  font-size: 18px; /* 標題字級維持放大 */
+  margin: 0 0 2px; /* 與下面內容只留一點點距離，不要一大格 */
+  line-height: 1.2;
 }
 
 .timeline-tooltip p,
@@ -698,7 +698,7 @@ main {
 }
 
 .timeline-extra-label {
-  font-size: 14px;
+  font-size: 16px; /* 比內文大一點點 */
   color: #facc15; /* 黃色的小提點標籤 */
   margin-bottom: 2px;
   font-weight: 700;
