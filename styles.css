@@ -677,7 +677,7 @@ main {
 }
 
 .timeline-tooltip ul {
-  margin-top: 6px; /* 在「—說明」與下面第一個條列點之間加一小段空白 */
+  margin-top: 10px; /* 在「—說明」與下面第一個條列點之間加一小段明顯的空白 */
   padding-left: 20px;
 }
 
