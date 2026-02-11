@@ -689,6 +689,32 @@ main {
   pointer-events: auto;
 }
 
+.timeline-extra {
+  margin-top: 18px;
+  font-size: 18px;
+  color: #374151;
+  line-height: 1.6;
+  white-space: normal;
+}
+
+.timeline-extra p {
+  margin: 0 0 4px;
+}
+
+.timeline-extra ol {
+  margin: 0 0 0 22px;
+  padding: 0;
+}
+
+.timeline-extra li {
+  margin-bottom: 2px;
+}
+
+.timeline-highlight {
+  color: #2563eb; /* 醒目的藍色強調文字 */
+  font-weight: 700;
+}
+
 /* Note view */
 .note-wrapper {
   margin: 12px auto 16px;
