@@ -664,8 +664,8 @@ main {
 .timeline-tooltip strong {
   display: block;
   font-size: 12px;
-  margin: 0 0 2px; /* 標題跟第一個項目之間留一點點距離 */
-  line-height: 1.25;
+  margin: 0 0 6px; /* 標題和第一個項目之間的距離再拉大一點 */
+  line-height: 1.35;
 }
 
 .timeline-tooltip p,
@@ -673,7 +673,7 @@ main {
   margin: 0;
   font-size: 12px;
   color: #4b5563;
-  line-height: 1.35; /* 比 1.2 鬆一點，但不會太空 */
+  line-height: 1.45; /* 文字之間行距再放鬆一點 */
 }
 
 .timeline-tooltip ul {
@@ -681,7 +681,7 @@ main {
 }
 
 .timeline-tooltip li {
-  margin: 0 0 2px; /* 各條目之間只留很小的間隙 */
+  margin: 0 0 4px; /* 各條目之間的間隔加大一些，但不要像一開始那麼誇張 */
 }
 
 .timeline-node:hover .timeline-tooltip {
