@@ -562,8 +562,8 @@ main {
   position: absolute;
   left: 0;
   right: 18px;
-  top: 42px;
-  height: 2px;
+  top: 40px;
+  height: 4px;
   background: linear-gradient(to right, #cbd5f5, #9ca3af);
 }
 
@@ -571,8 +571,8 @@ main {
   content: "";
   position: absolute;
   right: 8px;
-  top: 38px;
-  border-width: 6px 0 6px 10px;
+  top: 34px;
+  border-width: 8px 0 8px 12px;
   border-style: solid;
   border-color: transparent transparent transparent #4b5563;
 }
@@ -590,9 +590,28 @@ main {
   flex: 1;
 }
 
+.timeline-node-left .timeline-tooltip {
+  left: 0;
+  transform: translateX(0) translateY(4px);
+}
+
+.timeline-node-left:hover .timeline-tooltip {
+  transform: translateX(0) translateY(0);
+}
+
+.timeline-node-right .timeline-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(4px);
+}
+
+.timeline-node-right:hover .timeline-tooltip {
+  transform: translateX(0) translateY(0);
+}
+
 .timeline-label {
   font-size: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   white-space: nowrap;
 }
 
@@ -607,12 +626,15 @@ main {
 }
 
 .timeline-dot {
+  position: absolute;
+  top: 33px; /* 讓圓點中心貼在線上 */
+  left: 50%;
+  transform: translateX(-50%);
   width: 14px;
   height: 14px;
   border-radius: 999px;
   background: #4f46e5;
   border: 2px solid #e5e7eb;
-  margin: 0 auto;
   box-shadow:
     0 0 0 2px rgba(191, 219, 254, 0.9),
     0 6px 12px rgba(148, 163, 184, 0.6);
@@ -621,7 +643,7 @@ main {
 .timeline-tooltip {
   position: absolute;
   left: 50%;
-  top: 56px;
+  top: 60px;
   transform: translateX(-50%) translateY(4px);
   width: 240px;
   max-width: 260px;
