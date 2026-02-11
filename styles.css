@@ -641,7 +641,7 @@ main {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-  padding: 2px 10px 8px; /* 上方內距再縮小，讓標題更貼近上緣 */
+  padding: 0 8px 4px; /* 幾乎拿掉上下內距，只留一點點緩衝 */
   text-align: left;
   opacity: 0;
   pointer-events: none;
@@ -663,7 +663,8 @@ main {
 .timeline-tooltip strong {
   display: block;
   font-size: 12px;
-  margin-bottom: 0; /* 標題與下面第一個「．」幾乎貼在一起 */
+  margin: 0; /* 標題上下都不要額外空白 */
+  line-height: 1.2;
 }
 
 .timeline-tooltip p,
@@ -671,15 +672,15 @@ main {
   margin: 0;
   font-size: 12px;
   color: #4b5563;
-  line-height: 1.35; /* 文字行距稍微變緊湊一點 */
+  line-height: 1.2; /* 行距壓到比較緊 */
 }
 
 .timeline-tooltip ul {
-  padding-left: 16px;
+  padding-left: 14px; /* 稍微縮小縮排，讓整體更緊湊 */
 }
 
 .timeline-tooltip li {
-  margin-bottom: 1px; /* 各條目之間的間隔再縮小一些 */
+  margin: 0; /* 條目之間完全不額外加距離 */
 }
 
 .timeline-node:hover .timeline-tooltip {
