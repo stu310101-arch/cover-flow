@@ -589,6 +589,7 @@ main {
   position: relative;
   text-align: center;
   flex: 1;
+  padding-top: 32px; /* 預留空間給在線上的圓點與箭頭，文字固定在圓點下方 */
 }
 
 /* 左右兩端節點預留 class，實際邊界限制交由 JS 動態計算 */
@@ -615,7 +616,7 @@ main {
 
 .timeline-dot {
   position: absolute;
-  top: 39px; /* 圓點中心與時間線對齊，讓圓點「套」在箭頭線上 */
+  top: 13px; /* 以 .timeline-node 為基準讓圓點中心剛好壓在時間線上 */
   left: 50%;
   transform: translateX(-50%);
   width: 14px;
