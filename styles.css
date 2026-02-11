@@ -699,8 +699,9 @@ main {
 
 .timeline-extra-label {
   font-size: 14px;
-  color: #6b7280;
+  color: #facc15; /* 黃色的小提點標籤 */
   margin-bottom: 2px;
+  font-weight: 700;
 }
 
 .timeline-extra p {
