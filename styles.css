@@ -559,13 +559,13 @@ main {
   z-index: 1;
 }
 
-/* 線與箭頭改畫在 .timeline-nodes 上，確保和圓點使用同一個座標系統 */
+/* 線與箭頭畫在 .timeline-nodes 上，和圓點共用同一個座標系統 */
 .timeline-nodes::before {
   content: "";
   position: absolute;
   left: 0;
   right: 18px;
-  top: calc(13px + 7px - 2px); /* 圓點 top(13) + 半徑(7) - 線半高(2) */
+  top: 18px;              /* 線中心在 20px，線高 4px → 18~22px */
   height: 4px;
   background: linear-gradient(to right, #cbd5f5, #9ca3af);
 }
@@ -574,7 +574,7 @@ main {
   content: "";
   position: absolute;
   right: 8px;
-  top: calc(13px + 7px - 4px); /* 讓箭頭中心貼在線的中心 */
+  top: 12px;              /* 三角形高度 16px，12~28px，中線在 20px 對齊圓點 */
   border-width: 8px 0 8px 12px;
   border-style: solid;
   border-color: transparent transparent transparent #4b5563;
@@ -642,7 +642,7 @@ main {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-  padding: 0 8px 4px; /* 幾乎拿掉上下內距，只留一點點緩衝 */
+  padding: 6px 10px 6px; /* 保留一點上下呼吸空間，但不要太大塊 */
   text-align: left;
   opacity: 0;
   pointer-events: none;
@@ -664,8 +664,8 @@ main {
 .timeline-tooltip strong {
   display: block;
   font-size: 12px;
-  margin: 0; /* 標題上下都不要額外空白 */
-  line-height: 1.2;
+  margin: 0 0 2px; /* 標題跟第一個項目之間留一點點距離 */
+  line-height: 1.25;
 }
 
 .timeline-tooltip p,
@@ -673,15 +673,15 @@ main {
   margin: 0;
   font-size: 12px;
   color: #4b5563;
-  line-height: 1.2; /* 行距壓到比較緊 */
+  line-height: 1.35; /* 比 1.2 鬆一點，但不會太空 */
 }
 
 .timeline-tooltip ul {
-  padding-left: 14px; /* 稍微縮小縮排，讓整體更緊湊 */
+  padding-left: 16px;
 }
 
 .timeline-tooltip li {
-  margin: 0; /* 條目之間完全不額外加距離 */
+  margin: 0 0 2px; /* 各條目之間只留很小的間隙 */
 }
 
 .timeline-node:hover .timeline-tooltip {
