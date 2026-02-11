@@ -551,30 +551,31 @@ main {
   margin-bottom: 8px;
 }
 
-.timeline-track {
+.timeline-nodes {
   position: relative;
-  margin-top: 6px;
-  padding: 26px 8px 40px; /* 上方放人名，下方放說明框 */
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
 }
 
-.timeline-track::before {
+/* 線與箭頭改畫在 .timeline-nodes 上，確保和圓點使用同一個座標系統 */
+.timeline-nodes::before {
   content: "";
   position: absolute;
   left: 0;
   right: 18px;
-  top: 44px;
+  top: calc(13px + 7px - 2px); /* 圓點 top(13) + 半徑(7) - 線半高(2) */
   height: 4px;
   background: linear-gradient(to right, #cbd5f5, #9ca3af);
 }
 
-.timeline-track::after {
+.timeline-nodes::after {
   content: "";
   position: absolute;
   right: 8px;
-  top: 38px;
+  top: calc(13px + 7px - 4px); /* 讓箭頭中心貼在線的中心 */
   border-width: 8px 0 8px 12px;
   border-style: solid;
-  /* 右箭頭：只有左邊是有顏色的三角形 */
   border-color: transparent transparent transparent #4b5563;
 }
 
@@ -640,12 +641,18 @@ main {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-  padding: 8px 10px;
+  padding: 6px 10px 8px; /* 上方內距縮小一點，讓標題靠近上緣 */
   text-align: left;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.16s ease, transform 0.16s ease;
   z-index: 5;
+}
+
+.timeline-tooltip strong {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 2px; /* 標題與下面第一個「．」之間距離變小 */
 }
 
 .timeline-tooltip::before {
