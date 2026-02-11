@@ -697,6 +697,12 @@ main {
   white-space: normal;
 }
 
+.timeline-extra-label {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
 .timeline-extra p {
   margin: 0 0 4px;
 }
