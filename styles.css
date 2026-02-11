@@ -574,7 +574,8 @@ main {
   top: 38px;
   border-width: 8px 0 8px 12px;
   border-style: solid;
-  border-color: transparent transparent #4b5563;
+  /* 右箭頭：只有左邊是有顏色的三角形 */
+  border-color: transparent transparent transparent #4b5563;
 }
 
 .timeline-nodes {
@@ -665,6 +666,13 @@ main {
 
 .timeline-tooltip p,
 .timeline-tooltip ul {
+  margin: 0;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.timeline-tooltip ul {
   padding-left: 16px;
 }
 
@@ -675,18 +683,6 @@ main {
 .timeline-node:hover .timeline-tooltip {
   opacity: 1;
   pointer-events: auto;
-}
-
-/* Note view */
-.note-wrapper {
-  margin: 12px auto 16px;
-  max-width: 900px;
-  background: #f9fafb;
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
-  overflow: visible; /* 允許時間線提示框超出卡片邊界顯示 */
-  display: flex;
-  flex-direction: column;
 }
 
 /* Note view */
