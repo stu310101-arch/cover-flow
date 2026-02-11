@@ -539,6 +539,149 @@ main {
   color: #6b7280;
 }
 
+/* 生物 CH1：細胞學說發展史時間線 */
+.timeline {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.timeline-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.timeline-track {
+  position: relative;
+  margin-top: 6px;
+  padding: 26px 8px 40px; /* 上方放人名，下方放說明框 */
+}
+
+.timeline-track::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 18px;
+  top: 42px;
+  height: 2px;
+  background: linear-gradient(to right, #cbd5f5, #9ca3af);
+}
+
+.timeline-track::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 38px;
+  border-width: 6px 0 6px 10px;
+  border-style: solid;
+  border-color: transparent transparent transparent #4b5563;
+}
+
+.timeline-nodes {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.timeline-node {
+  position: relative;
+  text-align: center;
+  flex: 1;
+}
+
+.timeline-label {
+  font-size: 12px;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.timeline-label-en {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.timeline-label-year {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.timeline-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #4f46e5;
+  border: 2px solid #e5e7eb;
+  margin: 0 auto;
+  box-shadow:
+    0 0 0 2px rgba(191, 219, 254, 0.9),
+    0 6px 12px rgba(148, 163, 184, 0.6);
+}
+
+.timeline-tooltip {
+  position: absolute;
+  left: 50%;
+  top: 56px;
+  transform: translateX(-50%) translateY(4px);
+  width: 240px;
+  max-width: 260px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  padding: 8px 10px;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 5;
+}
+
+.timeline-tooltip::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 6px 6px 6px;
+  border-style: solid;
+  border-color: transparent transparent #e5e7eb transparent;
+}
+
+.timeline-tooltip strong {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.timeline-tooltip p,
+.timeline-tooltip ul {
+  margin: 0;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.timeline-tooltip ul {
+  padding-left: 16px;
+}
+
+.timeline-tooltip li {
+  margin-bottom: 2px;
+}
+
+.timeline-node:hover .timeline-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.timeline-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
 /* Note view */
 .note-wrapper {
   margin: 12px auto 16px;

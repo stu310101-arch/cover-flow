@@ -360,7 +360,8 @@ function initUnitPage() {
   if (unitTitleEl) {
     unitTitleEl.textContent = activeUnitTitle || "";
   }
-  if (hintEl) {
+  // 如果該單元未提供自訂內容，才顯示預設的小提點文字
+  if (hintEl && !hintEl.dataset.custom) {
     hintEl.textContent = "這裡之後會放本單元的小提點（關鍵觀念、易錯點等），由你提供文字內容。";
   }
   if (backBtn) {
