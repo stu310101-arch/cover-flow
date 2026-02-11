@@ -562,7 +562,7 @@ main {
   position: absolute;
   left: 0;
   right: 18px;
-  top: 40px;
+  top: 44px;
   height: 4px;
   background: linear-gradient(to right, #cbd5f5, #9ca3af);
 }
@@ -571,10 +571,10 @@ main {
   content: "";
   position: absolute;
   right: 8px;
-  top: 34px;
+  top: 38px;
   border-width: 8px 0 8px 12px;
   border-style: solid;
-  border-color: transparent transparent transparent #4b5563;
+  border-color: transparent transparent #4b5563;
 }
 
 .timeline-nodes {
@@ -627,7 +627,7 @@ main {
 
 .timeline-dot {
   position: absolute;
-  top: 33px; /* 讓圓點中心貼在線上 */
+  top: 30px; /* 圓點「坐在」時間線上方，底部貼線 */
   left: 50%;
   transform: translateX(-50%);
   width: 14px;
@@ -698,12 +698,6 @@ main {
   pointer-events: auto;
 }
 
-.timeline-note {
-  margin-top: 6px;
-  font-size: 11px;
-  color: #6b7280;
-}
-
 /* Note view */
 .note-wrapper {
   margin: 12px auto 16px;
@@ -711,7 +705,7 @@ main {
   background: #f9fafb;
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
-  overflow: hidden;
+  overflow: visible; /* 允許時間線提示框超出卡片邊界顯示 */
   display: flex;
   flex-direction: column;
 }
