@@ -544,6 +544,7 @@ main {
   margin-top: 4px;
   font-size: 13px;
   color: #374151;
+  white-space: normal; /* 取消父層 .hint-placeholder 的 pre-wrap，避免多餘換行空白 */
 }
 
 .timeline-title {
