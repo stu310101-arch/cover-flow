@@ -542,7 +542,7 @@ main {
 /* 生物 CH1：細胞學說發展史時間線 */
 .timeline {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 19px; /* 原本 13px，整體放大約 1.5 倍 */
   color: #374151;
   white-space: normal; /* 取消父層 .hint-placeholder 的 pre-wrap，避免多餘換行空白 */
 }
@@ -601,18 +601,18 @@ main {
 }
 
 .timeline-label {
-  font-size: 12px;
+  font-size: 18px; /* 原本 12px，放大約 1.5 倍 */
   margin-bottom: 10px;
   white-space: nowrap;
 }
 
 .timeline-label-en {
-  font-size: 11px;
+  font-size: 17px; /* 原本 11px，放大約 1.5 倍 */
   color: #6b7280;
 }
 
 .timeline-label-year {
-  font-size: 11px;
+  font-size: 17px; /* 原本 11px，放大約 1.5 倍 */
   color: #9ca3af;
 }
 
@@ -663,7 +663,7 @@ main {
 
 .timeline-tooltip strong {
   display: block;
-  font-size: 12px;
+  font-size: 18px; /* 原本 12px，放大約 1.5 倍 */
   margin: 0 0 6px; /* 標題和第一個項目之間的距離再拉大一點 */
   line-height: 1.35;
 }
@@ -671,7 +671,7 @@ main {
 .timeline-tooltip p,
 .timeline-tooltip ul {
   margin: 0;
-  font-size: 12px;
+  font-size: 18px; /* 原本 12px，放大約 1.5 倍 */
   color: #4b5563;
   line-height: 1.45; /* 文字之間行距再放鬆一點 */
 }
