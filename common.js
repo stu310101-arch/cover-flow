@@ -33,7 +33,7 @@ const SUBJECTS = {
     name: "生物",
     subjectFile: "biology.html",
     units: [
-      { id: "b1", title: "細胞構造", file: "biology-b1.html" },
+      { id: "b1", title: "細胞學說", file: "biology-b1.html" },
       { id: "b2", title: "光合作用", file: "biology-b2.html" },
       { id: "b3", title: "遺傳學：孟德爾定律", file: "biology-b3.html" },
       { id: "b4", title: "人體循環系統", file: "biology-b4.html" },
