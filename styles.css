@@ -641,7 +641,7 @@ main {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-  padding: 6px 10px 8px; /* 上方內距縮小一點，讓標題靠近上緣 */
+  padding: 4px 10px 8px; /* 上方內距再縮小，讓標題更貼近上緣 */
   text-align: left;
   opacity: 0;
   pointer-events: none;
@@ -652,7 +652,7 @@ main {
 .timeline-tooltip strong {
   display: block;
   font-size: 12px;
-  margin-bottom: 2px; /* 標題與下面第一個「．」之間距離變小 */
+  margin-bottom: 1px; /* 標題與下面第一個「．」幾乎貼在一起 */
 }
 
 .timeline-tooltip::before {
