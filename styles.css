@@ -677,11 +677,11 @@ main {
 }
 
 .timeline-tooltip ul {
-  padding-left: 16px;
+  padding-left: 20px;
 }
 
 .timeline-tooltip li {
-  margin: 0 0 4px; /* 各條目之間的間隔加大一些，但不要像一開始那麼誇張 */
+  margin: 0 0 4px;
 }
 
 .timeline-node:hover .timeline-tooltip {
