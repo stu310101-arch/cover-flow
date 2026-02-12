@@ -741,6 +741,11 @@ main {
   font-weight: 700;
 }
 
+.highlight-marker {
+  background: linear-gradient(to top, #fef08a 0, #fef08a 60%, transparent 60%);
+  padding: 0 2px;
+}
+
 /* Note view */
 .note-wrapper {
   margin: 12px auto 16px;
