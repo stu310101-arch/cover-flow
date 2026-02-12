@@ -725,6 +725,17 @@ main {
   margin-bottom: 2px;
 }
 
+.timeline-extra-image {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.timeline-extra-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
 .timeline-highlight {
   color: #2563eb; /* 醒目的藍色強調文字 */
   font-weight: 700;
