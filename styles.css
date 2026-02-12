@@ -134,7 +134,7 @@ main {
 /* Views */
 .view {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1300px; /* 整體內容區放寬，讓時間線可以更寬 */
 }
 
 /* Home view */
@@ -542,8 +542,9 @@ main {
 /* 生物 CH1：細胞學說發展史時間線 */
 .timeline {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 19px; /* 原本 13px，整體放大約 1.5 倍 */
   color: #374151;
+  white-space: normal; /* 取消父層 .hint-placeholder 的 pre-wrap，避免多餘換行空白 */
 }
 
 .timeline-title {
@@ -551,30 +552,32 @@ main {
   margin-bottom: 8px;
 }
 
-.timeline-track {
+.timeline-nodes {
   position: relative;
-  margin-top: 6px;
-  padding: 26px 8px 40px; /* 上方放人名，下方放說明框 */
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
 }
 
-.timeline-track::before {
+/* 線與箭頭畫在 .timeline-nodes 上，和圓點共用同一個座標系統 */
+.timeline-nodes::before {
   content: "";
   position: absolute;
   left: 0;
   right: 18px;
-  top: 44px;
+  top: 18px;              /* 線中心在 20px，線高 4px → 18~22px */
   height: 4px;
   background: linear-gradient(to right, #cbd5f5, #9ca3af);
 }
 
-.timeline-track::after {
+.timeline-nodes::after {
   content: "";
   position: absolute;
   right: 8px;
-  top: 38px;
+  top: 12px;              /* 三角形高度 16px，12~28px，中線在 20px 對齊圓點 */
   border-width: 8px 0 8px 12px;
   border-style: solid;
-  border-color: transparent transparent #4b5563;
+  border-color: transparent transparent transparent #4b5563;
 }
 
 .timeline-nodes {
@@ -588,6 +591,7 @@ main {
   position: relative;
   text-align: center;
   flex: 1;
+  padding-top: 32px; /* 預留空間給在線上的圓點與箭頭，文字固定在圓點下方 */
 }
 
 /* 左右兩端節點預留 class，實際邊界限制交由 JS 動態計算 */
@@ -597,24 +601,24 @@ main {
 }
 
 .timeline-label {
-  font-size: 12px;
+  font-size: 18px; /* 原本 12px，放大約 1.5 倍 */
   margin-bottom: 10px;
-  white-space: nowrap;
+  white-space: normal; /* 允許中文＋英文自動換行，避免整排黏在一起超出 */
 }
 
 .timeline-label-en {
-  font-size: 11px;
+  font-size: 17px; /* 原本 11px，放大約 1.5 倍 */
   color: #6b7280;
 }
 
 .timeline-label-year {
-  font-size: 11px;
+  font-size: 17px; /* 原本 11px，放大約 1.5 倍 */
   color: #9ca3af;
 }
 
 .timeline-dot {
   position: absolute;
-  top: 30px; /* 圓點「坐在」時間線上方，底部貼線 */
+  top: 13px; /* 以 .timeline-node 為基準讓圓點中心剛好壓在時間線上 */
   left: 50%;
   transform: translateX(-50%);
   width: 14px;
@@ -638,7 +642,7 @@ main {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-  padding: 8px 10px;
+  padding: 6px 10px 6px; /* 保留一點上下呼吸空間，但不要太大塊 */
   text-align: left;
   opacity: 0;
   pointer-events: none;
@@ -659,17 +663,33 @@ main {
 
 .timeline-tooltip strong {
   display: block;
-  font-size: 12px;
-  margin-bottom: 4px;
+  font-size: 18px; /* 標題字級維持放大 */
+  margin: 0;
+  line-height: 1.2;
+}
+
+.timeline-subline {
+  display: block;      /* 讓年份獨立一行，緊貼標題下方 */
+  font-size: 18px;     /* 與內文字級一致 */
+  margin: 0;           /* 不額外增加上下間距 */
+  padding: 0;
 }
 
 .timeline-tooltip p,
 .timeline-tooltip ul {
-  padding-left: 16px;
+  margin: 0;
+  font-size: 18px; /* 原本 12px，放大約 1.5 倍 */
+  color: #4b5563;
+  line-height: 1.45; /* 文字之間行距再放鬆一點 */
+}
+
+.timeline-tooltip ul {
+  margin-top: 10px; /* 在「—說明」與下面第一個條列點之間加一小段明顯的空白 */
+  padding-left: 20px;
 }
 
 .timeline-tooltip li {
-  margin-bottom: 2px;
+  margin: 0 0 4px;
 }
 
 .timeline-node:hover .timeline-tooltip {
@@ -677,22 +697,54 @@ main {
   pointer-events: auto;
 }
 
-/* Note view */
-.note-wrapper {
-  margin: 12px auto 16px;
-  max-width: 900px;
-  background: #f9fafb;
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
-  overflow: visible; /* 允許時間線提示框超出卡片邊界顯示 */
-  display: flex;
-  flex-direction: column;
+.timeline-extra {
+  margin-top: 18px;
+  font-size: 18px;
+  color: #374151;
+  line-height: 1.6;
+  white-space: normal;
+}
+
+.timeline-extra-label {
+  font-size: 16px; /* 比內文大一點點 */
+  color: #facc15; /* 黃色的小提點標籤 */
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
+.timeline-extra p {
+  margin: 0 0 4px;
+}
+
+.timeline-extra ol {
+  margin: 0 0 0 22px;
+  padding: 0;
+}
+
+.timeline-extra li {
+  margin-bottom: 2px;
+}
+
+.timeline-extra-image {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.timeline-extra-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.timeline-highlight {
+  color: #2563eb; /* 醒目的藍色強調文字 */
+  font-weight: 700;
 }
 
 /* Note view */
 .note-wrapper {
   margin: 12px auto 16px;
-  max-width: 900px;
+  max-width: 1200px; /* 原本 900px，放大整張卡片寬度 */
   background: #f9fafb;
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
