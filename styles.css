@@ -768,7 +768,7 @@ main {
 
 .nebula-source-line {
   display: block;
-  padding-left: 2em; /* 1. 2. 3. 大約在「依據：」下面排直直一條 */
+  padding-left: 2em;
   margin-bottom: 2px;
 }
 
@@ -789,49 +789,12 @@ main {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
- </old_code><new_code>.nebula-step {
-  display: flex;
-  justify-content: flex-start; /* 不要己的欄位中置中 */
-}
-
-.nebula-step-desc {
-  max-width: 230px;        /* 每一罐的寬度，文字在裡面自動換行 */
-  text-align: left;
-  line-height: 1.6;
-}
-
-.nebula-step-label {
-  color: #2563eb;
-  font-weight: 700;
-  margin-right: 4px;
-}
-
-.nebula-step-text {
-  color: #374151;
-}
-
-@media (max-width: 900px) {
-  .nebula-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 600px) {
-  .nebula-steps {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-</old_code><new_code>.nebula-steps {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
   font-size: 15px;
 }
 
 .nebula-step {
   display: flex;
-  justify-content: flex-start; /* 不要在欄位中間留一大塊空白，從欄位左邊開始排 */
+  justify-content: flex-start; /* 每個罐子從欄位左邊開始排，不留多餘空白 */
 }
 
 .nebula-step-desc {
@@ -861,84 +824,6 @@ main {
   .nebula-steps {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-  </old_code><new_code>.nebula-step-index {
-  font-size: 22px;
-  color: #2563eb;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.nebula-step-text {
-  color: #374151;
-  text-align: left;
-}
-
-@media (max-width: 900px) {
-  .nebula-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 600px) {
-  .nebula-steps {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* Note view */
-.note-wrapper {
-  margin: 12px auto 16px;
-  max-width: 1200px; /* 原本 900px，放大整張卡片寬度 */
-  background: #f9fafb;
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
-  overflow: visible; /* 允許時間線提示框超出卡片邊界顯示 */
-  display: flex;
-  flex-direction: column;
-}
-
-.note-header {
-  background: linear-gradient(to right, #4f46e5, #7c3aed);
-  color: #f9fafb;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.note-back-btn {
-  font-size: 13px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(191, 219, 254, 0.9);
-  background: rgba(15, 23, 42, 0.12);
-  color: #e5e7eb;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: background 0.16s ease, transform 0.1s ease;
-}
-
-.note-back-btn:hover {
-  background: rgba(15, 23, 42, 0.24);
-  transform: translateY(-1px);
-}
-
-.note-breadcrumb {
-  font-size: 12px;
-  max-width: 420px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.note-subject-tag {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(219, 234, 254, 0.9);
-  background: rgba(15, 23, 42, 0.08);
 }
 
 .note-body {
