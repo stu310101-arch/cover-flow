@@ -759,9 +759,18 @@ main {
   margin-bottom: 4px;
 }
 
+.nebula-source-block {
+  margin-bottom: 8px;
+}
+
 .nebula-source-list {
-  margin: 0 0 12px 32px;
-  padding: 0;
+  margin: 0 0 12px 0;
+  padding: 0 0 0 2.8em; /* 讓 1.2.3 大約在「依據：」下面對齊 */
+  list-style-type: decimal;
+}
+
+.nebula-source-list li {
+  margin-bottom: 2px;
 }
 
 .nebula-source-list li {
@@ -806,27 +815,30 @@ main {
   margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 24px;
   font-size: 15px;
 }
 
 .nebula-step {
   display: flex;
-  flex-direction: column;
-  align-items: center; /* 數字在上、文字罐子在下，整體置中 */
+  justify-content: center; /* 讓每個罐子在自己的欄位置中 */
 }
 
-.nebula-step-index {
-  font-size: 22px;
+.nebula-step-desc {
+  max-width: 230px;         /* 每一個像長方形罐子的寬度 */
+  text-align: left;
+  line-height: 1.6;
+}
+
+.nebula-step-label {
   color: #2563eb;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-right: 4px;
 }
 
 .nebula-step-text {
   color: #374151;
-  text-align: left;         /* 文字靠左排 */
-  max-width: 220px;         /* 像一個長方形罐子的寬度 */
+  text-align: left;
 }
 
 @media (max-width: 900px) {
