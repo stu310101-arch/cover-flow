@@ -754,12 +754,13 @@ main {
 }
 
 .nebula-source-label {
-  font-size: 16px;
+  font-size: 20px;
+  font-weight: 700;
   margin-bottom: 4px;
 }
 
 .nebula-source-list {
-  margin: 0 0 12px 20px;
+  margin: 0 0 12px 32px;
   padding: 0;
 }
 
@@ -778,7 +779,30 @@ main {
   border-radius: 10px;
 }
 
-.nebula-steps {
+.nebula-step-index {
+  font-size: 22px;
+  color: #2563eb;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.nebula-step-text {
+  color: #374151;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .nebula-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .nebula-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</old_code><new_code>.nebula-steps {
   margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -787,18 +811,45 @@ main {
 }
 
 .nebula-step {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 數字在上、文字罐子在下，整體置中 */
 }
 
 .nebula-step-index {
-  font-size: 18px;
+  font-size: 22px;
   color: #2563eb;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .nebula-step-text {
   color: #374151;
+  text-align: left;         /* 文字靠左排 */
+  max-width: 220px;         /* 像一個長方形罐子的寬度 */
+}
+
+@media (max-width: 900px) {
+  .nebula-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .nebula-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+  </old_code><new_code>.nebula-step-index {
+  font-size: 22px;
+  color: #2563eb;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.nebula-step-text {
+  color: #374151;
+  text-align: left;
 }
 
 @media (max-width: 900px) {
