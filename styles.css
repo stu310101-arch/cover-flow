@@ -756,24 +756,19 @@ main {
 .nebula-source-label {
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 4px;
 }
 
 .nebula-source-block {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-.nebula-source-list {
-  margin: 0 0 12px 0;
-  padding: 0 0 0 2.8em; /* 讓 1.2.3 大約在「依據：」下面對齊 */
-  list-style-type: decimal;
+.nebula-source-lines {
+  margin-top: 4px;
 }
 
-.nebula-source-list li {
-  margin-bottom: 2px;
-}
-
-.nebula-source-list li {
+.nebula-source-line {
+  display: block;
+  padding-left: 2em; /* 1. 2. 3. 大約在「依據：」下面排直直一條 */
   margin-bottom: 2px;
 }
 
@@ -794,12 +789,9 @@ main {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
-  font-size: 15px;
-}
-
-.nebula-step {
+ </old_code><new_code>.nebula-step {
   display: flex;
-  justify-content: center; /* 整個罐子在自己的欄位中置中 */
+  justify-content: flex-start; /* 不要己的欄位中置中 */
 }
 
 .nebula-step-desc {
@@ -839,7 +831,7 @@ main {
 
 .nebula-step {
   display: flex;
-  justify-content: center; /* 讓每個罐子在自己的欄位置中 */
+  justify-content: flex-start; /* 不要在欄位中間留一大塊空白，從欄位左邊開始排 */
 }
 
 .nebula-step-desc {
