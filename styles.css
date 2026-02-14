@@ -826,6 +826,61 @@ main {
   }
 }
 
+/* Note view：單元筆記卡片布局 */
+.note-wrapper {
+  margin: 12px auto 16px;
+  max-width: 1200px; /* 放大整張卡片寬度，所有科目共用 */
+  background: #f9fafb;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-header {
+  background: linear-gradient(to right, #4f46e5, #7c3aed);
+  color: #f9fafb;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.note-back-btn {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  background: rgba(15, 23, 42, 0.12);
+  color: #e5e7eb;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.16s ease, transform 0.1s ease;
+}
+
+.note-back-btn:hover {
+  background: rgba(15, 23, 42, 0.24);
+  transform: translateY(-1px);
+}
+
+.note-breadcrumb {
+  font-size: 12px;
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-subject-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(219, 234, 254, 0.9);
+  background: rgba(15, 23, 42, 0.08);
+}
+
 .note-body {
   padding: 16px 18px 18px;
   display: flex;
