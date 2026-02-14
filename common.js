@@ -45,7 +45,7 @@ const SUBJECTS = {
     name: "地科",
     subjectFile: "earth_science.html",
     units: [
-      { id: "e1", title: "地球氣體與大氣層", file: "earth-e1.html" },
+      { id: "e1", title: "太陽星雲學說", file: "earth-e1.html" },
       { id: "e2", title: "板塊構造學說", file: "earth-e2.html" },
       { id: "e3", title: "天文：太陽系", file: "earth-e3.html" },
       { id: "e4", title: "岩石循環", file: "earth-e4.html" },
