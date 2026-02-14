@@ -788,16 +788,34 @@ main {
   border-radius: 10px;
 }
 
-.nebula-step-index {
-  font-size: 22px;
+/* 太陽星雲學說四個階段：一列四個罐子，裡面是「1. 文本」這種排法 */
+.nebula-steps {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  font-size: 15px;
+}
+
+.nebula-step {
+  display: flex;
+  justify-content: center; /* 整個罐子在自己的欄位中置中 */
+}
+
+.nebula-step-desc {
+  max-width: 230px;        /* 每一罐的寬度，文字在裡面自動換行 */
+  text-align: left;
+  line-height: 1.6;
+}
+
+.nebula-step-label {
   color: #2563eb;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-right: 4px;
 }
 
 .nebula-step-text {
   color: #374151;
-  text-align: left;
 }
 
 @media (max-width: 900px) {
