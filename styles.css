@@ -751,6 +751,7 @@ main {
   font-size: 18px;
   color: #374151;
   line-height: 1.6;
+  white-space: normal; /* 取消 hint-placeholder 的 pre-wrap，避免多餘空白行 */
 }
 
 .nebula-source-label {
