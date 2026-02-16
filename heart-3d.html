@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>3D 跳動發光愛心</title>
   <style>
     :root { color-scheme: dark; }
@@ -30,6 +30,7 @@
       inset: 0;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       display: block;
     }
 
@@ -67,7 +68,32 @@
   </script>
 </head>
 <body>
-  <div id="hint">若你只看到背景沒有愛心：請用本機伺服器開啟（例如 <code>python -m http.server</code>），不要用 <code>file://</code> 直接點開。</div>
+  <div id="hint">
+    若你只看到背景沒有愛心：
+    <br>1) 請用本機/網路伺服器開啟（例如 <code>python -m http.server</code>），不要用 <code>file://</code>
+    <br>2) iPhone/iPad 需 iOS Safari 16.4+ 才支援 importmap（Chrome(iOS) 也同樣受限）
+  </div>
+  <script>
+    (function () {
+      const hint = document.getElementById("hint");
+      if (!hint) return;
+
+      const supportsModule = "noModule" in document.createElement("script");
+      if (!supportsModule) {
+        hint.textContent = "此頁需要支援 ES Modules 的瀏覽器。";
+        return;
+      }
+
+      if (window.HTMLScriptElement && typeof HTMLScriptElement.supports === "function") {
+        const ok = HTMLScriptElement.supports("importmap");
+        if (!ok) {
+          hint.innerHTML =
+            "此頁需要 Import Maps（iPhone/iPad 需 iOS Safari 16.4+）。" +
+            "<br>另外請用本機/網路伺服器（http/https）開啟，不要用 <code>file://</code>。";
+        }
+      }
+    })();
+  </script>
 
   <script type="module">
     import * as THREE from "three";
@@ -78,6 +104,9 @@
     import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
     import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
+    const isMobile = matchMedia("(max-width: 768px)").matches;
+    const dprCap = isMobile ? 1.5 : 2;
+
     // ---------- Renderer / Scene / Camera ----------
     const scene = new THREE.Scene();
 
@@ -86,7 +115,7 @@
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
@@ -102,7 +131,7 @@
 
     // ---------- Postprocessing (Bloom) ----------
     const composer = new EffectComposer(renderer);
-    composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     composer.setSize(window.innerWidth, window.innerHeight);
 
     const renderPass = new RenderPass(scene, camera);
@@ -214,7 +243,7 @@
     });
 
     // 1) 全場景淡藍粒子（不要太多，避免蓋掉愛心）
-    const ambientCount = 1600;
+    const ambientCount = isMobile ? 900 : 1600;
     const ambientBox = new THREE.Vector3(42, 26, 42);
     const half = ambientBox.clone().multiplyScalar(0.5);
 
@@ -259,7 +288,7 @@
     scene.add(new THREE.Points(ambientGeo, ambientMat));
 
     // 2) 愛心周圍白色粒子（從表面取樣，掛在 heart 底下跟著動）
-    const heartCount = 5200;
+    const heartCount = isMobile ? 2600 : 5200;
     const sampler = new MeshSurfaceSampler(heartMesh).build();
 
     const heartGeoPts = new THREE.BufferGeometry();
@@ -393,7 +422,7 @@
     window.addEventListener("resize", () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
 
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
