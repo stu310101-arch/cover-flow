@@ -15,11 +15,12 @@
 
     body {
       overflow: hidden;
-      /* 背景：深藍向內漸變淺藍 */
+      /* 背景：外圍更深黑藍，向內漸變到淺藍（不偏白） */
       background: radial-gradient(circle at 50% 45%,
-        #93c7ff 0%,
-        #2b6bd6 42%,
-        #071a3a 100%
+        #7fbfff 0%,
+        #2a6fd9 38%,
+        #0b2a66 72%,
+        #020814 100%
       );
     }
 
@@ -39,24 +40,63 @@
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js";
     import { MeshSurfaceSampler } from "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/math/MeshSurfaceSampler.js";
+    import { RoomEnvironment } from "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/environments/RoomEnvironment.js";
+    import { EffectComposer } from "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/EffectComposer.js";
+    import { RenderPass } from "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/RenderPass.js";
+    import { UnrealBloomPass } from "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+    import { OutputPass } from "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/OutputPass.js";
 
     // ---------- Renderer / Scene / Camera ----------
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(
-      45,
+      40,
       window.innerWidth / window.innerHeight,
       0.1,
       200
     );
-    camera.position.set(0, 0.6, 5);
+    camera.position.set(0, 0.55, 4.6);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     renderer.setClearColor(0x000000, 0); // 透明，讓 CSS 背景漸變透出
     document.body.appendChild(renderer.domElement);
+
+    // ---------- Environment (IBL) ----------
+    // 給 PBR 材質（MeshPhysicalMaterial）一個乾淨的室內環境光反射，
+    // 讓紅色愛心的高光/立體感更明顯，不需要把整顆心變超亮。
+    const environment = new RoomEnvironment();
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(environment, 0.04).texture;
+    environment.dispose();
+    pmremGenerator.dispose();
+
+    // ---------- Postprocessing (Bloom) ----------
+    const composer = new EffectComposer(renderer);
+    composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    composer.setSize(window.innerWidth, window.innerHeight);
+
+    const renderPass = new RenderPass(scene, camera);
+
+    // strength / radius / threshold
+    // - threshold 拉高：避免愛心整個被洗白
+    // - strength 稍強：讓粒子/高光更明顯「發光」
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      1.35,
+      0.55,
+      0.74
+    );
+
+    const outputPass = new OutputPass();
+
+    composer.addPass(renderPass);
+    composer.addPass(bloomPass);
+    composer.addPass(outputPass);
 
     // ---------- Lights ----------
     scene.add(new THREE.AmbientLight(0xffffff, 0.35));
@@ -103,6 +143,7 @@
       metalness: 0.05,
       clearcoat: 0.75,
       clearcoatRoughness: 0.18,
+      envMapIntensity: 0.85,
     });
 
     const heartMesh = new THREE.Mesh(heartGeo, heartMat);
@@ -141,14 +182,14 @@
     }
 
     const blueSprite = makeRadialGlowTexture({
-      innerColor: "rgba(200,245,255,1)",
-      midColor: "rgba(120,210,255,0.35)",
-      outerColor: "rgba(120,210,255,0)",
+      innerColor: "rgba(215,250,255,1)",
+      midColor: "rgba(140,225,255,0.22)",
+      outerColor: "rgba(140,225,255,0)",
     });
 
     const whiteSprite = makeRadialGlowTexture({
       innerColor: "rgba(255,255,255,1)",
-      midColor: "rgba(255,255,255,0.35)",
+      midColor: "rgba(255,255,255,0.18)",
       outerColor: "rgba(255,255,255,0)",
     });
 
@@ -174,10 +215,11 @@
       ambientVel[ix + 2] = (Math.random() - 0.5) * 0.10;
 
       const c = new THREE.Color(0x7fe6ff);
-      const tint = 0.85 + Math.random() * 0.30;
-      ambientCol[ix + 0] = c.r * tint;
-      ambientCol[ix + 1] = c.g * tint;
-      ambientCol[ix + 2] = c.b * tint;
+      const tint = 0.65 + Math.random() * 0.55;
+      const boost = Math.random() < 0.08 ? 1.8 : 1.0; // 少量「更亮」粒子，讓 Bloom 更明顯
+      ambientCol[ix + 0] = c.r * tint * boost;
+      ambientCol[ix + 1] = c.g * tint * boost;
+      ambientCol[ix + 2] = c.b * tint * boost;
     }
 
     ambientGeo.setAttribute("position", new THREE.BufferAttribute(ambientPos, 3));
@@ -186,10 +228,11 @@
     const ambientMat = new THREE.PointsMaterial({
       map: blueSprite,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.42,
+      alphaTest: 0.02,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      size: 0.085,
+      size: 0.078,
       sizeAttenuation: true,
       vertexColors: true,
     });
@@ -225,7 +268,8 @@
       heartNrm[ix + 2] = _n.z;
 
       heartPhase[i] = Math.random() * Math.PI * 2;
-      const w = 0.85 + Math.random() * 0.25;
+      let w = 0.75 + Math.random() * 0.65;
+      if (Math.random() < 0.18) w *= 1.9; // 少量超亮點：主要吃 Bloom，但本體不會整片泛白
       heartCol[ix + 0] = w;
       heartCol[ix + 1] = w;
       heartCol[ix + 2] = w;
@@ -237,10 +281,11 @@
     const heartMatPts = new THREE.PointsMaterial({
       map: whiteSprite,
       transparent: true,
-      opacity: 0.95,
+      opacity: 0.72,
+      alphaTest: 0.03,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      size: 0.065,
+      size: 0.072,
       sizeAttenuation: true,
       vertexColors: true,
     });
@@ -271,7 +316,7 @@
 
       // 讓鏡頭輕微繞行，增加「立體」視差感
       camera.position.x = Math.sin(t * 0.25) * 0.35;
-      camera.position.y = 0.6 + Math.sin(t * 0.18) * 0.08;
+      camera.position.y = 0.55 + Math.sin(t * 0.18) * 0.08;
       camera.lookAt(0, 0, 0);
 
       // 心跳（收縮跳動）+ 輕微自轉
@@ -279,6 +324,11 @@
       heart.scale.setScalar(baseScale * pulse);
       heart.rotation.y = t * 0.65;
       heart.rotation.z = 0.12 * Math.sin(t * 0.8);
+
+      // 讓 Bloom 跟著心跳「呼吸」，但用高 threshold 避免把愛心整個洗白
+      const bloomKick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
+      bloomPass.strength = 1.25 + bloomKick * 0.95;
+      bloomPass.radius = 0.55 + bloomKick * 0.08;
 
       // 背景 3D 粒子漂浮（wrap）
       const pos = ambientGeo.attributes.position.array;
@@ -311,16 +361,23 @@
       }
       heartGeoPts.attributes.position.needsUpdate = true;
 
-      renderer.render(scene, camera);
+      composer.render(dt);
     }
     animate();
 
     // ---------- Resize ----------
     window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      renderer.setPixelRatio(dpr);
+      renderer.setSize(w, h);
+      composer.setPixelRatio(dpr);
+      composer.setSize(w, h);
     }, { passive: true });
   </script>
 </body>
