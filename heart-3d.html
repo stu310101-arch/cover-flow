@@ -112,6 +112,7 @@
 
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
     camera.position.set(0, 0.55, 4.6);
+    camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -183,24 +184,12 @@
       bevelSegments: 6,
     });
     heartGeo.center();
+    heartGeo.computeBoundingSphere();
+    const heartRadius = heartGeo.boundingSphere ? heartGeo.boundingSphere.radius : 1;
 
-    // 讓本體「一定看得到」：加 emissive + IBL 反射
-    const heartMat = new THREE.MeshPhysicalMaterial({
-      color: 0xff1e2d,
-      roughness: 0.22,
-      metalness: 0.06,
-      clearcoat: 0.7,
-      clearcoatRoughness: 0.2,
-      emissive: 0x4d0007,
-      emissiveIntensity: 0.55,
-      envMapIntensity: 0.85,
-    });
-
-    const heartMesh = new THREE.Mesh(heartGeo, heartMat);
-
+    // 整顆心只用粒子呈現（Mesh 只用來表面取樣，且保持 invisible）
     const heart = new THREE.Group();
-    heart.add(heartMesh);
-    heart.rotation.x = 0.25;
+    heart.rotation.set(0.18, 0, Math.PI);
     scene.add(heart);
 
     const baseScale = 0.12;
@@ -242,10 +231,13 @@
       outerColor: "rgba(255,255,255,0)",
     });
 
-    // 1) 全場景淡藍粒子（不要太多，避免蓋掉愛心）
+    // 1) 全場景淡藍粒子（保留，但固定在愛心後方，避免蓋住愛心）
     const ambientCount = isMobile ? 900 : 1600;
     const ambientBox = new THREE.Vector3(42, 26, 42);
     const half = ambientBox.clone().multiplyScalar(0.5);
+
+    const ambientZMin = -half.z;
+    const ambientZMax = -0.6;
 
     const ambientGeo = new THREE.BufferGeometry();
     const ambientPos = new Float32Array(ambientCount * 3);
@@ -256,7 +248,7 @@
       const ix = i * 3;
       ambientPos[ix + 0] = (Math.random() - 0.5) * ambientBox.x;
       ambientPos[ix + 1] = (Math.random() - 0.5) * ambientBox.y;
-      ambientPos[ix + 2] = (Math.random() - 0.5) * ambientBox.z;
+      ambientPos[ix + 2] = THREE.MathUtils.lerp(ambientZMin, ambientZMax, Math.random());
 
       ambientVel[ix + 0] = (Math.random() - 0.5) * 0.10;
       ambientVel[ix + 1] = (Math.random() * 0.6 + 0.4) * 0.16;
@@ -276,7 +268,7 @@
     const ambientMat = new THREE.PointsMaterial({
       map: blueSprite,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.22,
       alphaTest: 0.02,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -285,61 +277,136 @@
       vertexColors: true,
     });
 
-    scene.add(new THREE.Points(ambientGeo, ambientMat));
+    const ambientPoints = new THREE.Points(ambientGeo, ambientMat);
+    ambientPoints.renderOrder = -20;
+    scene.add(ambientPoints);
 
-    // 2) 愛心周圍白色粒子（從表面取樣，掛在 heart 底下跟著動）
-    const heartCount = isMobile ? 2600 : 5200;
-    const sampler = new MeshSurfaceSampler(heartMesh).build();
-
-    const heartGeoPts = new THREE.BufferGeometry();
-    const heartPos = new Float32Array(heartCount * 3);
-    const heartBase = new Float32Array(heartCount * 3);
-    const heartNrm = new Float32Array(heartCount * 3);
-    const heartPhase = new Float32Array(heartCount);
-    const heartCol = new Float32Array(heartCount * 3);
+    // 2) 愛心粒子雲：內部偏紅 → 外層漸白（整顆心由粒子構成）
+    const samplerMesh = new THREE.Mesh(heartGeo, new THREE.MeshBasicMaterial());
+    samplerMesh.visible = false;
+    const sampler = new MeshSurfaceSampler(samplerMesh).build();
 
     const _p = new THREE.Vector3();
     const _n = new THREE.Vector3();
+    const innerRed = new THREE.Color(0xff1e2d);
+    const outerWhite = new THREE.Color(0xffffff);
+    const _col = new THREE.Color();
 
-    for (let i = 0; i < heartCount; i++) {
+    // 2-1) 內部粒子（填滿整顆心）
+    const innerCount = isMobile ? 9000 : 17000;
+    const innerGeo = new THREE.BufferGeometry();
+    const innerPos = new Float32Array(innerCount * 3);
+    const innerBase = new Float32Array(innerCount * 3);
+    const innerDir = new Float32Array(innerCount * 3);
+    const innerPhase = new Float32Array(innerCount);
+    const innerCol = new Float32Array(innerCount * 3);
+
+    for (let i = 0; i < innerCount; i++) {
       const ix = i * 3;
       sampler.sample(_p, _n);
 
-      heartPos[ix + 0] = heartBase[ix + 0] = _p.x;
-      heartPos[ix + 1] = heartBase[ix + 1] = _p.y;
-      heartPos[ix + 2] = heartBase[ix + 2] = _p.z;
+      // 從表面點往中心縮放，近似「體積」填充
+      const s = 0.10 + 0.90 * Math.pow(Math.random(), 1.4);
+      _p.multiplyScalar(s);
+      _p.addScaledVector(_n, (Math.random() - 0.55) * 0.35);
 
-      heartNrm[ix + 0] = _n.x;
-      heartNrm[ix + 1] = _n.y;
-      heartNrm[ix + 2] = _n.z;
+      innerPos[ix + 0] = innerBase[ix + 0] = _p.x;
+      innerPos[ix + 1] = innerBase[ix + 1] = _p.y;
+      innerPos[ix + 2] = innerBase[ix + 2] = _p.z;
 
-      heartPhase[i] = Math.random() * Math.PI * 2;
+      const dl = Math.max(1e-6, _p.length());
+      innerDir[ix + 0] = _p.x / dl;
+      innerDir[ix + 1] = _p.y / dl;
+      innerDir[ix + 2] = _p.z / dl;
 
-      let w = 0.55 + Math.random() * 0.45;
-      if (Math.random() < 0.10) w *= 1.6; // 少量亮點用來觸發 bloom
-      heartCol[ix + 0] = w;
-      heartCol[ix + 1] = w;
-      heartCol[ix + 2] = w;
+      innerPhase[i] = Math.random() * Math.PI * 2;
+
+      // 內紅外白：越外圈越白（但內部仍保留偏紅）
+      const edge = Math.pow(THREE.MathUtils.clamp(_p.length() / heartRadius, 0, 1), 1.45);
+      _col.copy(innerRed).lerp(outerWhite, edge);
+
+      let w = 0.55 + Math.random() * 0.75;
+      if (Math.random() < 0.07) w *= 1.6;
+      innerCol[ix + 0] = _col.r * w;
+      innerCol[ix + 1] = _col.g * w;
+      innerCol[ix + 2] = _col.b * w;
     }
 
-    heartGeoPts.setAttribute("position", new THREE.BufferAttribute(heartPos, 3));
-    heartGeoPts.setAttribute("color", new THREE.BufferAttribute(heartCol, 3));
+    innerGeo.setAttribute("position", new THREE.BufferAttribute(innerPos, 3));
+    innerGeo.setAttribute("color", new THREE.BufferAttribute(innerCol, 3));
 
-    const heartMatPts = new THREE.PointsMaterial({
+    const innerMat = new THREE.PointsMaterial({
+      map: whiteSprite,
+      transparent: true,
+      opacity: 0.50,
+      alphaTest: 0.03,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      size: 0.050,
+      sizeAttenuation: true,
+      vertexColors: true,
+    });
+
+    const innerPoints = new THREE.Points(innerGeo, innerMat);
+    innerPoints.frustumCulled = false;
+    innerPoints.renderOrder = 10;
+    heart.add(innerPoints);
+
+    // 2-2) 外層粒子（沿法線外擴，做出白色外暈）
+    const shellCount = isMobile ? 3200 : 6500;
+    const shellGeo = new THREE.BufferGeometry();
+    const shellPos = new Float32Array(shellCount * 3);
+    const shellBase = new Float32Array(shellCount * 3);
+    const shellNrm = new Float32Array(shellCount * 3);
+    const shellPhase = new Float32Array(shellCount);
+    const shellCol = new Float32Array(shellCount * 3);
+
+    for (let i = 0; i < shellCount; i++) {
+      const ix = i * 3;
+      sampler.sample(_p, _n);
+
+      const expand = 0.55 + Math.random() * 1.25;
+      _p.addScaledVector(_n, expand);
+
+      shellPos[ix + 0] = shellBase[ix + 0] = _p.x;
+      shellPos[ix + 1] = shellBase[ix + 1] = _p.y;
+      shellPos[ix + 2] = shellBase[ix + 2] = _p.z;
+
+      shellNrm[ix + 0] = _n.x;
+      shellNrm[ix + 1] = _n.y;
+      shellNrm[ix + 2] = _n.z;
+
+      shellPhase[i] = Math.random() * Math.PI * 2;
+
+      const t = THREE.MathUtils.clamp((expand - 0.55) / 1.25, 0, 1);
+      _col.set(0xffc2cf).lerp(outerWhite, t);
+
+      let w = 0.60 + Math.random() * 0.70;
+      if (Math.random() < 0.12) w *= 1.9;
+      shellCol[ix + 0] = _col.r * w;
+      shellCol[ix + 1] = _col.g * w;
+      shellCol[ix + 2] = _col.b * w;
+    }
+
+    shellGeo.setAttribute("position", new THREE.BufferAttribute(shellPos, 3));
+    shellGeo.setAttribute("color", new THREE.BufferAttribute(shellCol, 3));
+
+    const shellMat = new THREE.PointsMaterial({
       map: whiteSprite,
       transparent: true,
       opacity: 0.42,
       alphaTest: 0.03,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      size: 0.060,
+      size: 0.062,
       sizeAttenuation: true,
       vertexColors: true,
     });
 
-    const heartPoints = new THREE.Points(heartGeoPts, heartMatPts);
-    heartPoints.frustumCulled = false;
-    heart.add(heartPoints);
+    const shellPoints = new THREE.Points(shellGeo, shellMat);
+    shellPoints.frustumCulled = false;
+    shellPoints.renderOrder = 11;
+    heart.add(shellPoints);
 
     // ---------- Animation ----------
     const clock = new THREE.Clock();
@@ -358,20 +425,13 @@
       const dt = Math.min(0.05, clock.getDelta());
       const t = clock.elapsedTime;
 
-      // 讓鏡頭輕微繞行，增加立體視差感
-      camera.position.x = Math.sin(t * 0.25) * 0.35;
-      camera.position.y = 0.55 + Math.sin(t * 0.18) * 0.08;
-      camera.lookAt(0, 0, 0);
-
-      // 愛心心跳 + 自轉
+      // 愛心心跳（僅縮放，不旋轉）
       const pulse = heartbeatScale(t);
       heart.scale.setScalar(baseScale * pulse);
-      heart.rotation.y = t * 0.65;
-      heart.rotation.z = 0.12 * Math.sin(t * 0.8);
 
       // Bloom 跟著心跳呼吸
       const bloomKick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
-      bloomPass.strength = 1.1 + bloomKick * 0.85;
+      bloomPass.strength = 1.05 + bloomKick * 0.95;
       bloomPass.radius = 0.55 + bloomKick * 0.08;
 
       // 背景粒子漂浮（wrap）
@@ -386,26 +446,41 @@
         if (pos[ix + 0] < -half.x) pos[ix + 0] = half.x;
         if (pos[ix + 1] > half.y) pos[ix + 1] = -half.y;
         if (pos[ix + 1] < -half.y) pos[ix + 1] = half.y;
-        if (pos[ix + 2] > half.z) pos[ix + 2] = -half.z;
-        if (pos[ix + 2] < -half.z) pos[ix + 2] = half.z;
+        if (pos[ix + 2] > ambientZMax) pos[ix + 2] = ambientZMin;
+        if (pos[ix + 2] < ambientZMin) pos[ix + 2] = ambientZMax;
       }
       ambientGeo.attributes.position.needsUpdate = true;
 
-      // 愛心周圍粒子：沿法線做微小呼吸抖動
-      const hp = heartGeoPts.attributes.position.array;
-      const jitterAmp = 0.55;
-      const jitterFreq = 1.35;
-      for (let i = 0; i < heartCount; i++) {
-        const ix = i * 3;
-        const s = Math.sin(t * jitterFreq + heartPhase[i]);
-        const amp = jitterAmp * (0.5 + 0.5 * s);
-        hp[ix + 0] = heartBase[ix + 0] + heartNrm[ix + 0] * amp;
-        hp[ix + 1] = heartBase[ix + 1] + heartNrm[ix + 1] * amp;
-        hp[ix + 2] = heartBase[ix + 2] + heartNrm[ix + 2] * amp;
-      }
-      heartGeoPts.attributes.position.needsUpdate = true;
+      // 愛心粒子：沿「向外方向 / 法線」做微小呼吸抖動（保留生命感，但不做旋轉）
+      const innerArr = innerGeo.attributes.position.array;
+      const shellArr = shellGeo.attributes.position.array;
 
-      composer.render(dt);
+      const innerAmp = 0.16 + bloomKick * 0.12;
+      const shellAmp = 0.28 + bloomKick * 0.20;
+      const innerFreq = 1.15;
+      const shellFreq = 1.35;
+
+      for (let i = 0; i < innerCount; i++) {
+        const ix = i * 3;
+        const s = Math.sin(t * innerFreq + innerPhase[i]);
+        const amp = innerAmp * (0.5 + 0.5 * s);
+        innerArr[ix + 0] = innerBase[ix + 0] + innerDir[ix + 0] * amp;
+        innerArr[ix + 1] = innerBase[ix + 1] + innerDir[ix + 1] * amp;
+        innerArr[ix + 2] = innerBase[ix + 2] + innerDir[ix + 2] * amp;
+      }
+      innerGeo.attributes.position.needsUpdate = true;
+
+      for (let i = 0; i < shellCount; i++) {
+        const ix = i * 3;
+        const s = Math.sin(t * shellFreq + shellPhase[i]);
+        const amp = shellAmp * (0.5 + 0.5 * s);
+        shellArr[ix + 0] = shellBase[ix + 0] + shellNrm[ix + 0] * amp;
+        shellArr[ix + 1] = shellBase[ix + 1] + shellNrm[ix + 1] * amp;
+        shellArr[ix + 2] = shellBase[ix + 2] + shellNrm[ix + 2] * amp;
+      }
+      shellGeo.attributes.position.needsUpdate = true;
+
+      composer.render();
     }
     animate();
 
@@ -426,6 +501,7 @@
 
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      camera.lookAt(0, 0, 0);
 
       renderer.setPixelRatio(dpr);
       renderer.setSize(w, h);
