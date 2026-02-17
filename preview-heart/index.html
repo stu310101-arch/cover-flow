@@ -226,6 +226,7 @@
       ambient: isMobile ? 650 : 1200,
       core: isMobile ? 12000 : 22000,
       halo: isMobile ? 2300 : 4400,
+      sparkle: isMobile ? 320 : 600,
     };
 
     // ---------- Renderer / Scene / Camera ----------
@@ -240,6 +241,8 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.22;
     renderer.setClearColor(0x020612, 1);
     document.body.appendChild(renderer.domElement);
 
@@ -254,11 +257,14 @@
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
+    const bloomBaseStrength = 1.12;
+    const bloomFlickerAmp = 0.07;
+
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.75,
-      0.65,
-      0.0
+      bloomBaseStrength,
+      0.16,
+      0.05
     );
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
@@ -266,24 +272,34 @@
     // ---------- Glowy Sprite ----------
     function makeRadialGlowTexture({
       size = 128,
+      midStop = 0.35,
       innerColor = "rgba(255,255,255,1)",
       midColor = "rgba(255,255,255,0.22)",
       outerColor = "rgba(255,255,255,0)",
+      mipmaps = true,
     } = {}) {
       const c = document.createElement("canvas");
       c.width = c.height = size;
       const gctx = c.getContext("2d");
       const g = gctx.createRadialGradient(size * 0.5, size * 0.5, 0, size * 0.5, size * 0.5, size * 0.5);
       g.addColorStop(0.0, innerColor);
-      g.addColorStop(0.35, midColor);
+      g.addColorStop(midStop, midColor);
       g.addColorStop(1.0, outerColor);
       gctx.fillStyle = g;
       gctx.fillRect(0, 0, size, size);
 
       const tex = new THREE.CanvasTexture(c);
       tex.colorSpace = THREE.SRGBColorSpace;
-      tex.minFilter = THREE.LinearMipmapLinearFilter;
-      tex.magFilter = THREE.LinearFilter;
+
+      if (mipmaps) {
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+      } else {
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
+      }
+
       tex.needsUpdate = true;
       return tex;
     }
@@ -294,10 +310,20 @@
       outerColor: "rgba(140,225,255,0)",
     });
 
-    const whiteSprite = makeRadialGlowTexture({
+    const whiteSpriteSoft = makeRadialGlowTexture({
       innerColor: "rgba(255,255,255,1)",
-      midColor: "rgba(255,255,255,0.16)",
+      midStop: 0.32,
+      midColor: "rgba(255,255,255,0.11)",
       outerColor: "rgba(255,255,255,0)",
+    });
+
+    const whiteSpriteSharp = makeRadialGlowTexture({
+      size: 96,
+      innerColor: "rgba(255,255,255,1)",
+      midStop: 0.22,
+      midColor: "rgba(255,255,255,0.05)",
+      outerColor: "rgba(255,255,255,0)",
+      mipmaps: false,
     });
 
     // ---------- 3D Heart (ExtrudeGeometry) ----------
@@ -334,7 +360,7 @@
     const baseScale = 0.12;
     heart.scale.setScalar(baseScale);
 
-    // ---------- MeshSurfaceSampler (halo) ----------
+    // ---------- MeshSurfaceSampler (halo/sparkle sampling) ----------
     const samplerMesh = new THREE.Mesh(heartGeo, new THREE.MeshBasicMaterial());
     const surfaceSampler = new MeshSurfaceSampler(samplerMesh).build();
 
@@ -392,6 +418,18 @@
     ambientPoints.renderOrder = -20;
     scene.add(ambientPoints);
 
+    function makePointsMaterial(opts) {
+      return new THREE.PointsMaterial(Object.assign({
+        map: whiteSpriteSoft,
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
+        vertexColors: true,
+      }, opts));
+    }
+
     // 2) 愛心：體積填充紅色粒子（2D point-in-polygon + 隨機 z 厚度）
     const coreCount = COUNTS.core;
     const outline = heartShape.getSpacedPoints(240);
@@ -444,33 +482,22 @@
     coreGeo.setAttribute("position", new THREE.BufferAttribute(corePos, 3));
     coreGeo.setAttribute("color", new THREE.BufferAttribute(coreCol, 3));
 
-    function makePointsMaterial(opts) {
-      return new THREE.PointsMaterial(Object.assign({
-        map: whiteSprite,
-        transparent: true,
-        depthTest: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        sizeAttenuation: true,
-        vertexColors: true,
-      }, opts));
-    }
-
     const coreMatSharp = makePointsMaterial({
-      opacity: 0.56,
-      alphaTest: 0.05,
+      map: whiteSpriteSharp,
+      opacity: 0.62,
+      alphaTest: 0.10,
       depthWrite: true,
-      size: isMobile ? 0.048 : 0.054,
+      size: isMobile ? 0.044 : 0.048,
     });
     const coreMatGlow1 = makePointsMaterial({
-      opacity: 0.14,
-      alphaTest: 0.02,
-      size: isMobile ? 0.110 : 0.120,
+      opacity: 0.11,
+      alphaTest: 0.06,
+      size: isMobile ? 0.088 : 0.098,
     });
     const coreMatGlow2 = makePointsMaterial({
-      opacity: 0.05,
-      alphaTest: 0.01,
-      size: isMobile ? 0.220 : 0.250,
+      opacity: 0.040,
+      alphaTest: 0.035,
+      size: isMobile ? 0.145 : 0.160,
     });
 
     const corePointsSharp = new THREE.Points(coreGeo, coreMatSharp);
@@ -500,7 +527,7 @@
       const ix = i * 3;
       surfaceSampler.sample(_p, _n);
 
-      const expand = 1.05 + Math.random() * 1.75;
+      const expand = 0.55 + Math.random() * 0.75;
       _p.addScaledVector(_n, expand);
 
       haloPos[ix + 0] = haloBase[ix + 0] = _p.x;
@@ -514,7 +541,7 @@
       haloPhase[i] = Math.random() * Math.PI * 2;
 
       _col.copy(haloWhite);
-      const w = 0.12 + Math.random() * 0.18;
+      const w = 0.10 + Math.random() * 0.16;
       haloCol[ix + 0] = _col.r * w;
       haloCol[ix + 1] = _col.g * w;
       haloCol[ix + 2] = _col.b * w;
@@ -524,14 +551,15 @@
     haloGeo.setAttribute("color", new THREE.BufferAttribute(haloCol, 3));
 
     const haloMatSharp = makePointsMaterial({
-      opacity: 0.22,
-      alphaTest: 0.01,
-      size: isMobile ? 0.155 : 0.175,
+      map: whiteSpriteSharp,
+      opacity: 0.20,
+      alphaTest: 0.10,
+      size: isMobile ? 0.105 : 0.115,
     });
     const haloMatGlow1 = makePointsMaterial({
-      opacity: 0.10,
-      alphaTest: 0.01,
-      size: isMobile ? 0.300 : 0.340,
+      opacity: 0.070,
+      alphaTest: 0.05,
+      size: isMobile ? 0.175 : 0.195,
     });
 
     const haloPointsSharp = new THREE.Points(haloGeo, haloMatSharp);
@@ -542,6 +570,54 @@
 
     heart.add(haloPointsGlow1);
     heart.add(haloPointsSharp);
+
+    // 4) sparkle：少量白色閃光點（每幀只更新 color）
+    const sparkleCount = COUNTS.sparkle;
+
+    const sparkleGeo = new THREE.BufferGeometry();
+    const sparklePos = new Float32Array(sparkleCount * 3);
+    const sparkleCol = new Float32Array(sparkleCount * 3);
+    const sparklePhase = new Float32Array(sparkleCount);
+    const sparkleSpeed = new Float32Array(sparkleCount);
+    const sparkleBase = new Float32Array(sparkleCount);
+
+    for (let i = 0; i < sparkleCount; i++) {
+      const ix = i * 3;
+      surfaceSampler.sample(_p, _n);
+
+      const offset = Math.random() * 0.70;
+      _p.addScaledVector(_n, offset);
+
+      sparklePos[ix + 0] = _p.x;
+      sparklePos[ix + 1] = _p.y;
+      sparklePos[ix + 2] = _p.z;
+
+      sparkleCol[ix + 0] = 0;
+      sparkleCol[ix + 1] = 0;
+      sparkleCol[ix + 2] = 0;
+
+      sparklePhase[i] = Math.random() * Math.PI * 2;
+      sparkleSpeed[i] = 7.5 + Math.random() * 5.5;
+      sparkleBase[i] = 0.35 + Math.random() * 0.75;
+    }
+
+    sparkleGeo.setAttribute("position", new THREE.BufferAttribute(sparklePos, 3));
+    sparkleGeo.setAttribute("color", new THREE.BufferAttribute(sparkleCol, 3));
+
+    const sparkleMat = makePointsMaterial({
+      map: whiteSpriteSharp,
+      transparent: true,
+      opacity: 1,
+      alphaTest: 0.18,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      size: isMobile ? 0.050 : 0.045,
+    });
+
+    const sparklePoints = new THREE.Points(sparkleGeo, sparkleMat);
+    sparklePoints.frustumCulled = false;
+    sparklePoints.renderOrder = 30;
+    heart.add(sparklePoints);
 
     // ---------- Animation ----------
     const clock = new THREE.Clock();
@@ -572,6 +648,10 @@
       const pulse = heartbeatScale(t);
       heart.scale.setScalar(baseScale * pulse);
 
+      // bloom 微閃（避免整坨變白霧）
+      const kick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
+      bloomPass.strength = bloomBaseStrength + bloomFlickerAmp * (0.35 * Math.sin(t * 5.8) + 0.65 * kick);
+
       // 背景粒子漂浮（wrap）
       const pos = ambientGeo.attributes.position.array;
       for (let i = 0; i < ambientCount; i++) {
@@ -591,8 +671,7 @@
 
       // halo：沿法線做非常小的呼吸抖動（保持輪廓、避免變雲）
       const haloArr = haloGeo.attributes.position.array;
-      const kick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
-      const haloAmp = 0.22 + kick * 0.12;
+      const haloAmp = 0.14 + kick * 0.08;
       const haloFreq = 1.25;
 
       for (let i = 0; i < haloCount; i++) {
@@ -604,6 +683,19 @@
         haloArr[ix + 2] = haloBase[ix + 2] + haloNrm[ix + 2] * amp;
       }
       haloGeo.attributes.position.needsUpdate = true;
+
+      // sparkle：每幀只更新 color attribute
+      const sc = sparkleGeo.attributes.color.array;
+      for (let i = 0; i < sparkleCount; i++) {
+        const ix = i * 3;
+        const s = Math.max(0, Math.sin(t * sparkleSpeed[i] + sparklePhase[i]));
+        const blink = Math.pow(s, 18);
+        const v = sparkleBase[i] * (0.10 + 1.65 * blink);
+        sc[ix + 0] = v;
+        sc[ix + 1] = v;
+        sc[ix + 2] = v;
+      }
+      sparkleGeo.attributes.color.needsUpdate = true;
 
       composer.render();
     }
