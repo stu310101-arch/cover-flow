@@ -670,7 +670,8 @@
       }
 
       const isMobile = matchMedia("(max-width: 768px)").matches;
-      const dprCap = isMobile ? 1.5 : 2;
+      const dprCap = isMobile ? 1.1 : 1.4;
+      const ppScale = isMobile ? 0.72 : 0.80;
 
       const COUNTS = {
         heartFill: isMobile ? 11000 : 20000,
@@ -703,7 +704,7 @@
       };
 
       const composer = new EffectComposer(renderer);
-      composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
+      composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap) * ppScale);
       composer.addPass(new RenderPass(scene, camera));
 
       const bloomPass = new UnrealBloomPass(
@@ -1267,30 +1268,20 @@
         sparkle: 2.6,
       };
 
-      const DIR_MIX_MAX = 0.85;
-
       function buildOutwardAttributes({ count, baseDir, rotDir, amp, outwardMax }) {
-        const aDir = new Float32Array(count * 2);
+        const aBaseDir = new Float32Array(count * 2);
+        const aRotDir = new Float32Array(count * 2);
         const aAmp = new Float32Array(count);
 
         for (let i = 0; i < count; i++) {
-          const bdx = baseDir[i * 2 + 0];
-          const bdy = baseDir[i * 2 + 1];
-          const rdx = rotDir[i * 2 + 0];
-          const rdy = rotDir[i * 2 + 1];
-
-          let fx = bdx + (rdx - bdx) * DIR_MIX_MAX;
-          let fy = bdy + (rdy - bdy) * DIR_MIX_MAX;
-          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
-          fx *= invLen;
-          fy *= invLen;
-
-          aDir[i * 2 + 0] = fx;
-          aDir[i * 2 + 1] = fy;
+          aBaseDir[i * 2 + 0] = baseDir[i * 2 + 0];
+          aBaseDir[i * 2 + 1] = baseDir[i * 2 + 1];
+          aRotDir[i * 2 + 0] = rotDir[i * 2 + 0];
+          aRotDir[i * 2 + 1] = rotDir[i * 2 + 1];
           aAmp[i] = amp[i] * outwardMax;
         }
 
-        return { aDir, aAmp };
+        return { aBaseDir, aRotDir, aAmp };
       }
 
       const outwardAttrsFill = buildOutwardAttributes({
@@ -1300,7 +1291,8 @@
         amp: heartFillAmp,
         outwardMax: OUTWARD_MAX.fill,
       });
-      heartFillGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsFill.aDir, 2));
+      heartFillGeo.setAttribute("aBaseDir", new THREE.BufferAttribute(outwardAttrsFill.aBaseDir, 2));
+      heartFillGeo.setAttribute("aRotDir", new THREE.BufferAttribute(outwardAttrsFill.aRotDir, 2));
       heartFillGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsFill.aAmp, 1));
 
       const outwardAttrsEdge = buildOutwardAttributes({
@@ -1310,7 +1302,8 @@
         amp: heartEdgeAmp,
         outwardMax: OUTWARD_MAX.edge,
       });
-      heartEdgeGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsEdge.aDir, 2));
+      heartEdgeGeo.setAttribute("aBaseDir", new THREE.BufferAttribute(outwardAttrsEdge.aBaseDir, 2));
+      heartEdgeGeo.setAttribute("aRotDir", new THREE.BufferAttribute(outwardAttrsEdge.aRotDir, 2));
       heartEdgeGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsEdge.aAmp, 1));
 
       const outwardAttrsOuterDust = buildOutwardAttributes({
@@ -1320,7 +1313,8 @@
         amp: outerDustAmp,
         outwardMax: OUTWARD_MAX.outerDust,
       });
-      outerDustGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsOuterDust.aDir, 2));
+      outerDustGeo.setAttribute("aBaseDir", new THREE.BufferAttribute(outwardAttrsOuterDust.aBaseDir, 2));
+      outerDustGeo.setAttribute("aRotDir", new THREE.BufferAttribute(outwardAttrsOuterDust.aRotDir, 2));
       outerDustGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsOuterDust.aAmp, 1));
 
       const outwardAttrsSparkle = buildOutwardAttributes({
@@ -1330,22 +1324,24 @@
         amp: sparkleAmp,
         outwardMax: OUTWARD_MAX.sparkle,
       });
-      sparkleGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsSparkle.aDir, 2));
+      sparkleGeo.setAttribute("aBaseDir", new THREE.BufferAttribute(outwardAttrsSparkle.aBaseDir, 2));
+      sparkleGeo.setAttribute("aRotDir", new THREE.BufferAttribute(outwardAttrsSparkle.aRotDir, 2));
       sparkleGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsSparkle.aAmp, 1));
 
-      function enableOutwardDisplacement(material, outwardUniform) {
+      function enableOutwardDisplacement(material, outwardUniform, dirMixUniform) {
         material.onBeforeCompile = (shader) => {
           shader.uniforms.uOutward = outwardUniform;
+          shader.uniforms.uDirMix = dirMixUniform;
 
-          shader.vertexShader = `\nattribute vec2 aDir;\nattribute float aAmp;\nuniform float uOutward;\n` + shader.vertexShader;
+          shader.vertexShader = `\nattribute vec2 aBaseDir;\nattribute vec2 aRotDir;\nattribute float aAmp;\nuniform float uOutward;\nuniform float uDirMix;\n` + shader.vertexShader;
 
           shader.vertexShader = shader.vertexShader.replace(
             "#include <begin_vertex>",
-            `#include <begin_vertex>\ntransformed.xy += aDir * (aAmp * uOutward);`
+            `#include <begin_vertex>\nvec2 dir = normalize(mix(aBaseDir, aRotDir, uDirMix));\ntransformed.xy += dir * (aAmp * uOutward);`
           );
         };
 
-        material.customProgramCacheKey = () => "outwardDisplacement-v1";
+        material.customProgramCacheKey = () => "outwardDisplacement-v3";
         material.needsUpdate = true;
       }
 
@@ -1354,21 +1350,85 @@
       const uOutwardOuterDust = { value: 0 };
       const uOutwardSparkle = { value: 0 };
 
-      enableOutwardDisplacement(heartGlowMat, uOutwardFill);
-      enableOutwardDisplacement(heartFillMat, uOutwardFill);
-      enableOutwardDisplacement(heartEdgeMat, uOutwardEdge);
-      enableOutwardDisplacement(outerDustMat, uOutwardOuterDust);
-      enableOutwardDisplacement(sparkleMat, uOutwardSparkle);
+      const uDirMixFill = { value: 0 };
+      const uDirMixEdge = { value: 0 };
+      const uDirMixOuterDust = { value: 0 };
+      const uDirMixSparkle = { value: 0 };
 
-      function makeNeonTextTexture(lines) {
-        const w = 1024;
-        const h = 512;
+      enableOutwardDisplacement(heartGlowMat, uOutwardFill, uDirMixFill);
+      enableOutwardDisplacement(heartFillMat, uOutwardFill, uDirMixFill);
+      enableOutwardDisplacement(heartEdgeMat, uOutwardEdge, uDirMixEdge);
+      enableOutwardDisplacement(outerDustMat, uOutwardOuterDust, uDirMixOuterDust);
+      enableOutwardDisplacement(sparkleMat, uOutwardSparkle, uDirMixSparkle);
+
+      renderer.autoClear = true;
+
+      // ---------- Center Text (always readable) ----------
+      function canvasToTexture(canvas) {
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
+        tex.needsUpdate = true;
+        return tex;
+      }
+
+      function roundRect(ctx, x, y, w, h, r) {
+        const rr = Math.min(r, w * 0.5, h * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(x + rr, y);
+        ctx.arcTo(x + w, y, x + w, y + h, rr);
+        ctx.arcTo(x + w, y + h, x, y + h, rr);
+        ctx.arcTo(x, y + h, x, y, rr);
+        ctx.arcTo(x, y, x + w, y, rr);
+        ctx.closePath();
+      }
+
+      function makeTextPlateCanvas({ w, h }) {
         const canvas = document.createElement("canvas");
         canvas.width = w;
         canvas.height = h;
 
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, w, h);
+        ctx.imageSmoothingEnabled = true;
+
+        const padX = w * 0.08;
+        const padY = h * 0.18;
+
+        const x = padX;
+        const y = padY;
+        const ww = w - padX * 2;
+        const hh = h - padY * 2;
+        const r = Math.min(ww, hh) * 0.18;
+
+        ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+        ctx.shadowBlur = Math.min(w, h) * 0.08;
+        ctx.shadowOffsetY = Math.min(w, h) * 0.02;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.95)";
+        roundRect(ctx, x, y, ww, hh, r);
+        ctx.fill();
+
+        ctx.shadowColor = "rgba(0, 0, 0, 0)";
+        const g = ctx.createRadialGradient(w * 0.5, h * 0.46, 0, w * 0.5, h * 0.46, Math.max(w, h) * 0.60);
+        g.addColorStop(0, "rgba(0, 0, 0, 0.55)");
+        g.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        return canvas;
+      }
+
+      function makeMarkerTextCanvas({ lines, w, h, mode }) {
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, w, h);
+        ctx.imageSmoothingEnabled = true;
 
         const cx = w * 0.5;
         ctx.textAlign = "center";
@@ -1380,72 +1440,129 @@
         const y0 = h * 0.40;
         const y1 = h * 0.66;
 
-        function drawLine(text, y, size) {
-          ctx.font = `900 ${size}px ${fontFamily}`;
-
-          ctx.shadowColor = "rgba(60, 255, 140, 0.95)";
-          ctx.shadowBlur = size * 0.32;
-          ctx.strokeStyle = "rgba(40, 255, 120, 0.22)";
-          ctx.lineWidth = size * 0.42;
-
-          for (let k = 0; k < 10; k++) {
-            const ox = (Math.random() - 0.5) * (size * 0.05);
-            const oy = (Math.random() - 0.5) * (size * 0.05);
-            ctx.strokeText(text, cx + ox, y + oy);
+        function jitteredDraw(fn, count, jitterPx) {
+          for (let k = 0; k < count; k++) {
+            const ox = (Math.random() - 0.5) * 2 * jitterPx;
+            const oy = (Math.random() - 0.5) * 2 * jitterPx;
+            fn(ox, oy);
           }
-
-          ctx.shadowBlur = size * 0.22;
-          ctx.strokeStyle = "rgba(140, 255, 190, 0.60)";
-          ctx.lineWidth = size * 0.16;
-          for (let k = 0; k < 6; k++) {
-            const ox = (Math.random() - 0.5) * (size * 0.03);
-            const oy = (Math.random() - 0.5) * (size * 0.03);
-            ctx.strokeText(text, cx + ox, y + oy);
-          }
-
-          ctx.shadowBlur = size * 0.10;
-          ctx.fillStyle = "rgba(35, 255, 120, 0.95)";
-          for (let k = 0; k < 4; k++) {
-            const ox = (Math.random() - 0.5) * (size * 0.02);
-            const oy = (Math.random() - 0.5) * (size * 0.02);
-            ctx.fillText(text, cx + ox, y + oy);
-          }
-
-          ctx.shadowBlur = size * 0.06;
-          ctx.fillStyle = "rgba(235, 255, 245, 0.35)";
-          ctx.fillText(text, cx, y - size * 0.02);
         }
 
-        drawLine(lines[0] || "", y0, 150);
-        drawLine(lines[1] || "", y1, 140);
+        function drawLine(text, y, size) {
+          if (!text) return;
+          ctx.font = `900 ${size}px ${fontFamily}`;
 
-        const tex = new THREE.CanvasTexture(canvas);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.minFilter = THREE.LinearFilter;
-        tex.magFilter = THREE.LinearFilter;
-        tex.generateMipmaps = false;
-        tex.needsUpdate = true;
-        return tex;
+          if (mode === "glow") {
+            const jitterPx = size * 0.020;
+
+            ctx.shadowColor = "rgba(60, 255, 140, 0.95)";
+            ctx.shadowBlur = size * 0.62;
+
+            ctx.strokeStyle = "rgba(70, 255, 150, 0.18)";
+            ctx.lineWidth = size * 0.70;
+            jitteredDraw((ox, oy) => ctx.strokeText(text, cx + ox, y + oy), 10, jitterPx);
+
+            ctx.shadowBlur = size * 0.84;
+            ctx.fillStyle = "rgba(80, 255, 170, 0.12)";
+            jitteredDraw((ox, oy) => ctx.fillText(text, cx + ox, y + oy), 6, jitterPx * 0.7);
+
+            ctx.shadowBlur = size * 0.96;
+            ctx.strokeStyle = "rgba(140, 255, 210, 0.10)";
+            ctx.lineWidth = size * 0.36;
+            ctx.strokeText(text, cx, y);
+            return;
+          }
+
+          const jitterPx = size * 0.012;
+
+          ctx.shadowColor = "rgba(0, 0, 0, 0)";
+          ctx.shadowBlur = 0;
+
+          ctx.strokeStyle = "rgba(20, 210, 90, 1)";
+          ctx.lineWidth = size * 0.30;
+          jitteredDraw((ox, oy) => ctx.strokeText(text, cx + ox, y + oy), 7, jitterPx);
+
+          ctx.fillStyle = "rgba(35, 255, 120, 1)";
+          jitteredDraw((ox, oy) => ctx.fillText(text, cx + ox, y + oy), 3, jitterPx * 0.6);
+
+          ctx.strokeStyle = "rgba(235, 255, 245, 0.22)";
+          ctx.lineWidth = size * 0.08;
+          ctx.strokeText(text, cx, y - size * 0.02);
+
+          ctx.fillStyle = "rgba(235, 255, 245, 0.16)";
+          ctx.fillText(text, cx, y - size * 0.03);
+        }
+
+        drawLine(lines[0] || "", y0, 300);
+        drawLine(lines[1] || "", y1, 280);
+
+        return canvas;
       }
 
-      const textTex = makeNeonTextTexture(["陳巧恩", "新年快樂"]);
-      const textMat = new THREE.SpriteMaterial({
-        map: textTex,
+      const TEXT_CANVAS_W = 2048;
+      const TEXT_CANVAS_H = 1024;
+      const TEXT_LINES = ["陳巧恩", "新年快樂"];
+
+      const plateCanvas = makeTextPlateCanvas({ w: TEXT_CANVAS_W, h: TEXT_CANVAS_H });
+      const crispCanvas = makeMarkerTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "crisp" });
+      const glowCanvas = makeMarkerTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "glow" });
+
+      const plateTex = canvasToTexture(plateCanvas);
+      const crispTex = canvasToTexture(crispCanvas);
+      const glowTextTex = canvasToTexture(glowCanvas);
+
+      const textPlateMat = new THREE.SpriteMaterial({
+        map: plateTex,
         transparent: true,
-        opacity: 0.92,
+        opacity: 0.35,
+        alphaTest: 0,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      });
+
+      const textSolidMat = new THREE.SpriteMaterial({
+        map: crispTex,
+        transparent: true,
+        opacity: 1.0,
+        alphaTest: 0.05,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      });
+
+      const textGlowMat = new THREE.SpriteMaterial({
+        map: glowTextTex,
+        transparent: true,
+        opacity: 0.55,
         alphaTest: 0.02,
         depthTest: false,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
 
-      const textSprite = new THREE.Sprite(textMat);
-      textSprite.position.set(0, 0.02, 0.22);
+      const textPlate = new THREE.Sprite(textPlateMat);
+      const textSolid = new THREE.Sprite(textSolidMat);
+      const textGlow = new THREE.Sprite(textGlowMat);
+
+      const textZ = 0.25;
+      textPlate.position.set(0, 0.02, textZ);
+      textSolid.position.set(0, 0.02, textZ + 0.001);
+      textGlow.position.set(0, 0.02, textZ + 0.002);
+
       const textHeight = isMobile ? 0.54 : 0.62;
-      const textAspect = textTex.image.width / textTex.image.height;
-      textSprite.scale.set(textHeight * textAspect, textHeight, 1);
-      textSprite.renderOrder = 120;
-      scene.add(textSprite);
+      const textAspect = crispCanvas.width / crispCanvas.height;
+      textSolid.scale.set(textHeight * textAspect, textHeight, 1);
+      textGlow.scale.copy(textSolid.scale);
+      textPlate.scale.set(textSolid.scale.x * 1.20, textSolid.scale.y * 1.24, 1);
+
+      textPlate.renderOrder = 110;
+      textSolid.renderOrder = 120;
+      textGlow.renderOrder = 130;
+
+      scene.add(textPlate);
+      scene.add(textSolid);
+      scene.add(textGlow);
 
       // ---------- Animation ----------
       const clock = new THREE.Clock();
@@ -1477,12 +1594,18 @@
         const pulse = heartbeatScale(t);
         const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
         const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.10, 0, 1);
-        const outward = kick;
+        const outward = Math.pow(kick, 0.65);
+        const dirMix = 0.85 * outward;
 
         uOutwardFill.value = outward;
         uOutwardEdge.value = outward;
         uOutwardOuterDust.value = outward;
         uOutwardSparkle.value = outward;
+
+        uDirMixFill.value = dirMix;
+        uDirMixEdge.value = dirMix;
+        uDirMixOuterDust.value = dirMix;
+        uDirMixSparkle.value = dirMix;
 
         const breath = 0.03 * Math.sin(t * 0.9);
         bloomPass.strength = BLOOM.strength * THREE.MathUtils.clamp(0.86 + 0.20 * kick + breath, 0.76, 1.02);
@@ -1515,7 +1638,7 @@
         renderer.setPixelRatio(dpr);
         renderer.setSize(w, h);
 
-        composer.setPixelRatio(dpr);
+        composer.setPixelRatio(dpr * ppScale);
         composer.setSize(w, h);
         bloomPass.setSize(w, h);
       }, { passive: true });
