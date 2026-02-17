@@ -249,7 +249,7 @@
       const BLOOM = {
         strength: 0.85,
         radius: 0.18,
-        threshold: 0.72,
+        threshold: 0.74,
       };
 
       const composer = new EffectComposer(renderer);
@@ -265,7 +265,7 @@
       composer.addPass(bloomPass);
       composer.addPass(new OutputPass());
 
-      // ---------- Sprite (hard dot; no halo ring) ----------
+      // ---------- Sprite ----------
       function makeDotTexture({ size = 64 } = {}) {
         const c = document.createElement("canvas");
         c.width = c.height = size;
@@ -287,7 +287,39 @@
         return tex;
       }
 
+      function makeGlowTexture({ size = 128 } = {}) {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+
+        const ctx = c.getContext("2d");
+        ctx.clearRect(0, 0, size, size);
+
+        const g = ctx.createRadialGradient(
+          size * 0.5,
+          size * 0.5,
+          0,
+          size * 0.5,
+          size * 0.5,
+          size * 0.5
+        );
+        g.addColorStop(0, "rgba(255,255,255,1)");
+        g.addColorStop(0.35, "rgba(255,255,255,0.55)");
+        g.addColorStop(1, "rgba(255,255,255,0)");
+
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, size, size);
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
+        tex.needsUpdate = true;
+        return tex;
+      }
+
       const dotTex = makeDotTexture({ size: 64 });
+      const glowTex = makeGlowTexture({ size: 128 });
 
       // ---------- Heart (2D shape) ----------
       const heartShape = new THREE.Shape();
@@ -346,8 +378,10 @@
       heart.rotation.set(0, 0, Math.PI);
       scene.add(heart);
 
+      const MOBILE_FIT = 0.75;
       const baseScale = 0.12;
-      heart.scale.setScalar(baseScale);
+      const heartScale = baseScale * (isMobile ? MOBILE_FIT : 1);
+      heart.scale.setScalar(heartScale);
 
       // ---------- Colors (pink / magenta only; tiny hue jitter) ----------
       const _c = new THREE.Color();
@@ -383,6 +417,25 @@
 
       heartFillGeo.setAttribute("position", new THREE.BufferAttribute(heartFillPos, 3));
       heartFillGeo.setAttribute("color", new THREE.BufferAttribute(heartFillCol, 3));
+
+      // Glow layer (soft sprite; additive; vertexColors stay pink)
+      const heartGlowMat = new THREE.PointsMaterial({
+        map: glowTex,
+        transparent: true,
+        opacity: isMobile ? 0.12 : 0.14,
+        alphaTest: 0.02,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        size: isMobile ? 0.095 : 0.105,
+        sizeAttenuation: true,
+        vertexColors: true,
+      });
+
+      const heartGlow = new THREE.Points(heartFillGeo, heartGlowMat);
+      heartGlow.frustumCulled = false;
+      heartGlow.renderOrder = 5;
+      heart.add(heartGlow);
 
       const heartFillMat = new THREE.PointsMaterial({
         map: dotTex,
@@ -439,8 +492,24 @@
         writePinkColor(heartEdgeCol, ix, 0.62, 0.16);
       }
 
-      heartEdgeGeo.setAttribute("position", new THREE.BufferAttribute(heartEdgePos, 3));
+      const heartEdgePosAttr = new THREE.BufferAttribute(heartEdgePos, 3);
+      heartEdgePosAttr.setUsage(THREE.DynamicDrawUsage);
+      heartEdgeGeo.setAttribute("position", heartEdgePosAttr);
       heartEdgeGeo.setAttribute("color", new THREE.BufferAttribute(heartEdgeCol, 3));
+
+      const heartEdgeBasePos = heartEdgePos.slice();
+      const heartEdgeDir = new Float32Array(edgePoints.length * 2);
+      const heartEdgeAmp = new Float32Array(edgePoints.length);
+
+      for (let i = 0; i < edgePoints.length; i++) {
+        const ix = i * 3;
+        const px = heartEdgeBasePos[ix + 0];
+        const py = heartEdgeBasePos[ix + 1];
+        const invLen = 1 / Math.max(1e-6, Math.hypot(px, py));
+        heartEdgeDir[i * 2 + 0] = px * invLen;
+        heartEdgeDir[i * 2 + 1] = py * invLen;
+        heartEdgeAmp[i] = 0.20 + 0.80 * Math.pow(Math.random(), 1.25);
+      }
 
       const heartEdgeMat = new THREE.PointsMaterial({
         map: dotTex,
@@ -467,7 +536,7 @@
       const outerDustCol = new Float32Array(outerDustCount * 3);
 
       const dustMin = 0.55;
-      const dustMax = 5.6;
+      const dustMax = isMobile ? 4.4 : 5.6;
       const dustPow = 2.2;
       const dustZJitter = 0.75;
 
@@ -477,7 +546,7 @@
         const ix = i * 3;
 
         const pickFill = Math.random() < pickFillChance;
-        const baseArr = pickFill ? heartFillPos : heartEdgePos;
+        const baseArr = pickFill ? heartFillPos : heartEdgeBasePos;
         const baseCount = pickFill ? heartFillCount : edgePoints.length;
         const si = Math.floor(Math.random() * baseCount) * 3;
 
@@ -502,8 +571,24 @@
         writePinkColor(outerDustCol, ix, 0.46, 0.22);
       }
 
-      outerDustGeo.setAttribute("position", new THREE.BufferAttribute(outerDustPos, 3));
+      const outerDustPosAttr = new THREE.BufferAttribute(outerDustPos, 3);
+      outerDustPosAttr.setUsage(THREE.DynamicDrawUsage);
+      outerDustGeo.setAttribute("position", outerDustPosAttr);
       outerDustGeo.setAttribute("color", new THREE.BufferAttribute(outerDustCol, 3));
+
+      const outerDustBasePos = outerDustPos.slice();
+      const outerDustDir = new Float32Array(outerDustCount * 2);
+      const outerDustAmp = new Float32Array(outerDustCount);
+
+      for (let i = 0; i < outerDustCount; i++) {
+        const ix = i * 3;
+        const px = outerDustBasePos[ix + 0];
+        const py = outerDustBasePos[ix + 1];
+        const invLen = 1 / Math.max(1e-6, Math.hypot(px, py));
+        outerDustDir[i * 2 + 0] = px * invLen;
+        outerDustDir[i * 2 + 1] = py * invLen;
+        outerDustAmp[i] = 0.25 + 0.75 * Math.pow(Math.random(), 0.70);
+      }
 
       const outerDustMat = new THREE.PointsMaterial({
         map: dotTex,
@@ -536,9 +621,9 @@
         const ix = i * 3;
 
         const si = Math.floor(Math.random() * edgePoints.length) * 3;
-        const bx = heartEdgePos[si + 0];
-        const by = heartEdgePos[si + 1];
-        const bz = heartEdgePos[si + 2];
+        const bx = heartEdgeBasePos[si + 0];
+        const by = heartEdgeBasePos[si + 1];
+        const bz = heartEdgeBasePos[si + 2];
 
         const a = Math.random() * Math.PI * 2;
         const zTilt = (Math.random() - 0.5) * 0.9;
@@ -570,10 +655,27 @@
         sparkleSpeed[i] = 8 + Math.random() * 10;
       }
 
-      sparkleGeo.setAttribute("position", new THREE.BufferAttribute(sparklePos, 3));
+      const sparklePosAttr = new THREE.BufferAttribute(sparklePos, 3);
+      sparklePosAttr.setUsage(THREE.DynamicDrawUsage);
+      sparkleGeo.setAttribute("position", sparklePosAttr);
+
       const sparkleColAttr = new THREE.BufferAttribute(sparkleCol, 3);
       sparkleColAttr.setUsage(THREE.DynamicDrawUsage);
       sparkleGeo.setAttribute("color", sparkleColAttr);
+
+      const sparkleBasePos = sparklePos.slice();
+      const sparkleDir = new Float32Array(sparkleCount * 2);
+      const sparkleAmp = new Float32Array(sparkleCount);
+
+      for (let i = 0; i < sparkleCount; i++) {
+        const ix = i * 3;
+        const px = sparkleBasePos[ix + 0];
+        const py = sparkleBasePos[ix + 1];
+        const invLen = 1 / Math.max(1e-6, Math.hypot(px, py));
+        sparkleDir[i * 2 + 0] = px * invLen;
+        sparkleDir[i * 2 + 1] = py * invLen;
+        sparkleAmp[i] = 0.20 + 0.80 * Math.pow(Math.random(), 1.10);
+      }
 
       const sparkleMat = new THREE.PointsMaterial({
         map: dotTex,
@@ -592,6 +694,13 @@
       sparkle.frustumCulled = false;
       sparkle.renderOrder = 30;
       heart.add(sparkle);
+
+      // ---------- Heartbeat outward offsets ----------
+      const OUTWARD_MAX = {
+        outerDust: isMobile ? 0.75 : 0.95,
+        edge: 0.28,
+        sparkle: 0.22,
+      };
 
       // ---------- Animation ----------
       const clock = new THREE.Clock();
@@ -617,13 +726,47 @@
 
         const t = clock.getElapsedTime();
 
-        // 愛心心跳（僅縮放，不旋轉）
+        // 心跳：中心固定，粒子向外擴散（不使用 group scale 做 pulse）
         const pulse = heartbeatScale(t);
         const pulseBoost = 1 + (pulse - 1) * 1.6;
-        heart.scale.setScalar(baseScale * pulseBoost);
-
         const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.18, 0, 1);
-        bloomPass.strength = BLOOM.strength * (0.85 + 0.35 * kick);
+        const outward = Math.pow(kick, 1.35);
+
+        for (let i = 0; i < outerDustCount; i++) {
+          const ix = i * 3;
+          const dx = outerDustDir[i * 2 + 0];
+          const dy = outerDustDir[i * 2 + 1];
+          const amp = outerDustAmp[i] * OUTWARD_MAX.outerDust * outward;
+          outerDustPos[ix + 0] = outerDustBasePos[ix + 0] + dx * amp;
+          outerDustPos[ix + 1] = outerDustBasePos[ix + 1] + dy * amp;
+          outerDustPos[ix + 2] = outerDustBasePos[ix + 2];
+        }
+        outerDustGeo.attributes.position.needsUpdate = true;
+
+        for (let i = 0; i < edgePoints.length; i++) {
+          const ix = i * 3;
+          const dx = heartEdgeDir[i * 2 + 0];
+          const dy = heartEdgeDir[i * 2 + 1];
+          const amp = heartEdgeAmp[i] * OUTWARD_MAX.edge * outward;
+          heartEdgePos[ix + 0] = heartEdgeBasePos[ix + 0] + dx * amp;
+          heartEdgePos[ix + 1] = heartEdgeBasePos[ix + 1] + dy * amp;
+          heartEdgePos[ix + 2] = heartEdgeBasePos[ix + 2];
+        }
+        heartEdgeGeo.attributes.position.needsUpdate = true;
+
+        for (let i = 0; i < sparkleCount; i++) {
+          const ix = i * 3;
+          const dx = sparkleDir[i * 2 + 0];
+          const dy = sparkleDir[i * 2 + 1];
+          const amp = sparkleAmp[i] * OUTWARD_MAX.sparkle * outward;
+          sparklePos[ix + 0] = sparkleBasePos[ix + 0] + dx * amp;
+          sparklePos[ix + 1] = sparkleBasePos[ix + 1] + dy * amp;
+          sparklePos[ix + 2] = sparkleBasePos[ix + 2];
+        }
+        sparkleGeo.attributes.position.needsUpdate = true;
+
+        const breath = 0.03 * Math.sin(t * 0.9);
+        bloomPass.strength = BLOOM.strength * THREE.MathUtils.clamp(0.86 + 0.20 * kick + breath, 0.76, 1.02);
 
         for (let i = 0; i < sparkleCount; i++) {
           const ix = i * 3;
