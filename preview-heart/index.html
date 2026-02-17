@@ -146,14 +146,10 @@
       {
         name: "esm.sh",
         three: "https://esm.sh/three@0.182.0",
-        jsm: "https://esm.sh/three@0.182.0/examples/jsm",
-        jsmSuffix: "",
       },
       {
         name: "jsdelivr",
         three: "https://cdn.jsdelivr.net/npm/three@0.182.0/+esm",
-        jsm: "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm",
-        jsmSuffix: "/+esm",
       },
     ];
 
@@ -183,16 +179,7 @@
 
         try {
           const THREE = await importWithTimeout(cdn.three, timeoutMs);
-          const suffix = cdn.jsmSuffix || "";
-
-          const { RoomEnvironment } = await importWithTimeout(`${cdn.jsm}/environments/RoomEnvironment.js${suffix}`, timeoutMs);
-          const { MeshSurfaceSampler } = await importWithTimeout(`${cdn.jsm}/math/MeshSurfaceSampler.js${suffix}`, timeoutMs);
-          const { EffectComposer } = await importWithTimeout(`${cdn.jsm}/postprocessing/EffectComposer.js${suffix}`, timeoutMs);
-          const { RenderPass } = await importWithTimeout(`${cdn.jsm}/postprocessing/RenderPass.js${suffix}`, timeoutMs);
-          const { UnrealBloomPass } = await importWithTimeout(`${cdn.jsm}/postprocessing/UnrealBloomPass.js${suffix}`, timeoutMs);
-          const { OutputPass } = await importWithTimeout(`${cdn.jsm}/postprocessing/OutputPass.js${suffix}`, timeoutMs);
-
-          return { THREE, RoomEnvironment, MeshSurfaceSampler, EffectComposer, RenderPass, UnrealBloomPass, OutputPass };
+          return { THREE };
         } catch (err) {
           console.warn(`[heart-3d] CDN 失敗：${cdn.name}`, err);
         }
@@ -203,592 +190,344 @@
     }
 
     (async () => {
-      const {
-        THREE,
-        RoomEnvironment,
-        MeshSurfaceSampler,
-        EffectComposer,
-        RenderPass,
-        UnrealBloomPass,
-        OutputPass,
-      } = await loadThreeModules();
+      const { THREE } = await loadThreeModules();
 
-    function hideOverlay() {
-      if (!overlayEl) return;
-      overlayEl.classList.add("hide");
-      window.setTimeout(() => overlayEl.remove(), 380);
-    }
+      function hideOverlay() {
+        if (!overlayEl) return;
+        overlayEl.classList.add("hide");
+        window.setTimeout(() => overlayEl.remove(), 380);
+      }
 
-    const isMobile = matchMedia("(max-width: 768px)").matches;
-    const dprCap = isMobile ? 1.5 : 2;
+      const isMobile = matchMedia("(max-width: 768px)").matches;
+      const dprCap = isMobile ? 1.5 : 2;
 
-    const COUNTS = {
-      ambient: isMobile ? 650 : 1200,
-      core: isMobile ? 12000 : 22000,
-      halo: isMobile ? 2300 : 4400,
-      sparkle: isMobile ? 320 : 600,
-    };
+      const COUNTS = {
+        heartFill: isMobile ? 11000 : 20000,
+        heartEdge: isMobile ? 2400 : 4200,
+        outerDust: isMobile ? 7000 : 14000,
+      };
 
-    // ---------- Renderer / Scene / Camera ----------
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020612);
+      // ---------- Renderer / Scene / Camera ----------
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x020612);
 
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(0, 0.55, 4.6);
-    camera.lookAt(0, 0, 0);
+      const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+      camera.position.set(0, 0.55, 4.6);
+      camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.22;
-    renderer.setClearColor(0x020612, 1);
-    document.body.appendChild(renderer.domElement);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.18;
+      renderer.setClearColor(0x020612, 1);
+      document.body.appendChild(renderer.domElement);
 
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      // ---------- Sprite (hard dot; no halo ring) ----------
+      function makeDotTexture({ size = 64 } = {}) {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
 
-    // ---------- Postprocessing (Bloom) ----------
-    const composer = new EffectComposer(renderer);
-    composer.setSize(window.innerWidth, window.innerHeight);
-    composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
+        const ctx = c.getContext("2d");
+        ctx.clearRect(0, 0, size, size);
+        ctx.fillStyle = "rgba(255,255,255,1)";
+        ctx.beginPath();
+        ctx.arc(size * 0.5, size * 0.5, size * 0.46, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
 
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
-
-    const bloomBaseStrength = 1.12;
-
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      bloomBaseStrength,
-      0.16,
-      0.05
-    );
-    composer.addPass(bloomPass);
-    composer.addPass(new OutputPass());
-
-    // ---------- Glowy Sprite ----------
-    function makeRadialGlowTexture({
-      size = 128,
-      midStop = 0.35,
-      innerColor = "rgba(255,255,255,1)",
-      midColor = "rgba(255,255,255,0.22)",
-      outerColor = "rgba(255,255,255,0)",
-      mipmaps = true,
-    } = {}) {
-      const c = document.createElement("canvas");
-      c.width = c.height = size;
-      const gctx = c.getContext("2d");
-      const g = gctx.createRadialGradient(size * 0.5, size * 0.5, 0, size * 0.5, size * 0.5, size * 0.5);
-      g.addColorStop(0.0, innerColor);
-      g.addColorStop(midStop, midColor);
-      g.addColorStop(1.0, outerColor);
-      gctx.fillStyle = g;
-      gctx.fillRect(0, 0, size, size);
-
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-
-      if (mipmaps) {
-        tex.minFilter = THREE.LinearMipmapLinearFilter;
-        tex.magFilter = THREE.LinearFilter;
-      } else {
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
         tex.minFilter = THREE.LinearFilter;
         tex.magFilter = THREE.LinearFilter;
         tex.generateMipmaps = false;
+        tex.needsUpdate = true;
+        return tex;
       }
 
-      tex.needsUpdate = true;
-      return tex;
-    }
+      const dotTex = makeDotTexture({ size: 64 });
 
-    const blueSprite = makeRadialGlowTexture({
-      innerColor: "rgba(215,250,255,1)",
-      midColor: "rgba(140,225,255,0.18)",
-      outerColor: "rgba(140,225,255,0)",
-    });
+      // ---------- Heart (2D shape) ----------
+      const heartShape = new THREE.Shape();
+      const x = 0, y = 0;
 
-    const whiteSpriteSoft = makeRadialGlowTexture({
-      innerColor: "rgba(255,255,255,1)",
-      midStop: 0.32,
-      midColor: "rgba(255,255,255,0.11)",
-      outerColor: "rgba(255,255,255,0)",
-    });
+      heartShape.moveTo(x + 5, y + 5);
+      heartShape.bezierCurveTo(x + 5, y + 5, x + 4, y, x, y);
+      heartShape.bezierCurveTo(x - 6, y, x - 6, y + 7, x - 6, y + 7);
+      heartShape.bezierCurveTo(x - 6, y + 11, x - 3, y + 15, x + 5, y + 19);
+      heartShape.bezierCurveTo(x + 12, y + 15, x + 16, y + 11, x + 16, y + 7);
+      heartShape.bezierCurveTo(x + 16, y + 7, x + 16, y, x + 10, y);
+      heartShape.bezierCurveTo(x + 7, y, x + 5, y + 5, x + 5, y + 5);
 
-    const whiteSpriteSharp = makeRadialGlowTexture({
-      size: 96,
-      innerColor: "rgba(255,255,255,1)",
-      midStop: 0.22,
-      midColor: "rgba(255,255,255,0.05)",
-      outerColor: "rgba(255,255,255,0)",
-      mipmaps: false,
-    });
+      const outlinePolyRaw = heartShape.getSpacedPoints(520);
+      outlinePolyRaw.pop();
+      const outlinePoly = outlinePolyRaw.map((p) => new THREE.Vector2(p.x, p.y));
 
-    // ---------- 3D Heart (ExtrudeGeometry) ----------
-    const heartShape = new THREE.Shape();
-    const x = 0, y = 0;
+      const outlineBoxRaw = new THREE.Box2().setFromPoints(outlinePoly);
+      const outlineCenter = outlineBoxRaw.getCenter(new THREE.Vector2());
 
-    heartShape.moveTo(x + 5, y + 5);
-    heartShape.bezierCurveTo(x + 5, y + 5, x + 4, y, x, y);
-    heartShape.bezierCurveTo(x - 6, y, x - 6, y + 7, x - 6, y + 7);
-    heartShape.bezierCurveTo(x - 6, y + 11, x - 3, y + 15, x + 5, y + 19);
-    heartShape.bezierCurveTo(x + 12, y + 15, x + 16, y + 11, x + 16, y + 7);
-    heartShape.bezierCurveTo(x + 16, y + 7, x + 16, y, x + 10, y);
-    heartShape.bezierCurveTo(x + 7, y, x + 5, y + 5, x + 5, y + 5);
+      for (let i = 0; i < outlinePoly.length; i++) {
+        outlinePoly[i].sub(outlineCenter);
+      }
 
-    const heartExtrudeDepth = 4;
-    const heartGeo = new THREE.ExtrudeGeometry(heartShape, {
-      depth: heartExtrudeDepth,
-      steps: 2,
-      bevelEnabled: true,
-      bevelThickness: 1.7,
-      bevelSize: 1.25,
-      bevelOffset: 0,
-      bevelSegments: 6,
-    });
+      const outlineBox = new THREE.Box2().setFromPoints(outlinePoly);
 
-    heartGeo.computeBoundingBox();
-    const heartGeoCenter = heartGeo.boundingBox.getCenter(new THREE.Vector3());
-    heartGeo.translate(-heartGeoCenter.x, -heartGeoCenter.y, -heartGeoCenter.z);
+      function isPointInPolygon(p, poly) {
+        let inside = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const xi = poly[i].x, yi = poly[i].y;
+          const xj = poly[j].x, yj = poly[j].y;
+          const intersect = ((yi > p.y) !== (yj > p.y))
+            && (p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
 
-    const heart = new THREE.Group();
-    heart.rotation.set(0.18, 0, Math.PI);
-    scene.add(heart);
+      const MAX_TRIES_IN_POLY = 900;
+      const _v2 = new THREE.Vector2();
 
-    const baseScale = 0.12;
-    heart.scale.setScalar(baseScale);
+      function sampleInHeart2D(out) {
+        for (let tries = 0; tries < MAX_TRIES_IN_POLY; tries++) {
+          out.set(
+            THREE.MathUtils.lerp(outlineBox.min.x, outlineBox.max.x, Math.random()),
+            THREE.MathUtils.lerp(outlineBox.min.y, outlineBox.max.y, Math.random())
+          );
+          if (isPointInPolygon(out, outlinePoly)) return out;
+        }
 
-    // ---------- MeshSurfaceSampler (halo/sparkle sampling) ----------
-    const samplerMesh = new THREE.Mesh(heartGeo, new THREE.MeshBasicMaterial());
-    const surfaceSampler = new MeshSurfaceSampler(samplerMesh).build();
+        out.set(0, 0);
+        return out;
+      }
 
-    // ---------- Particles ----------
-    const heartPink = new THREE.Color(0xff1e2d);
-    const haloWhite = new THREE.Color(0xffffff);
-    const _col = new THREE.Color();
-    const _p = new THREE.Vector3();
-    const _n = new THREE.Vector3();
+      const heart = new THREE.Group();
+      heart.rotation.set(0, 0, Math.PI);
+      scene.add(heart);
 
-    // 1) 全場景淡藍粒子（固定在愛心後方）
-    const ambientCount = COUNTS.ambient;
-    const ambientBox = new THREE.Vector3(42, 26, 42);
-    const half = ambientBox.clone().multiplyScalar(0.5);
-    const ambientZMin = -half.z;
-    const ambientZMax = -0.6;
+      const baseScale = 0.12;
+      heart.scale.setScalar(baseScale);
 
-    const ambientGeo = new THREE.BufferGeometry();
-    const ambientPos = new Float32Array(ambientCount * 3);
-    const ambientVel = new Float32Array(ambientCount * 3);
-    const ambientCol = new Float32Array(ambientCount * 3);
+      // ---------- Colors (pink / magenta only; tiny hue jitter) ----------
+      const _c = new THREE.Color();
+      function writePinkColor(dst, ix, lightnessBase, lightnessJitter) {
+        const hue = THREE.MathUtils.degToRad(330 + (Math.random() - 0.5) * 16);
+        const h = (hue / (Math.PI * 2) + 1) % 1;
+        const s = 0.86 + Math.random() * 0.12;
+        const l = THREE.MathUtils.clamp(lightnessBase + (Math.random() - 0.5) * lightnessJitter, 0.32, 0.76);
+        _c.setHSL(h, s, l, THREE.SRGBColorSpace);
+        dst[ix + 0] = _c.r;
+        dst[ix + 1] = _c.g;
+        dst[ix + 2] = _c.b;
+      }
 
-    for (let i = 0; i < ambientCount; i++) {
-      const ix = i * 3;
-      ambientPos[ix + 0] = (Math.random() - 0.5) * ambientBox.x;
-      ambientPos[ix + 1] = (Math.random() - 0.5) * ambientBox.y;
-      ambientPos[ix + 2] = THREE.MathUtils.lerp(ambientZMin, ambientZMax, Math.random());
+      // ---------- Layer A: heartFill (almost 2D) ----------
+      const heartFillCount = COUNTS.heartFill;
+      const heartFillGeo = new THREE.BufferGeometry();
+      const heartFillPos = new Float32Array(heartFillCount * 3);
+      const heartFillCol = new Float32Array(heartFillCount * 3);
 
-      ambientVel[ix + 0] = (Math.random() - 0.5) * 0.10;
-      ambientVel[ix + 1] = (Math.random() * 0.6 + 0.4) * 0.16;
-      ambientVel[ix + 2] = (Math.random() - 0.5) * 0.10;
+      const fillZJitter = 0.06;
 
-      const tint = 0.16 + Math.random() * 0.22;
-      ambientCol[ix + 0] = 0.50 * tint;
-      ambientCol[ix + 1] = 0.90 * tint;
-      ambientCol[ix + 2] = 1.00 * tint;
-    }
+      for (let i = 0; i < heartFillCount; i++) {
+        const ix = i * 3;
+        sampleInHeart2D(_v2);
 
-    ambientGeo.setAttribute("position", new THREE.BufferAttribute(ambientPos, 3));
-    ambientGeo.setAttribute("color", new THREE.BufferAttribute(ambientCol, 3));
+        heartFillPos[ix + 0] = _v2.x;
+        heartFillPos[ix + 1] = _v2.y;
+        heartFillPos[ix + 2] = (Math.random() - 0.5) * fillZJitter;
 
-    const ambientMat = new THREE.PointsMaterial({
-      map: blueSprite,
-      transparent: true,
-      opacity: 0.08,
-      alphaTest: 0.02,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      size: 0.060,
-      sizeAttenuation: true,
-      vertexColors: true,
-    });
+        writePinkColor(heartFillCol, ix, 0.58, 0.18);
+      }
 
-    const ambientPoints = new THREE.Points(ambientGeo, ambientMat);
-    ambientPoints.renderOrder = -20;
-    scene.add(ambientPoints);
+      heartFillGeo.setAttribute("position", new THREE.BufferAttribute(heartFillPos, 3));
+      heartFillGeo.setAttribute("color", new THREE.BufferAttribute(heartFillCol, 3));
 
-    function makePointsMaterial(opts) {
-      return new THREE.PointsMaterial(Object.assign({
-        map: whiteSpriteSoft,
+      const heartFillMat = new THREE.PointsMaterial({
+        map: dotTex,
         transparent: true,
-        depthTest: true,
+        opacity: 0.78,
+        alphaTest: 0.70,
+        depthTest: false,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending: THREE.NormalBlending,
+        size: isMobile ? 0.050 : 0.054,
         sizeAttenuation: true,
         vertexColors: true,
-      }, opts));
-    }
+      });
 
-    // 2) 愛心：體積填充紅色粒子（2D point-in-polygon + 隨機 z 厚度）
-    const coreCount = COUNTS.core;
-    const outline = heartShape.getSpacedPoints(240);
-    const outline2 = outline.map((v) => new THREE.Vector2(v.x, v.y));
-    const outlineBox = new THREE.Box2().setFromPoints(outline2);
+      const heartFill = new THREE.Points(heartFillGeo, heartFillMat);
+      heartFill.frustumCulled = false;
+      heartFill.renderOrder = 10;
+      heart.add(heartFill);
 
-    function isPointInPolygon(p, poly) {
-      let inside = false;
-      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-        const xi = poly[i].x, yi = poly[i].y;
-        const xj = poly[j].x, yj = poly[j].y;
-        const intersect = ((yi > p.y) !== (yj > p.y))
-          && (p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi);
-        if (intersect) inside = !inside;
-      }
-      return inside;
-    }
+      // ---------- Layer B: heartEdge (outline + small jitter in/out) ----------
+      const heartEdgeCount = COUNTS.heartEdge;
+      const edgePointsRaw = heartShape.getSpacedPoints(heartEdgeCount);
+      edgePointsRaw.pop();
 
-    const _v2 = new THREE.Vector2();
-    function sampleInHeart2D(out) {
-      for (let tries = 0; tries < 400; tries++) {
-        out.set(
-          THREE.MathUtils.lerp(outlineBox.min.x, outlineBox.max.x, Math.random()),
-          THREE.MathUtils.lerp(outlineBox.min.y, outlineBox.max.y, Math.random())
-        );
-        if (isPointInPolygon(out, outline2)) return out;
-      }
+      const edgePoints = edgePointsRaw.map((p) => new THREE.Vector2(p.x - outlineCenter.x, p.y - outlineCenter.y));
 
-      out.set(
-        (outlineBox.min.x + outlineBox.max.x) * 0.5,
-        (outlineBox.min.y + outlineBox.max.y) * 0.5
-      );
-      return out;
-    }
+      const heartEdgeGeo = new THREE.BufferGeometry();
+      const heartEdgePos = new Float32Array(edgePoints.length * 3);
+      const heartEdgeCol = new Float32Array(edgePoints.length * 3);
 
-    const heartExtentX = Math.max(
-      Math.abs(outlineBox.min.x - heartGeoCenter.x),
-      Math.abs(outlineBox.max.x - heartGeoCenter.x)
-    );
-    const heartExtentY = Math.max(
-      Math.abs(outlineBox.min.y - heartGeoCenter.y),
-      Math.abs(outlineBox.max.y - heartGeoCenter.y)
-    );
+      const edgeJitter = 0.26;
+      const edgeZJitter = 0.04;
 
-    function edgeNorm01(centeredX, centeredY) {
-      const nx = centeredX / (heartExtentX || 1);
-      const ny = centeredY / (heartExtentY || 1);
-      return Math.min(1, Math.sqrt(nx * nx + ny * ny));
-    }
-
-    const coreGeo = new THREE.BufferGeometry();
-    const corePos = new Float32Array(coreCount * 3);
-    const coreCol = new Float32Array(coreCount * 3);
-
-    const shellRatio = 0.82;
-    const shellCount = Math.floor(coreCount * shellRatio);
-    const innerCount = coreCount - shellCount;
-
-    const shellInsetMin = 0.03;
-    const shellThickness = 0.55;
-    const shellInsetPow = 2.2;
-    const shellEdgePow = 2.0;
-
-    for (let i = 0; i < shellCount; i++) {
-      const ix = i * 3;
-
-      for (let tries = 0; tries < 120; tries++) {
-        surfaceSampler.sample(_p, _n);
-        const r = edgeNorm01(_p.x, _p.y);
-        const accept = 0.10 + 0.90 * Math.pow(r, shellEdgePow);
-        if (Math.random() < accept || tries === 119) break;
-      }
-
-      const inset = shellInsetMin + Math.pow(Math.random(), shellInsetPow) * shellThickness;
-      _p.addScaledVector(_n, -inset);
-
-      corePos[ix + 0] = _p.x;
-      corePos[ix + 1] = _p.y;
-      corePos[ix + 2] = _p.z;
-
-      _col.copy(heartPink);
-      const w = (0.62 + Math.random() * 0.34) * (0.78 + 0.22 * edgeNorm01(_p.x, _p.y));
-      coreCol[ix + 0] = _col.r * w;
-      coreCol[ix + 1] = _col.g * w;
-      coreCol[ix + 2] = _col.b * w;
-    }
-
-    const innerEdgePow = 2.8;
-
-    for (let i = 0; i < innerCount; i++) {
-      const dst = shellCount + i;
-      const ix = dst * 3;
-
-      for (let tries = 0; tries < 220; tries++) {
-        sampleInHeart2D(_v2);
-        const cx = _v2.x - heartGeoCenter.x;
-        const cy = _v2.y - heartGeoCenter.y;
-        const r = edgeNorm01(cx, cy);
-        const accept = 0.06 + 0.94 * Math.pow(r, innerEdgePow);
-        if (Math.random() < accept || tries === 219) break;
-      }
-
-      const z = THREE.MathUtils.lerp(0, heartExtrudeDepth, Math.random());
-      corePos[ix + 0] = _v2.x - heartGeoCenter.x;
-      corePos[ix + 1] = _v2.y - heartGeoCenter.y;
-      corePos[ix + 2] = z - heartGeoCenter.z;
-
-      _col.copy(heartPink);
-      const r = edgeNorm01(corePos[ix + 0], corePos[ix + 1]);
-      const w = (0.48 + Math.random() * 0.28) * (0.72 + 0.28 * r);
-      coreCol[ix + 0] = _col.r * w;
-      coreCol[ix + 1] = _col.g * w;
-      coreCol[ix + 2] = _col.b * w;
-    }
-
-    coreGeo.setAttribute("position", new THREE.BufferAttribute(corePos, 3));
-    coreGeo.setAttribute("color", new THREE.BufferAttribute(coreCol, 3));
-
-    const coreMatSharp = makePointsMaterial({
-      map: whiteSpriteSharp,
-      opacity: 0.62,
-      alphaTest: 0.10,
-      depthWrite: true,
-      size: isMobile ? 0.044 : 0.048,
-    });
-    const coreMatGlow1 = makePointsMaterial({
-      opacity: 0.11,
-      alphaTest: 0.06,
-      size: isMobile ? 0.088 : 0.098,
-    });
-    const coreMatGlow2 = makePointsMaterial({
-      opacity: 0.040,
-      alphaTest: 0.035,
-      size: isMobile ? 0.145 : 0.160,
-    });
-
-    const corePointsSharp = new THREE.Points(coreGeo, coreMatSharp);
-    const corePointsGlow1 = new THREE.Points(coreGeo, coreMatGlow1);
-    const corePointsGlow2 = new THREE.Points(coreGeo, coreMatGlow2);
-    corePointsSharp.frustumCulled = corePointsGlow1.frustumCulled = corePointsGlow2.frustumCulled = false;
-
-    corePointsSharp.renderOrder = 10;
-    corePointsGlow1.renderOrder = 9;
-    corePointsGlow2.renderOrder = 8;
-
-    heart.add(corePointsGlow2);
-    heart.add(corePointsGlow1);
-    heart.add(corePointsSharp);
-
-    // 3) halo：白色粒子（MeshSurfaceSampler 取表面點與法線，再沿法線外擴）
-    const haloCount = COUNTS.halo;
-
-    const haloGeo = new THREE.BufferGeometry();
-    const haloPos = new Float32Array(haloCount * 3);
-    const haloBase = new Float32Array(haloCount * 3);
-    const haloNrm = new Float32Array(haloCount * 3);
-    const haloPhase = new Float32Array(haloCount);
-    const haloCol = new Float32Array(haloCount * 3);
-
-    for (let i = 0; i < haloCount; i++) {
-      const ix = i * 3;
-      surfaceSampler.sample(_p, _n);
-
-      const expand = 0.10 + Math.random() * 0.18;
-      _p.addScaledVector(_n, expand);
-
-      haloPos[ix + 0] = haloBase[ix + 0] = _p.x;
-      haloPos[ix +  1] = haloBase[ix + 1] = _p.y;
-      haloPos[ix + 2] = haloBase[ix + 2] = _p.z;
-
-      haloNrm[ix + 0] = _n.x;
-      haloNrm[ix + 1] = _n.y;
-      haloNrm[ix + 2] = _n.z;
-
-      haloPhase[i] = Math.random() * Math.PI * 2;
-
-      _col.copy(haloWhite);
-      const w = 0.12 + Math.random() * 0.20;
-      haloCol[ix + 0] = _col.r * w;
-      haloCol[ix + 1] = _col.g * w;
-      haloCol[ix + 2] = _col.b * w;
-    }
-
-    haloGeo.setAttribute("position", new THREE.BufferAttribute(haloPos, 3));
-    haloGeo.setAttribute("color", new THREE.BufferAttribute(haloCol, 3));
-
-    const haloMatSharp = makePointsMaterial({
-      map: whiteSpriteSharp,
-      opacity: 0.24,
-      alphaTest: 0.14,
-      size: isMobile ? 0.135 : 0.150,
-    });
-    const haloMatGlow1 = makePointsMaterial({
-      opacity: 0.060,
-      alphaTest: 0.07,
-      size: isMobile ? 0.225 : 0.245,
-    });
-
-    const haloPointsSharp = new THREE.Points(haloGeo, haloMatSharp);
-    const haloPointsGlow1 = new THREE.Points(haloGeo, haloMatGlow1);
-    haloPointsSharp.frustumCulled = haloPointsGlow1.frustumCulled = false;
-    haloPointsSharp.renderOrder = 20;
-    haloPointsGlow1.renderOrder = 19;
-
-    heart.add(haloPointsGlow1);
-    heart.add(haloPointsSharp);
-
-    // 4) sparkle：少量白色閃光點（每幀只更新 color）
-    const sparkleCount = COUNTS.sparkle;
-
-    const sparkleGeo = new THREE.BufferGeometry();
-    const sparklePos = new Float32Array(sparkleCount * 3);
-    const sparkleCol = new Float32Array(sparkleCount * 3);
-    const sparklePhase = new Float32Array(sparkleCount);
-    const sparkleSpeed = new Float32Array(sparkleCount);
-    const sparkleBase = new Float32Array(sparkleCount);
-
-    for (let i = 0; i < sparkleCount; i++) {
-      const ix = i * 3;
-
-      for (let tries = 0; tries < 120; tries++) {
-        surfaceSampler.sample(_p, _n);
-        const r = edgeNorm01(_p.x, _p.y);
-        const accept = 0.12 + 0.88 * Math.pow(r, 2.4);
-        if (Math.random() < accept || tries === 119) break;
-      }
-
-      const offset = 0.10 + Math.random() * 0.16;
-      _p.addScaledVector(_n, offset);
-
-      sparklePos[ix + 0] = _p.x;
-      sparklePos[ix + 1] = _p.y;
-      sparklePos[ix + 2] = _p.z;
-
-      sparkleCol[ix + 0] = 0;
-      sparkleCol[ix + 1] = 0;
-      sparkleCol[ix + 2] = 0;
-
-      sparklePhase[i] = Math.random() * Math.PI * 2;
-      sparkleSpeed[i] = 7.5 + Math.random() * 5.5;
-      sparkleBase[i] = 0.35 + Math.random() * 0.75;
-    }
-
-    sparkleGeo.setAttribute("position", new THREE.BufferAttribute(sparklePos, 3));
-    sparkleGeo.setAttribute("color", new THREE.BufferAttribute(sparkleCol, 3));
-
-    const sparkleMat = makePointsMaterial({
-      map: whiteSpriteSharp,
-      transparent: true,
-      opacity: 1,
-      alphaTest: 0.14,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      size: isMobile ? 0.078 : 0.070,
-    });
-
-    const sparklePoints = new THREE.Points(sparkleGeo, sparkleMat);
-    sparklePoints.frustumCulled = false;
-    sparklePoints.renderOrder = 30;
-    heart.add(sparklePoints);
-
-    // ---------- Animation ----------
-    const clock = new THREE.Clock();
-
-    function heartbeatScale(t) {
-      const speed = 3.2;
-      const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 6);
-      const b2 = Math.pow(Math.max(0, Math.sin(t * speed + 1.1)), 10);
-      const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
-      return 1 + 0.11 * (b1 + 0.6 * b2) - 0.045 * relax;
-    }
-
-    let didMarkOk = false;
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      if (!didMarkOk) {
-        didMarkOk = true;
-        window.__HEART_OK__ = true;
-        hideOverlay();
-      }
-
-      const dt = Math.min(0.05, clock.getDelta());
-      const t = clock.elapsedTime;
-
-      // 愛心心跳（僅縮放，不旋轉）
-      const pulse = heartbeatScale(t);
-      heart.scale.setScalar(baseScale * pulse);
-
-      // kick：心跳強度（給 halo 呼吸用；bloom strength 固定不閃）
-      const kick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
-
-      // 背景粒子漂浮（wrap）
-      const pos = ambientGeo.attributes.position.array;
-      for (let i = 0; i < ambientCount; i++) {
+      for (let i = 0; i < edgePoints.length; i++) {
         const ix = i * 3;
-        pos[ix + 0] += ambientVel[ix + 0] * (dt * 60);
-        pos[ix + 1] += ambientVel[ix + 1] * (dt * 60);
-        pos[ix + 2] += ambientVel[ix + 2] * (dt * 60);
 
-        if (pos[ix + 0] > half.x) pos[ix + 0] = -half.x;
-        if (pos[ix + 0] < -half.x) pos[ix + 0] = half.x;
-        if (pos[ix + 1] > half.y) pos[ix + 1] = -half.y;
-        if (pos[ix + 1] < -half.y) pos[ix + 1] = half.y;
-        if (pos[ix + 2] > ambientZMax) pos[ix + 2] = ambientZMin;
-        if (pos[ix + 2] < ambientZMin) pos[ix + 2] = ambientZMax;
+        const prev = edgePoints[(i - 1 + edgePoints.length) % edgePoints.length];
+        const curr = edgePoints[i];
+        const next = edgePoints[(i + 1) % edgePoints.length];
+
+        const tx = next.x - prev.x;
+        const ty = next.y - prev.y;
+        const invLen = 1 / Math.max(1e-6, Math.hypot(tx, ty));
+
+        const nx = -ty * invLen;
+        const ny = tx * invLen;
+
+        const j = (Math.random() - 0.5) * 2 * edgeJitter;
+
+        heartEdgePos[ix + 0] = curr.x + nx * j;
+        heartEdgePos[ix + 1] = curr.y + ny * j;
+        heartEdgePos[ix + 2] = (Math.random() - 0.5) * edgeZJitter;
+
+        writePinkColor(heartEdgeCol, ix, 0.62, 0.16);
       }
-      ambientGeo.attributes.position.needsUpdate = true;
 
-      // halo：沿法線做非常小的呼吸抖動（保持輪廓、避免變雲）
-      const haloArr = haloGeo.attributes.position.array;
-      const haloAmp = 0.08 + kick * 0.05;
-      const haloFreq = 1.25;
+      heartEdgeGeo.setAttribute("position", new THREE.BufferAttribute(heartEdgePos, 3));
+      heartEdgeGeo.setAttribute("color", new THREE.BufferAttribute(heartEdgeCol, 3));
 
-      for (let i = 0; i < haloCount; i++) {
+      const heartEdgeMat = new THREE.PointsMaterial({
+        map: dotTex,
+        transparent: true,
+        opacity: 0.68,
+        alphaTest: 0.70,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        size: isMobile ? 0.056 : 0.060,
+        sizeAttenuation: true,
+        vertexColors: true,
+      });
+
+      const heartEdge = new THREE.Points(heartEdgeGeo, heartEdgeMat);
+      heartEdge.frustumCulled = false;
+      heartEdge.renderOrder = 20;
+      heart.add(heartEdge);
+
+      // ---------- Layer C: outerDust (seed + random displacement; small more common) ----------
+      const outerDustCount = COUNTS.outerDust;
+      const outerDustGeo = new THREE.BufferGeometry();
+      const outerDustPos = new Float32Array(outerDustCount * 3);
+      const outerDustCol = new Float32Array(outerDustCount * 3);
+
+      const dustMin = 0.55;
+      const dustMax = 5.6;
+      const dustPow = 2.2;
+      const dustZJitter = 0.75;
+
+      const pickFillChance = heartFillCount / (heartFillCount + edgePoints.length);
+
+      for (let i = 0; i < outerDustCount; i++) {
         const ix = i * 3;
-        const s = Math.sin(t * haloFreq + haloPhase[i]);
-        const amp = haloAmp * (0.5 + 0.5 * s);
-        haloArr[ix + 0] = haloBase[ix + 0] + haloNrm[ix + 0] * amp;
-        haloArr[ix + 1] = haloBase[ix + 1] + haloNrm[ix + 1] * amp;
-        haloArr[ix + 2] = haloBase[ix + 2] + haloNrm[ix + 2] * amp;
+
+        const pickFill = Math.random() < pickFillChance;
+        const baseArr = pickFill ? heartFillPos : heartEdgePos;
+        const baseCount = pickFill ? heartFillCount : edgePoints.length;
+        const si = Math.floor(Math.random() * baseCount) * 3;
+
+        const bx = baseArr[si + 0];
+        const by = baseArr[si + 1];
+        const bz = baseArr[si + 2];
+
+        const a = Math.random() * Math.PI * 2;
+        const zTilt = (Math.random() - 0.5) * 0.38;
+
+        const dx = Math.cos(a) * Math.cos(zTilt);
+        const dy = Math.sin(a) * Math.cos(zTilt);
+        const dz = Math.sin(zTilt);
+
+        const r = dustMin + (dustMax - dustMin) * Math.pow(Math.random(), dustPow);
+        const jitter = (Math.random() - 0.5) * 0.22;
+
+        outerDustPos[ix + 0] = bx + dx * (r + jitter);
+        outerDustPos[ix + 1] = by + dy * (r + jitter);
+        outerDustPos[ix + 2] = bz + dz * (r * 0.42) + (Math.random() - 0.5) * dustZJitter;
+
+        writePinkColor(outerDustCol, ix, 0.46, 0.22);
       }
-      haloGeo.attributes.position.needsUpdate = true;
 
-      // sparkle：每幀只更新 color attribute
-      const sc = sparkleGeo.attributes.color.array;
-      for (let i = 0; i < sparkleCount; i++) {
-        const ix = i * 3;
-        const s = Math.max(0, Math.sin(t * sparkleSpeed[i] + sparklePhase[i]));
-        const blink = Math.pow(s, 18);
-        const v = sparkleBase[i] * (0.10 + 1.65 * blink);
-        sc[ix + 0] = v;
-        sc[ix + 1] = v;
-        sc[ix + 2] = v;
+      outerDustGeo.setAttribute("position", new THREE.BufferAttribute(outerDustPos, 3));
+      outerDustGeo.setAttribute("color", new THREE.BufferAttribute(outerDustCol, 3));
+
+      const outerDustMat = new THREE.PointsMaterial({
+        map: dotTex,
+        transparent: true,
+        opacity: 0.15,
+        alphaTest: 0.62,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+        size: isMobile ? 0.040 : 0.042,
+        sizeAttenuation: true,
+        vertexColors: true,
+      });
+
+      const outerDust = new THREE.Points(outerDustGeo, outerDustMat);
+      outerDust.frustumCulled = false;
+      outerDust.renderOrder = 1;
+      heart.add(outerDust);
+
+      // ---------- Animation ----------
+      const clock = new THREE.Clock();
+
+      function heartbeatScale(t) {
+        const speed = 3.2;
+        const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 6);
+        const b2 = Math.pow(Math.max(0, Math.sin(t * speed + 1.1)), 10);
+        const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
+        return 1 + 0.11 * (b1 + 0.6 * b2) - 0.045 * relax;
       }
-      sparkleGeo.attributes.color.needsUpdate = true;
 
-      composer.render();
-    }
+      let didMarkOk = false;
 
-    animate();
+      function animate() {
+        requestAnimationFrame(animate);
 
-    // ---------- Resize ----------
-    window.addEventListener("resize", () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+        if (!didMarkOk) {
+          didMarkOk = true;
+          window.__HEART_OK__ = true;
+          hideOverlay();
+        }
 
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      camera.lookAt(0, 0, 0);
+        const t = clock.elapsedTime;
 
-      renderer.setPixelRatio(dpr);
-      renderer.setSize(w, h);
+        // 愛心心跳（僅縮放，不旋轉）
+        const pulse = heartbeatScale(t);
+        heart.scale.setScalar(baseScale * pulse);
 
-      composer.setPixelRatio(dpr);
-      composer.setSize(w, h);
-      bloomPass.setSize(w, h);
-    }, { passive: true });
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      // ---------- Resize ----------
+      window.addEventListener("resize", () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        camera.lookAt(0, 0, 0);
+
+        renderer.setPixelRatio(dpr);
+        renderer.setSize(w, h);
+      }, { passive: true });
     })().catch((err) => {
       showOverlayError(window.__HEART_CDNS_TRIED__ || []);
       appendOverlayErrorMessage(err);
