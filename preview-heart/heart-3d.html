@@ -258,7 +258,6 @@
     composer.addPass(renderPass);
 
     const bloomBaseStrength = 1.12;
-    const bloomFlickerAmp = 0.07;
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
@@ -450,22 +449,87 @@
 
     const _v2 = new THREE.Vector2();
     function sampleInHeart2D(out) {
-      for (;;) {
+      for (let tries = 0; tries < 400; tries++) {
         out.set(
           THREE.MathUtils.lerp(outlineBox.min.x, outlineBox.max.x, Math.random()),
           THREE.MathUtils.lerp(outlineBox.min.y, outlineBox.max.y, Math.random())
         );
         if (isPointInPolygon(out, outline2)) return out;
       }
+
+      out.set(
+        (outlineBox.min.x + outlineBox.max.x) * 0.5,
+        (outlineBox.min.y + outlineBox.max.y) * 0.5
+      );
+      return out;
+    }
+
+    const heartExtentX = Math.max(
+      Math.abs(outlineBox.min.x - heartGeoCenter.x),
+      Math.abs(outlineBox.max.x - heartGeoCenter.x)
+    );
+    const heartExtentY = Math.max(
+      Math.abs(outlineBox.min.y - heartGeoCenter.y),
+      Math.abs(outlineBox.max.y - heartGeoCenter.y)
+    );
+
+    function edgeNorm01(centeredX, centeredY) {
+      const nx = centeredX / (heartExtentX || 1);
+      const ny = centeredY / (heartExtentY || 1);
+      return Math.min(1, Math.sqrt(nx * nx + ny * ny));
     }
 
     const coreGeo = new THREE.BufferGeometry();
     const corePos = new Float32Array(coreCount * 3);
     const coreCol = new Float32Array(coreCount * 3);
 
-    for (let i = 0; i < coreCount; i++) {
+    const shellRatio = 0.82;
+    const shellCount = Math.floor(coreCount * shellRatio);
+    const innerCount = coreCount - shellCount;
+
+    const shellInsetMin = 0.03;
+    const shellThickness = 0.55;
+    const shellInsetPow = 2.2;
+    const shellEdgePow = 2.0;
+
+    for (let i = 0; i < shellCount; i++) {
       const ix = i * 3;
-      sampleInHeart2D(_v2);
+
+      for (let tries = 0; tries < 120; tries++) {
+        surfaceSampler.sample(_p, _n);
+        const r = edgeNorm01(_p.x, _p.y);
+        const accept = 0.10 + 0.90 * Math.pow(r, shellEdgePow);
+        if (Math.random() < accept || tries === 119) break;
+      }
+
+      const inset = shellInsetMin + Math.pow(Math.random(), shellInsetPow) * shellThickness;
+      _p.addScaledVector(_n, -inset);
+
+      corePos[ix + 0] = _p.x;
+      corePos[ix + 1] = _p.y;
+      corePos[ix + 2] = _p.z;
+
+      _col.copy(heartPink);
+      const w = (0.62 + Math.random() * 0.34) * (0.78 + 0.22 * edgeNorm01(_p.x, _p.y));
+      coreCol[ix + 0] = _col.r * w;
+      coreCol[ix + 1] = _col.g * w;
+      coreCol[ix + 2] = _col.b * w;
+    }
+
+    const innerEdgePow = 2.8;
+
+    for (let i = 0; i < innerCount; i++) {
+      const dst = shellCount + i;
+      const ix = dst * 3;
+
+      for (let tries = 0; tries < 220; tries++) {
+        sampleInHeart2D(_v2);
+        const cx = _v2.x - heartGeoCenter.x;
+        const cy = _v2.y - heartGeoCenter.y;
+        const r = edgeNorm01(cx, cy);
+        const accept = 0.06 + 0.94 * Math.pow(r, innerEdgePow);
+        if (Math.random() < accept || tries === 219) break;
+      }
 
       const z = THREE.MathUtils.lerp(0, heartExtrudeDepth, Math.random());
       corePos[ix + 0] = _v2.x - heartGeoCenter.x;
@@ -473,7 +537,8 @@
       corePos[ix + 2] = z - heartGeoCenter.z;
 
       _col.copy(heartPink);
-      const w = 0.58 + Math.random() * 0.30;
+      const r = edgeNorm01(corePos[ix + 0], corePos[ix + 1]);
+      const w = (0.48 + Math.random() * 0.28) * (0.72 + 0.28 * r);
       coreCol[ix + 0] = _col.r * w;
       coreCol[ix + 1] = _col.g * w;
       coreCol[ix + 2] = _col.b * w;
@@ -527,7 +592,7 @@
       const ix = i * 3;
       surfaceSampler.sample(_p, _n);
 
-      const expand = 0.55 + Math.random() * 0.75;
+      const expand = 0.10 + Math.random() * 0.18;
       _p.addScaledVector(_n, expand);
 
       haloPos[ix + 0] = haloBase[ix + 0] = _p.x;
@@ -541,7 +606,7 @@
       haloPhase[i] = Math.random() * Math.PI * 2;
 
       _col.copy(haloWhite);
-      const w = 0.10 + Math.random() * 0.16;
+      const w = 0.12 + Math.random() * 0.20;
       haloCol[ix + 0] = _col.r * w;
       haloCol[ix + 1] = _col.g * w;
       haloCol[ix + 2] = _col.b * w;
@@ -552,14 +617,14 @@
 
     const haloMatSharp = makePointsMaterial({
       map: whiteSpriteSharp,
-      opacity: 0.20,
-      alphaTest: 0.10,
-      size: isMobile ? 0.105 : 0.115,
+      opacity: 0.24,
+      alphaTest: 0.14,
+      size: isMobile ? 0.135 : 0.150,
     });
     const haloMatGlow1 = makePointsMaterial({
-      opacity: 0.070,
-      alphaTest: 0.05,
-      size: isMobile ? 0.175 : 0.195,
+      opacity: 0.060,
+      alphaTest: 0.07,
+      size: isMobile ? 0.225 : 0.245,
     });
 
     const haloPointsSharp = new THREE.Points(haloGeo, haloMatSharp);
@@ -583,9 +648,15 @@
 
     for (let i = 0; i < sparkleCount; i++) {
       const ix = i * 3;
-      surfaceSampler.sample(_p, _n);
 
-      const offset = Math.random() * 0.70;
+      for (let tries = 0; tries < 120; tries++) {
+        surfaceSampler.sample(_p, _n);
+        const r = edgeNorm01(_p.x, _p.y);
+        const accept = 0.12 + 0.88 * Math.pow(r, 2.4);
+        if (Math.random() < accept || tries === 119) break;
+      }
+
+      const offset = 0.10 + Math.random() * 0.16;
       _p.addScaledVector(_n, offset);
 
       sparklePos[ix + 0] = _p.x;
@@ -608,10 +679,10 @@
       map: whiteSpriteSharp,
       transparent: true,
       opacity: 1,
-      alphaTest: 0.18,
+      alphaTest: 0.14,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      size: isMobile ? 0.050 : 0.045,
+      size: isMobile ? 0.078 : 0.070,
     });
 
     const sparklePoints = new THREE.Points(sparkleGeo, sparkleMat);
@@ -648,9 +719,8 @@
       const pulse = heartbeatScale(t);
       heart.scale.setScalar(baseScale * pulse);
 
-      // bloom 微閃（避免整坨變白霧）
+      // kick：心跳強度（給 halo 呼吸用；bloom strength 固定不閃）
       const kick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
-      bloomPass.strength = bloomBaseStrength + bloomFlickerAmp * (0.35 * Math.sin(t * 5.8) + 0.65 * kick);
 
       // 背景粒子漂浮（wrap）
       const pos = ambientGeo.attributes.position.array;
@@ -671,7 +741,7 @@
 
       // halo：沿法線做非常小的呼吸抖動（保持輪廓、避免變雲）
       const haloArr = haloGeo.attributes.position.array;
-      const haloAmp = 0.14 + kick * 0.08;
+      const haloAmp = 0.08 + kick * 0.05;
       const haloFreq = 1.25;
 
       for (let i = 0; i < haloCount; i++) {
