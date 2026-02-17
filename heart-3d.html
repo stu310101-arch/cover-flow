@@ -146,10 +146,18 @@
       {
         name: "esm.sh",
         three: "https://esm.sh/three@0.182.0",
+        effectComposer: "https://esm.sh/three@0.182.0/examples/jsm/postprocessing/EffectComposer.js",
+        renderPass: "https://esm.sh/three@0.182.0/examples/jsm/postprocessing/RenderPass.js",
+        unrealBloomPass: "https://esm.sh/three@0.182.0/examples/jsm/postprocessing/UnrealBloomPass.js",
+        outputPass: "https://esm.sh/three@0.182.0/examples/jsm/postprocessing/OutputPass.js",
       },
       {
         name: "jsdelivr",
         three: "https://cdn.jsdelivr.net/npm/three@0.182.0/+esm",
+        effectComposer: "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/EffectComposer.js/+esm",
+        renderPass: "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/RenderPass.js/+esm",
+        unrealBloomPass: "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/UnrealBloomPass.js/+esm",
+        outputPass: "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/postprocessing/OutputPass.js/+esm",
       },
     ];
 
@@ -178,8 +186,21 @@
         setOverlayText("載入中…", `正在嘗試載入 3D 模組（${cdn.name}）`);
 
         try {
-          const THREE = await importWithTimeout(cdn.three, timeoutMs);
-          return { THREE };
+          const [
+            THREE,
+            { EffectComposer },
+            { RenderPass },
+            { UnrealBloomPass },
+            { OutputPass },
+          ] = await Promise.all([
+            importWithTimeout(cdn.three, timeoutMs),
+            importWithTimeout(cdn.effectComposer, timeoutMs),
+            importWithTimeout(cdn.renderPass, timeoutMs),
+            importWithTimeout(cdn.unrealBloomPass, timeoutMs),
+            importWithTimeout(cdn.outputPass, timeoutMs),
+          ]);
+
+          return { THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass };
         } catch (err) {
           console.warn(`[heart-3d] CDN 失敗：${cdn.name}`, err);
         }
@@ -190,7 +211,7 @@
     }
 
     (async () => {
-      const { THREE } = await loadThreeModules();
+      const { THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass } = await loadThreeModules();
 
       function hideOverlay() {
         if (!overlayEl) return;
@@ -223,6 +244,26 @@
       renderer.toneMappingExposure = 1.18;
       renderer.setClearColor(0x020612, 1);
       document.body.appendChild(renderer.domElement);
+
+      // ---------- Postprocessing (Bloom) ----------
+      const BLOOM = {
+        strength: 0.85,
+        radius: 0.18,
+        threshold: 0.72,
+      };
+
+      const composer = new EffectComposer(renderer);
+      composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
+      composer.addPass(new RenderPass(scene, camera));
+
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        BLOOM.strength,
+        BLOOM.radius,
+        BLOOM.threshold
+      );
+      composer.addPass(bloomPass);
+      composer.addPass(new OutputPass());
 
       // ---------- Sprite (hard dot; no halo ring) ----------
       function makeDotTexture({ size = 64 } = {}) {
@@ -482,6 +523,76 @@
       outerDust.renderOrder = 1;
       heart.add(outerDust);
 
+      // ---------- Layer D: sparkle/glint (edge-only; animated color) ----------
+      const sparkleCount = isMobile ? 300 : 600;
+      const sparkleGeo = new THREE.BufferGeometry();
+      const sparklePos = new Float32Array(sparkleCount * 3);
+      const sparkleCol = new Float32Array(sparkleCount * 3);
+      const sparkleTint = new Float32Array(sparkleCount * 3);
+      const sparklePhase = new Float32Array(sparkleCount);
+      const sparkleSpeed = new Float32Array(sparkleCount);
+
+      for (let i = 0; i < sparkleCount; i++) {
+        const ix = i * 3;
+
+        const si = Math.floor(Math.random() * edgePoints.length) * 3;
+        const bx = heartEdgePos[si + 0];
+        const by = heartEdgePos[si + 1];
+        const bz = heartEdgePos[si + 2];
+
+        const a = Math.random() * Math.PI * 2;
+        const zTilt = (Math.random() - 0.5) * 0.9;
+
+        const dx = Math.cos(a) * Math.cos(zTilt);
+        const dy = Math.sin(a) * Math.cos(zTilt);
+        const dz = Math.sin(zTilt);
+
+        const r = 0.10 + Math.random() * 0.46;
+        const jitter = (Math.random() - 0.5) * 0.10;
+
+        sparklePos[ix + 0] = bx + dx * (r + jitter);
+        sparklePos[ix + 1] = by + dy * (r + jitter);
+        sparklePos[ix + 2] = bz + dz * (r * 0.28);
+
+        const hue = THREE.MathUtils.degToRad(332 + (Math.random() - 0.5) * 10);
+        const h = (hue / (Math.PI * 2) + 1) % 1;
+        _c.setHSL(h, 0.35 + Math.random() * 0.25, 0.78 + Math.random() * 0.20, THREE.SRGBColorSpace);
+
+        sparkleTint[ix + 0] = _c.r;
+        sparkleTint[ix + 1] = _c.g;
+        sparkleTint[ix + 2] = _c.b;
+
+        sparkleCol[ix + 0] = 0;
+        sparkleCol[ix + 1] = 0;
+        sparkleCol[ix + 2] = 0;
+
+        sparklePhase[i] = Math.random() * Math.PI * 2;
+        sparkleSpeed[i] = 8 + Math.random() * 10;
+      }
+
+      sparkleGeo.setAttribute("position", new THREE.BufferAttribute(sparklePos, 3));
+      const sparkleColAttr = new THREE.BufferAttribute(sparkleCol, 3);
+      sparkleColAttr.setUsage(THREE.DynamicDrawUsage);
+      sparkleGeo.setAttribute("color", sparkleColAttr);
+
+      const sparkleMat = new THREE.PointsMaterial({
+        map: dotTex,
+        transparent: true,
+        opacity: 0.92,
+        alphaTest: 0.58,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        size: isMobile ? 0.066 : 0.072,
+        sizeAttenuation: true,
+        vertexColors: true,
+      });
+
+      const sparkle = new THREE.Points(sparkleGeo, sparkleMat);
+      sparkle.frustumCulled = false;
+      sparkle.renderOrder = 30;
+      heart.add(sparkle);
+
       // ---------- Animation ----------
       const clock = new THREE.Clock();
 
@@ -508,9 +619,20 @@
 
         // 愛心心跳（僅縮放，不旋轉）
         const pulse = heartbeatScale(t);
-        heart.scale.setScalar(baseScale * pulse);
+        const pulseBoost = 1 + (pulse - 1) * 1.6;
+        heart.scale.setScalar(baseScale * pulseBoost);
 
-        renderer.render(scene, camera);
+        for (let i = 0; i < sparkleCount; i++) {
+          const ix = i * 3;
+          const blink = Math.pow(Math.max(0, Math.sin(t * sparkleSpeed[i] + sparklePhase[i])), 18);
+          const intensity = 0.02 + blink * 3.9;
+          sparkleCol[ix + 0] = sparkleTint[ix + 0] * intensity;
+          sparkleCol[ix + 1] = sparkleTint[ix + 1] * intensity;
+          sparkleCol[ix + 2] = sparkleTint[ix + 2] * intensity;
+        }
+        sparkleGeo.attributes.color.needsUpdate = true;
+
+        composer.render();
       }
 
       animate();
@@ -527,6 +649,10 @@
 
         renderer.setPixelRatio(dpr);
         renderer.setSize(w, h);
+
+        composer.setPixelRatio(dpr);
+        composer.setSize(w, h);
+        bloomPass.setSize(w, h);
       }, { passive: true });
     })().catch((err) => {
       showOverlayError(window.__HEART_CDNS_TRIED__ || []);
