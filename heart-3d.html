@@ -15,13 +15,8 @@
 
     body {
       overflow: hidden;
-      /* 背景：深藍向內漸變淺藍 */
-      background: radial-gradient(circle at 50% 45%,
-        #7fbfff 0%,
-        #2a6fd9 38%,
-        #0b2a66 72%,
-        #020814 100%
-      );
+      /* 背景：非常深藍接近黑（純色） */
+      background: #020612;
       font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
     }
 
@@ -120,7 +115,7 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(0x020612, 1);
     document.body.appendChild(renderer.domElement);
 
     // ---------- Environment (IBL) ----------
@@ -138,9 +133,9 @@
     const renderPass = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.2,   // strength
-      0.55,  // radius
-      0.78   // threshold（拉高避免整顆心被洗白）
+      0.55,  // strength（降低避免粉紅被洗白）
+      0.35,  // radius
+      0.90   // threshold
     );
 
     composer.addPass(renderPass);
@@ -232,7 +227,7 @@
     });
 
     // 1) 全場景淡藍粒子（保留，但固定在愛心後方，避免蓋住愛心）
-    const ambientCount = isMobile ? 900 : 1600;
+    const ambientCount = isMobile ? 650 : 1200;
     const ambientBox = new THREE.Vector3(42, 26, 42);
     const half = ambientBox.clone().multiplyScalar(0.5);
 
@@ -255,11 +250,10 @@
       ambientVel[ix + 2] = (Math.random() - 0.5) * 0.10;
 
       const c = new THREE.Color(0x7fe6ff);
-      const tint = 0.55 + Math.random() * 0.45;
-      const boost = Math.random() < 0.05 ? 1.35 : 1.0;
-      ambientCol[ix + 0] = c.r * tint * boost;
-      ambientCol[ix + 1] = c.g * tint * boost;
-      ambientCol[ix + 2] = c.b * tint * boost;
+      const tint = 0.16 + Math.random() * 0.22;
+      ambientCol[ix + 0] = c.r * tint;
+      ambientCol[ix + 1] = c.g * tint;
+      ambientCol[ix + 2] = c.b * tint;
     }
 
     ambientGeo.setAttribute("position", new THREE.BufferAttribute(ambientPos, 3));
@@ -268,11 +262,11 @@
     const ambientMat = new THREE.PointsMaterial({
       map: blueSprite,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.08,
       alphaTest: 0.02,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      size: 0.072,
+      size: 0.060,
       sizeAttenuation: true,
       vertexColors: true,
     });
@@ -281,19 +275,19 @@
     ambientPoints.renderOrder = -20;
     scene.add(ambientPoints);
 
-    // 2) 愛心粒子雲：內部偏紅 → 外層漸白（整顆心由粒子構成）
+    // 2) 愛心粒子雲：主體粉紅色粒子（整顆心由粒子構成，不變白）
     const samplerMesh = new THREE.Mesh(heartGeo, new THREE.MeshBasicMaterial());
     samplerMesh.visible = false;
     const sampler = new MeshSurfaceSampler(samplerMesh).build();
 
     const _p = new THREE.Vector3();
     const _n = new THREE.Vector3();
-    const innerRed = new THREE.Color(0xff1e2d);
-    const outerWhite = new THREE.Color(0xffffff);
+    const heartPink = new THREE.Color(0xff3b8d);
+    const haloWhite = new THREE.Color(0xffffff);
     const _col = new THREE.Color();
 
-    // 2-1) 內部粒子（填滿整顆心）
-    const innerCount = isMobile ? 9000 : 17000;
+    // 2-1) 主體粒子（填滿整顆心）
+    const innerCount = isMobile ? 7800 : 14500;
     const innerGeo = new THREE.BufferGeometry();
     const innerPos = new Float32Array(innerCount * 3);
     const innerBase = new Float32Array(innerCount * 3);
@@ -321,12 +315,8 @@
 
       innerPhase[i] = Math.random() * Math.PI * 2;
 
-      // 內紅外白：越外圈越白（但內部仍保留偏紅）
-      const edge = Math.pow(THREE.MathUtils.clamp(_p.length() / heartRadius, 0, 1), 1.45);
-      _col.copy(innerRed).lerp(outerWhite, edge);
-
-      let w = 0.55 + Math.random() * 0.75;
-      if (Math.random() < 0.07) w *= 1.6;
+      _col.copy(heartPink);
+      const w = 0.40 + Math.random() * 0.30;
       innerCol[ix + 0] = _col.r * w;
       innerCol[ix + 1] = _col.g * w;
       innerCol[ix + 2] = _col.b * w;
@@ -338,11 +328,11 @@
     const innerMat = new THREE.PointsMaterial({
       map: whiteSprite,
       transparent: true,
-      opacity: 0.50,
+      opacity: 0.42,
       alphaTest: 0.03,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      size: 0.050,
+      size: 0.048,
       sizeAttenuation: true,
       vertexColors: true,
     });
@@ -352,8 +342,8 @@
     innerPoints.renderOrder = 10;
     heart.add(innerPoints);
 
-    // 2-2) 外層粒子（沿法線外擴，做出白色外暈）
-    const shellCount = isMobile ? 3200 : 6500;
+    // 2-2) 光暈：淡淡白色粒子（更外圍、數量更少、透明度更低、粒子更大）
+    const shellCount = isMobile ? 850 : 1700;
     const shellGeo = new THREE.BufferGeometry();
     const shellPos = new Float32Array(shellCount * 3);
     const shellBase = new Float32Array(shellCount * 3);
@@ -365,7 +355,7 @@
       const ix = i * 3;
       sampler.sample(_p, _n);
 
-      const expand = 0.55 + Math.random() * 1.25;
+      const expand = 1.45 + Math.random() * 2.35;
       _p.addScaledVector(_n, expand);
 
       shellPos[ix + 0] = shellBase[ix + 0] = _p.x;
@@ -378,11 +368,8 @@
 
       shellPhase[i] = Math.random() * Math.PI * 2;
 
-      const t = THREE.MathUtils.clamp((expand - 0.55) / 1.25, 0, 1);
-      _col.set(0xffc2cf).lerp(outerWhite, t);
-
-      let w = 0.60 + Math.random() * 0.70;
-      if (Math.random() < 0.12) w *= 1.9;
+      _col.copy(haloWhite);
+      const w = 0.12 + Math.random() * 0.18;
       shellCol[ix + 0] = _col.r * w;
       shellCol[ix + 1] = _col.g * w;
       shellCol[ix + 2] = _col.b * w;
@@ -394,11 +381,11 @@
     const shellMat = new THREE.PointsMaterial({
       map: whiteSprite,
       transparent: true,
-      opacity: 0.42,
-      alphaTest: 0.03,
+      opacity: 0.08,
+      alphaTest: 0.01,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      size: 0.062,
+      size: 0.115,
       sizeAttenuation: true,
       vertexColors: true,
     });
@@ -429,10 +416,10 @@
       const pulse = heartbeatScale(t);
       heart.scale.setScalar(baseScale * pulse);
 
-      // Bloom 跟著心跳呼吸
+      // Bloom 跟著心跳呼吸（避免 additive 疊太亮把粉紅洗白）
       const bloomKick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
-      bloomPass.strength = 1.05 + bloomKick * 0.95;
-      bloomPass.radius = 0.55 + bloomKick * 0.08;
+      bloomPass.strength = 0.45 + bloomKick * 0.30;
+      bloomPass.radius = 0.35 + bloomKick * 0.05;
 
       // 背景粒子漂浮（wrap）
       const pos = ambientGeo.attributes.position.array;
@@ -444,41 +431,12 @@
 
         if (pos[ix + 0] > half.x) pos[ix + 0] = -half.x;
         if (pos[ix + 0] < -half.x) pos[ix + 0] = half.x;
-        if (pos[ix + 1] > half.y) pos[ix + 1] = -half.y;
+        if (pos[ix + 1] > half.y) pos[ix +  1] = -half.y;
         if (pos[ix + 1] < -half.y) pos[ix + 1] = half.y;
         if (pos[ix + 2] > ambientZMax) pos[ix + 2] = ambientZMin;
         if (pos[ix + 2] < ambientZMin) pos[ix + 2] = ambientZMax;
       }
       ambientGeo.attributes.position.needsUpdate = true;
-
-      // 愛心粒子：沿「向外方向 / 法線」做微小呼吸抖動（保留生命感，但不做旋轉）
-      const innerArr = innerGeo.attributes.position.array;
-      const shellArr = shellGeo.attributes.position.array;
-
-      const innerAmp = 0.16 + bloomKick * 0.12;
-      const shellAmp = 0.28 + bloomKick * 0.20;
-      const innerFreq = 1.15;
-      const shellFreq = 1.35;
-
-      for (let i = 0; i < innerCount; i++) {
-        const ix = i * 3;
-        const s = Math.sin(t * innerFreq + innerPhase[i]);
-        const amp = innerAmp * (0.5 + 0.5 * s);
-        innerArr[ix + 0] = innerBase[ix + 0] + innerDir[ix + 0] * amp;
-        innerArr[ix + 1] = innerBase[ix + 1] + innerDir[ix + 1] * amp;
-        innerArr[ix + 2] = innerBase[ix + 2] + innerDir[ix + 2] * amp;
-      }
-      innerGeo.attributes.position.needsUpdate = true;
-
-      for (let i = 0; i < shellCount; i++) {
-        const ix = i * 3;
-        const s = Math.sin(t * shellFreq + shellPhase[i]);
-        const amp = shellAmp * (0.5 + 0.5 * s);
-        shellArr[ix + 0] = shellBase[ix + 0] + shellNrm[ix + 0] * amp;
-        shellArr[ix + 1] = shellBase[ix + 1] + shellNrm[ix + 1] * amp;
-        shellArr[ix + 2] = shellBase[ix + 2] + shellNrm[ix + 2] * amp;
-      }
-      shellGeo.attributes.position.needsUpdate = true;
 
       composer.render();
     }
