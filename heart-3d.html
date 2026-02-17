@@ -263,11 +263,12 @@
         const FILL_MIN_ACCEPT = 0.28;
 
         function heartbeatScale(t) {
-          const speed = 4.4;
-          const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 6);
-          const b2 = Math.pow(Math.max(0, Math.sin(t * speed + 1.1)), 10);
-          const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
-          return 1 + 0.11 * (b1 + 0.75 * b2) - 0.035 * relax;
+          const speed = 3.25;
+          const offset2 = 1.12;
+          const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 5);
+          const b2 = Math.pow(Math.max(0, Math.sin(t * speed + offset2)), 7);
+          const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.86)), 2);
+          return 1 + 0.12 * (b1 + 0.58 * b2) - 0.05 * relax;
         }
 
         function computePulse(t) {
@@ -537,8 +538,37 @@
           return out;
         }
 
-        const t0 = 0.30;
-        const t1 = 0.90;
+        const { tPeak, tValley } = (() => {
+          const tStart = 0;
+          const tEnd = 4;
+          const dt = 1 / 480;
+          const sampleCount = Math.floor((tEnd - tStart) / dt);
+
+          let tPeak = tStart;
+          let tValley = tStart;
+          let maxKick = -Infinity;
+          let minKick = Infinity;
+
+          for (let i = 0; i < sampleCount; i++) {
+            const tt = tStart + i * dt;
+            const { kick } = computePulse(tt);
+
+            if (kick > maxKick) {
+              maxKick = kick;
+              tPeak = tt;
+            }
+
+            if (kick < minKick) {
+              minKick = kick;
+              tValley = tt;
+            }
+          }
+
+          return { tPeak, tValley };
+        })();
+
+        const t0 = tPeak;
+        const t1 = tValley;
 
         const pulse0 = computePulse(t0);
         const pulse1 = computePulse(t1);
@@ -632,10 +662,42 @@
           if (mean > threshold) changed++;
         }
 
+        const pulseAnalysis = (() => {
+          const tStart = 0;
+          const tEnd = 4;
+          const dt = 1 / 240;
+          const sampleCount = Math.floor((tEnd - tStart) / dt);
+          const threshold = 0.02;
+
+          let nonZeroCount = 0;
+          let estimatedBeatCount = 0;
+          let prevAbove = false;
+
+          for (let i = 0; i < sampleCount; i++) {
+            const tt = tStart + i * dt;
+            const { kick } = computePulse(tt);
+            const above = kick >= threshold;
+            if (above) nonZeroCount++;
+            if (!prevAbove && above) estimatedBeatCount++;
+            prevAbove = above;
+          }
+
+          return {
+            tStart,
+            tEnd,
+            dt,
+            sampleCount,
+            threshold,
+            nonZeroFraction: sampleCount ? nonZeroCount / sampleCount : 0,
+            estimatedBeatCount,
+          };
+        })();
+
         const result = {
           qa: true,
           t0,
           t1,
+          pulseAnalysis,
           outward0: pulse0.outward,
           outward1: pulse1.outward,
           positionDelta: {
@@ -673,10 +735,12 @@
       const dprCap = isMobile ? 1.1 : 1.4;
       const ppScale = isMobile ? 0.72 : 0.80;
 
+      const COUNT_SCALE = 0.70;
+
       const COUNTS = {
-        heartFill: isMobile ? 11000 : 20000,
-        heartEdge: isMobile ? 2400 : 4200,
-        outerDust: isMobile ? 7000 : 14000,
+        heartFill: Math.floor((isMobile ? 11000 : 20000) * COUNT_SCALE),
+        heartEdge: Math.floor((isMobile ? 2400 : 4200) * COUNT_SCALE),
+        outerDust: Math.floor((isMobile ? 7000 : 14000) * COUNT_SCALE),
       };
 
       // ---------- Renderer / Scene / Camera ----------
@@ -835,7 +899,7 @@
       scene.add(heart);
 
       const MOBILE_FIT = 0.75;
-      const baseScale = 0.12;
+      const baseScale = 0.108;
       const heartScale = baseScale * (isMobile ? MOBILE_FIT : 1);
       heart.scale.setScalar(heartScale);
 
@@ -980,11 +1044,22 @@
       heart.add(heartFill);
 
       // ---------- Layer B: heartEdge (outline + small jitter in/out) ----------
+      const EDGE_SAMPLE_COUNT = isMobile ? 2400 : 4200;
       const heartEdgeCount = COUNTS.heartEdge;
-      const edgePointsRaw = heartShape.getSpacedPoints(heartEdgeCount);
+
+      const edgePointsRaw = heartShape.getSpacedPoints(EDGE_SAMPLE_COUNT);
       edgePointsRaw.pop();
 
-      const edgePoints = edgePointsRaw.map((p) => new THREE.Vector2(p.x - outlineCenter.x, p.y - outlineCenter.y));
+      const edgePointsAll = edgePointsRaw.map((p) => new THREE.Vector2(p.x - outlineCenter.x, p.y - outlineCenter.y));
+
+      const edgePoints = new Array(heartEdgeCount);
+      const edgeIndices = new Uint32Array(heartEdgeCount);
+
+      for (let i = 0; i < heartEdgeCount; i++) {
+        const src = Math.floor(i * edgePointsAll.length / heartEdgeCount);
+        edgeIndices[i] = src;
+        edgePoints[i] = edgePointsAll[src];
+      }
 
       const heartEdgeGeo = new THREE.BufferGeometry();
       const heartEdgePos = new Float32Array(edgePoints.length * 3);
@@ -1000,9 +1075,11 @@
       for (let i = 0; i < edgePoints.length; i++) {
         const ix = i * 3;
 
-        const prev = edgePoints[(i - 1 + edgePoints.length) % edgePoints.length];
-        const curr = edgePoints[i];
-        const next = edgePoints[(i + 1) % edgePoints.length];
+        const src = edgeIndices[i];
+
+        const prev = edgePointsAll[(src - 1 + edgePointsAll.length) % edgePointsAll.length];
+        const curr = edgePointsAll[src];
+        const next = edgePointsAll[(src + 1) % edgePointsAll.length];
 
         const tx = next.x - prev.x;
         const ty = next.y - prev.y;
@@ -1159,7 +1236,7 @@
       heart.add(outerDust);
 
       // ---------- Layer D: sparkle/glint (edge-only; animated color) ----------
-      const sparkleCount = isMobile ? 300 : 600;
+      const sparkleCount = Math.floor((isMobile ? 300 : 600) * COUNT_SCALE);
       const sparkleGeo = new THREE.BufferGeometry();
       const sparklePos = new Float32Array(sparkleCount * 3);
       const sparkleCol = new Float32Array(sparkleCount * 3);
@@ -1389,65 +1466,59 @@
         ctx.lineCap = "round";
 
         const fontFamily = "\"DFKai-SB\", \"KaiTi\", \"STKaiti\", \"YuKyokasho\", \"Noto Sans TC\", \"PingFang TC\", \"Microsoft JhengHei\", system-ui, sans-serif";
-        const y0 = h * 0.40;
-        const y1 = h * 0.66;
+        const y0 = h * 0.38;
+        const y1 = h * 0.72;
 
-        function jitteredDraw(fn, count, jitterPx) {
-          for (let k = 0; k < count; k++) {
-            const ox = (Math.random() - 0.5) * 2 * jitterPx;
-            const oy = (Math.random() - 0.5) * 2 * jitterPx;
-            fn(ox, oy);
-          }
-        }
-
-        function drawLine(text, y, size) {
+        function drawMarker(text, y, size) {
           if (!text) return;
-          ctx.font = `900 ${size}px ${fontFamily}`;
+          ctx.font = `650 ${size}px ${fontFamily}`;
 
-          if (mode === "glow") {
-            const jitterPx = size * 0.020;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowColor = "rgba(80,255,150,0.92)";
+          ctx.shadowBlur = size * 0.34;
 
-            ctx.shadowColor = "rgba(60, 255, 140, 0.95)";
-            ctx.shadowBlur = size * 0.75;
+          ctx.fillStyle = "rgba(80,255,150,0.22)";
+          ctx.strokeStyle = "rgba(80,255,150,0.55)";
+          const lw = size * 0.18;
+          ctx.lineWidth = lw;
 
-            ctx.strokeStyle = "rgba(70, 255, 150, 0.30)";
-            ctx.lineWidth = size * 0.76;
-            jitteredDraw((ox, oy) => ctx.strokeText(text, cx + ox, y + oy), 12, jitterPx);
-
-            ctx.shadowBlur = size * 0.95;
-            ctx.strokeStyle = "rgba(140, 255, 210, 0.22)";
-            ctx.lineWidth = size * 0.34;
-            jitteredDraw((ox, oy) => ctx.strokeText(text, cx + ox, y + oy), 8, jitterPx * 0.7);
-
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = "rgba(120, 255, 180, 0.10)";
-            ctx.lineWidth = size * 0.10;
-            ctx.strokeText(text, cx, y);
-            return;
+          const j = size * 0.020;
+          for (let k = 0; k < 9; k++) {
+            const a = k * 2.399963229728653;
+            const jx = Math.cos(a) * j;
+            const jy = Math.sin(a) * j;
+            ctx.fillText(text, cx + jx, y + jy);
+            ctx.strokeText(text, cx + jx, y + jy);
           }
-
-          const jitterPx = size * 0.010;
-
-          ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
-          ctx.shadowBlur = size * 0.02;
-
-          ctx.strokeStyle = "rgba(0, 0, 0, 0.92)";
-          ctx.lineWidth = size * 0.16;
-          jitteredDraw((ox, oy) => ctx.strokeText(text, cx + ox, y + oy), 5, jitterPx);
-
-          ctx.fillStyle = "#000";
-          jitteredDraw((ox, oy) => ctx.fillText(text, cx + ox, y + oy), 3, jitterPx * 0.6);
 
           ctx.shadowBlur = 0;
-          ctx.strokeStyle = "rgba(0, 0, 0, 0.78)";
-          ctx.lineWidth = size * 0.05;
+          ctx.shadowColor = "rgba(0,0,0,0)";
+        }
+
+        function drawWhite(text, y, size) {
+          if (!text) return;
+          ctx.font = `650 ${size}px ${fontFamily}`;
+
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = "rgba(0,0,0,0)";
+
+          ctx.strokeStyle = "rgba(255,255,255,0.65)";
+          ctx.lineWidth = size * 0.020;
           ctx.strokeText(text, cx, y);
+
+          ctx.fillStyle = "#fff";
           ctx.fillText(text, cx, y);
         }
 
-        drawLine(lines[0] || "", y0, 300);
-        drawLine(lines[1] || "", y1, 280);
+        if (mode === "marker") {
+          drawMarker(lines[0] || "", y0, 272);
+          drawMarker(lines[1] || "", y1, 248);
+          return canvas;
+        }
 
+        drawWhite(lines[0] || "", y0, 272);
+        drawWhite(lines[1] || "", y1, 248);
         return canvas;
       }
 
@@ -1455,16 +1526,16 @@
       const TEXT_CANVAS_H = 1024;
       const TEXT_LINES = ["陳巧恩", "新年快樂"];
 
-      const glowCanvas = makeHandTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "glow" });
-      const inkCanvas = makeHandTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "ink" });
+      const markerCanvas = makeHandTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "marker" });
+      const whiteCanvas = makeHandTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "white" });
 
-      const glowTextTex = canvasToTexture(glowCanvas);
-      const inkTex = canvasToTexture(inkCanvas);
+      const markerTex = canvasToTexture(markerCanvas);
+      const whiteTex = canvasToTexture(whiteCanvas);
 
-      const textGlowMat = new THREE.SpriteMaterial({
-        map: glowTextTex,
+      const textMarkerMat = new THREE.SpriteMaterial({
+        map: markerTex,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.95,
         alphaTest: 0.01,
         depthTest: false,
         depthWrite: false,
@@ -1472,8 +1543,8 @@
         toneMapped: false,
       });
 
-      const textInkMat = new THREE.SpriteMaterial({
-        map: inkTex,
+      const textWhiteMat = new THREE.SpriteMaterial({
+        map: whiteTex,
         transparent: true,
         opacity: 1.0,
         alphaTest: 0.02,
@@ -1483,36 +1554,45 @@
         toneMapped: false,
       });
 
-      const textGlow = new THREE.Sprite(textGlowMat);
-      const textInk = new THREE.Sprite(textInkMat);
+      const textMarker = new THREE.Sprite(textMarkerMat);
+      const textWhite = new THREE.Sprite(textWhiteMat);
 
       const textZ = 0.35;
-      textGlow.position.set(0, 0, textZ);
-      textInk.position.set(0, 0, textZ + 0.001);
+      textMarker.position.set(0, 0, textZ);
+      textWhite.position.set(0, 0, textZ + 0.001);
 
-      const textHeight = isMobile ? 0.54 : 0.62;
-      const textAspect = inkCanvas.width / inkCanvas.height;
-      textInk.scale.set(textHeight * textAspect, textHeight, 1);
-      textGlow.scale.copy(textInk.scale);
+      const textHeight = isMobile ? 0.64 : 0.74;
+      const textAspect = whiteCanvas.width / whiteCanvas.height;
+      textWhite.scale.set(textHeight * textAspect, textHeight, 1);
+      textMarker.scale.copy(textWhite.scale);
 
-      textGlow.renderOrder = 110;
-      textInk.renderOrder = 120;
+      textMarker.renderOrder = 110;
+      textWhite.renderOrder = 120;
 
-      scene.add(textGlow);
-      scene.add(textInk);
+      scene.add(textMarker);
+      scene.add(textWhite);
 
       // ---------- Animation ----------
       const clock = new THREE.Clock();
 
       function heartbeatScale(t) {
-        const speed = 4.4;
-        const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 6);
-        const b2 = Math.pow(Math.max(0, Math.sin(t * speed + 1.1)), 10);
-        const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
-        return 1 + 0.11 * (b1 + 0.75 * b2) - 0.035 * relax;
+        const speed = 3.25;
+        const offset2 = 1.12;
+        const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 5);
+        const b2 = Math.pow(Math.max(0, Math.sin(t * speed + offset2)), 7);
+        const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.86)), 2);
+        return 1 + 0.12 * (b1 + 0.58 * b2) - 0.05 * relax;
       }
 
       const PULSE_GAIN = 2.8;
+
+      function computePulse(t) {
+        const pulse = heartbeatScale(t);
+        const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
+        const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.10, 0, 1);
+        const outward = Math.pow(kick, 0.65);
+        return { pulse, pulseBoost, kick, outward };
+      }
 
       let didMarkOk = false;
 
@@ -1528,10 +1608,7 @@
         const t = clock.getElapsedTime();
 
         // 心跳：中心固定，粒子向外擴散（不使用 group scale 做 pulse）
-        const pulse = heartbeatScale(t);
-        const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
-        const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.10, 0, 1);
-        const outward = Math.pow(kick, 0.65);
+        const { kick, outward } = computePulse(t);
 
         uOutwardFill.value = outward;
         uOutwardEdge.value = outward;
