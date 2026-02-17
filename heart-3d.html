@@ -726,10 +726,10 @@
 
       // ---------- Heartbeat outward offsets ----------
       const OUTWARD_MAX = {
-        outerDust: isMobile ? 0.75 : 0.95,
-        fill: isMobile ? 1.0 : 1.2,
-        edge: 0.28,
-        sparkle: 0.22,
+        outerDust: isMobile ? 0.9 : 1.15,
+        fill: isMobile ? 2.0 : 2.8,
+        edge: 0.45,
+        sparkle: 0.35,
       };
 
       // ---------- Animation ----------
@@ -759,8 +759,13 @@
         // 心跳：中心固定，粒子向外擴散（不使用 group scale 做 pulse）
         const pulse = heartbeatScale(t);
         const pulseBoost = 1 + (pulse - 1) * 1.6;
-        const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.18, 0, 1);
+        const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.12, 0, 1);
         const outward = kick;
+
+        const wob = (isMobile ? 0.06 : 0.085) * (0.35 + 0.65 * kick);
+        heart.position.x = wob * Math.sin(t * 1.35);
+        heart.position.y = wob * 0.85 * Math.sin(t * 2.05 + 0.7);
+        heart.rotation.z = Math.PI + (isMobile ? 0.06 : 0.085) * (0.35 + 0.65 * kick) * Math.sin(t * 1.45);
 
         for (let i = 0; i < heartFillCount; i++) {
           const ix = i * 3;
