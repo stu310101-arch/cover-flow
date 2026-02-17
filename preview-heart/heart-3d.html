@@ -50,448 +50,566 @@
   </style>
 
   <!--
-    重要：three 的 examples/jsm addons 內部會用 `from 'three'` 這種 bare specifier。
-    若沒有 importmap，瀏覽器會無法解析，導致你看到「只有背景、沒有愛心」。
+    Non-module 版本：
+    - 不用 importmap / 不用 type=module
+    - 不依賴 three/addons/*（沒有 EffectComposer / UnrealBloomPass / MeshSurfaceSampler 等）
+    - 直接丟 GitHub Pages 或 file:// 開啟都能跑
   -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/"
-    }
-  }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 </head>
 <body>
-  <div id="hint">
-    若你只看到背景沒有愛心：
-    <br>1) 請用本機/網路伺服器開啟（例如 <code>python -m http.server</code>），不要用 <code>file://</code>
-    <br>2) iPhone/iPad 需 iOS Safari 16.4+ 才支援 importmap（Chrome(iOS) 也同樣受限）
-  </div>
+  <div id="hint" style="display:none"></div>
+
   <script>
     (function () {
-      const hint = document.getElementById("hint");
-      if (!hint) return;
+      const hintEl = document.getElementById("hint");
+      function showError(msg) {
+        if (!hintEl) return;
+        hintEl.textContent = msg;
+        hintEl.style.display = "block";
+      }
 
-      const supportsModule = "noModule" in document.createElement("script");
-      if (!supportsModule) {
-        hint.textContent = "此頁需要支援 ES Modules 的瀏覽器。";
+      if (!window.THREE) {
+        showError("錯誤：three.js 載入失敗（請確認網路或 CDN 連線）。");
         return;
       }
 
-      if (window.HTMLScriptElement && typeof HTMLScriptElement.supports === "function") {
-        const ok = HTMLScriptElement.supports("importmap");
-        if (!ok) {
-          hint.innerHTML =
-            "此頁需要 Import Maps（iPhone/iPad 需 iOS Safari 16.4+）。" +
-            "<br>另外請用本機/網路伺服器（http/https）開啟，不要用 <code>file://</code>。";
+      if (!window.WebGLRenderingContext) {
+        showError("錯誤：此瀏覽器不支援 WebGL，無法顯示 3D 愛心。");
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (!gl) {
+        showError("錯誤：WebGL 初始化失敗，無法顯示 3D 愛心。");
+        return;
+      }
+
+      const isMobile = matchMedia("(max-width: 768px)").matches;
+      const dprCap = isMobile ? 1.5 : 2;
+
+      const COUNTS = {
+        ambient: isMobile ? 650 : 1200,
+        core: isMobile ? 12000 : 22000,
+        halo: isMobile ? 2300 : 4400,
+      };
+
+      // ---------- Renderer / Scene / Camera ----------
+      const scene = new THREE.Scene();
+
+      const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+      camera.position.set(0, 0.55, 4.6);
+      camera.lookAt(0, 0, 0);
+
+      let renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      } catch (e) {
+        showError("錯誤：建立 WebGLRenderer 失敗，無法顯示 3D 愛心。");
+        return;
+      }
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
+
+      if ("outputColorSpace" in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
+      if ("outputEncoding" in renderer) renderer.outputEncoding = THREE.sRGBEncoding;
+
+      renderer.setClearColor(0x020612, 1);
+      document.body.appendChild(renderer.domElement);
+
+      // ---------- Glowy Sprite ----------
+      function makeRadialGlowTexture({
+        size = 128,
+        innerColor = "rgba(255,255,255,1)",
+        midColor = "rgba(255,255,255,0.22)",
+        outerColor = "rgba(255,255,255,0)",
+      } = {}) {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const gctx = c.getContext("2d");
+        const g = gctx.createRadialGradient(size * 0.5, size * 0.5, 0, size * 0.5, size * 0.5, size * 0.5);
+        g.addColorStop(0.0, innerColor);
+        g.addColorStop(0.35, midColor);
+        g.addColorStop(1.0, outerColor);
+        gctx.fillStyle = g;
+        gctx.fillRect(0, 0, size, size);
+
+        const tex = new THREE.CanvasTexture(c);
+        if ("colorSpace" in tex) tex.colorSpace = THREE.SRGBColorSpace;
+        if ("encoding" in tex) tex.encoding = THREE.sRGBEncoding;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.needsUpdate = true;
+        return tex;
+      }
+
+      const blueSprite = makeRadialGlowTexture({
+        innerColor: "rgba(215,250,255,1)",
+        midColor: "rgba(140,225,255,0.18)",
+        outerColor: "rgba(140,225,255,0)",
+      });
+
+      const whiteSprite = makeRadialGlowTexture({
+        innerColor: "rgba(255,255,255,1)",
+        midColor: "rgba(255,255,255,0.16)",
+        outerColor: "rgba(255,255,255,0)",
+      });
+
+      // ---------- 3D Heart (ExtrudeGeometry) ----------
+      const heartShape = new THREE.Shape();
+      const x = 0, y = 0;
+
+      heartShape.moveTo(x + 5, y + 5);
+      heartShape.bezierCurveTo(x + 5, y + 5, x + 4, y, x, y);
+      heartShape.bezierCurveTo(x - 6, y, x - 6, y + 7, x - 6, y + 7);
+      heartShape.bezierCurveTo(x - 6, y + 11, x - 3, y + 15, x + 5, y + 19);
+      heartShape.bezierCurveTo(x + 12, y + 15, x + 16, y + 11, x + 16, y + 7);
+      heartShape.bezierCurveTo(x + 16, y + 7, x + 16, y, x + 10, y);
+      heartShape.bezierCurveTo(x + 7, y, x + 5, y + 5, x + 5, y + 5);
+
+      const heartExtrudeDepth = 4;
+      const heartGeo = new THREE.ExtrudeGeometry(heartShape, {
+        depth: heartExtrudeDepth,
+        steps: 2,
+        bevelEnabled: true,
+        bevelThickness: 1.7,
+        bevelSize: 1.25,
+        bevelOffset: 0,
+        bevelSegments: 6,
+      });
+
+      heartGeo.computeBoundingBox();
+      const heartGeoCenter = heartGeo.boundingBox.getCenter(new THREE.Vector3());
+      heartGeo.translate(-heartGeoCenter.x, -heartGeoCenter.y, -heartGeoCenter.z);
+
+      const heart = new THREE.Group();
+      heart.rotation.set(0.18, 0, Math.PI);
+      scene.add(heart);
+
+      const baseScale = 0.12;
+      heart.scale.setScalar(baseScale);
+
+      // ---------- 自製 Surface Sampler（表面三角形面積加權取樣） ----------
+      function createSurfaceSampler(geometry) {
+        const position = geometry.getAttribute("position");
+        const index = geometry.getIndex();
+        const triCount = index ? (index.count / 3) : (position ? (position.count / 3) : 0);
+
+        if (!position || triCount <= 0) {
+          return {
+            totalArea: 0,
+            sample: function (outPos, outNrm) {
+              const i = position ? (Math.random() * position.count) | 0 : 0;
+              if (position) outPos.fromBufferAttribute(position, i);
+              else outPos.set(0, 0, 0);
+              outNrm.set(0, 0, 1);
+            },
+          };
         }
+
+        const cumulativeArea = new Float32Array(triCount);
+        const faceNormal = new Float32Array(triCount * 3);
+
+        const a = new THREE.Vector3();
+        const b = new THREE.Vector3();
+        const c = new THREE.Vector3();
+        const ab = new THREE.Vector3();
+        const ac = new THREE.Vector3();
+        const n = new THREE.Vector3();
+
+        let totalArea = 0;
+
+        for (let t = 0; t < triCount; t++) {
+          let ia, ib, ic;
+          if (index) {
+            ia = index.getX(t * 3 + 0);
+            ib = index.getX(t * 3 + 1);
+            ic = index.getX(t * 3 + 2);
+          } else {
+            ia = t * 3 + 0;
+            ib = t * 3 + 1;
+            ic = t * 3 + 2;
+          }
+
+          a.fromBufferAttribute(position, ia);
+          b.fromBufferAttribute(position, ib);
+          c.fromBufferAttribute(position, ic);
+
+          ab.subVectors(b, a);
+          ac.subVectors(c, a);
+          n.crossVectors(ab, ac);
+
+          const doubleArea = n.length();
+          if (doubleArea > 0) {
+            totalArea += doubleArea * 0.5;
+            n.multiplyScalar(1 / doubleArea);
+          } else {
+            n.set(0, 0, 1);
+          }
+
+          faceNormal[t * 3 + 0] = n.x;
+          faceNormal[t * 3 + 1] = n.y;
+          faceNormal[t * 3 + 2] = n.z;
+          cumulativeArea[t] = totalArea;
+        }
+
+        const va = new THREE.Vector3();
+        const vb = new THREE.Vector3();
+        const vc = new THREE.Vector3();
+
+        function pickTriangleIndex(r) {
+          let lo = 0;
+          let hi = triCount - 1;
+          while (lo < hi) {
+            const mid = (lo + hi) >>> 1;
+            if (r < cumulativeArea[mid]) hi = mid;
+            else lo = mid + 1;
+          }
+          return lo;
+        }
+
+        return {
+          totalArea,
+          sample: function (outPos, outNrm) {
+            if (totalArea <= 0) {
+              const i = (Math.random() * position.count) | 0;
+              outPos.fromBufferAttribute(position, i);
+              outNrm.set(0, 0, 1);
+              return;
+            }
+
+            const r = Math.random() * totalArea;
+            const t = pickTriangleIndex(r);
+
+            let ia, ib, ic;
+            if (index) {
+              ia = index.getX(t * 3 + 0);
+              ib = index.getX(t * 3 + 1);
+              ic = index.getX(t * 3 + 2);
+            } else {
+              ia = t * 3 + 0;
+              ib = t * 3 + 1;
+              ic = t * 3 + 2;
+            }
+
+            va.fromBufferAttribute(position, ia);
+            vb.fromBufferAttribute(position, ib);
+            vc.fromBufferAttribute(position, ic);
+
+            let u = Math.random();
+            let v = Math.random();
+            if (u + v > 1) {
+              u = 1 - u;
+              v = 1 - v;
+            }
+
+            outPos
+              .copy(va)
+              .multiplyScalar(1 - u - v)
+              .addScaledVector(vb, u)
+              .addScaledVector(vc, v);
+
+            outNrm.set(
+              faceNormal[t * 3 + 0],
+              faceNormal[t * 3 + 1],
+              faceNormal[t * 3 + 2]
+            );
+          },
+        };
       }
-    })();
-  </script>
 
-  <script type="module">
-    import * as THREE from "three";
-    import { MeshSurfaceSampler } from "three/addons/math/MeshSurfaceSampler.js";
-    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-    import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-    import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+      const surfaceSampler = createSurfaceSampler(heartGeo);
 
-    const isMobile = matchMedia("(max-width: 768px)").matches;
-    const dprCap = isMobile ? 1.5 : 2;
+      // ---------- Particles ----------
+      const heartPink = new THREE.Color(0xff1e2d);
+      const haloWhite = new THREE.Color(0xffffff);
+      const _col = new THREE.Color();
+      const _p = new THREE.Vector3();
+      const _n = new THREE.Vector3();
 
-    // ---------- Renderer / Scene / Camera ----------
-    const scene = new THREE.Scene();
+      // 1) 全場景淡藍粒子（固定在愛心後方）
+      const ambientCount = COUNTS.ambient;
+      const ambientBox = new THREE.Vector3(42, 26, 42);
+      const half = ambientBox.clone().multiplyScalar(0.5);
+      const ambientZMin = -half.z;
+      const ambientZMax = -0.6;
 
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(0, 0.55, 4.6);
-    camera.lookAt(0, 0, 0);
+      const ambientGeo = new THREE.BufferGeometry();
+      const ambientPos = new Float32Array(ambientCount * 3);
+      const ambientVel = new Float32Array(ambientCount * 3);
+      const ambientCol = new Float32Array(ambientCount * 3);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
-    renderer.setClearColor(0x000000, 0);
-    document.body.appendChild(renderer.domElement);
-
-    // ---------- Environment (IBL) ----------
-    const environment = new RoomEnvironment();
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmremGenerator.fromScene(environment, 0.04).texture;
-    environment.dispose();
-    pmremGenerator.dispose();
-
-    // ---------- Postprocessing (Bloom) ----------
-    const composer = new EffectComposer(renderer);
-    composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
-    composer.setSize(window.innerWidth, window.innerHeight);
-
-    const renderPass = new RenderPass(scene, camera);
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.50,
-      0.34,
-      0.92
-    );
-
-    composer.addPass(renderPass);
-    composer.addPass(bloomPass);
-    composer.addPass(new OutputPass());
-
-    // ---------- Lights ----------
-    scene.add(new THREE.AmbientLight(0xffffff, 0.33));
-
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    keyLight.position.set(3, 4, 5);
-    scene.add(keyLight);
-
-    const fillLight = new THREE.DirectionalLight(0x9fd6ff, 0.40);
-    fillLight.position.set(-4, -1, 3);
-    scene.add(fillLight);
-
-    const rimLight = new THREE.DirectionalLight(0xff99aa, 0.75);
-    rimLight.position.set(-4, 2, -4);
-    scene.add(rimLight);
-
-    // ---------- 3D Heart ----------
-    const heartShape = new THREE.Shape();
-    const x = 0, y = 0;
-
-    heartShape.moveTo(x + 5, y + 5);
-    heartShape.bezierCurveTo(x + 5, y + 5, x + 4, y, x, y);
-    heartShape.bezierCurveTo(x - 6, y, x - 6, y + 7, x - 6, y + 7);
-    heartShape.bezierCurveTo(x - 6, y + 11, x - 3, y + 15, x + 5, y + 19);
-    heartShape.bezierCurveTo(x + 12, y + 15, x + 16, y + 11, x + 16, y + 7);
-    heartShape.bezierCurveTo(x + 16, y + 7, x + 16, y, x + 10, y);
-    heartShape.bezierCurveTo(x + 7, y, x + 5, y + 5, x + 5, y + 5);
-
-    const heartExtrudeDepth = 4;
-
-    const heartGeo = new THREE.ExtrudeGeometry(heartShape, {
-      depth: heartExtrudeDepth,
-      steps: 2,
-      bevelEnabled: true,
-      bevelThickness: 1.7,
-      bevelSize: 1.25,
-      bevelOffset: 0,
-      bevelSegments: 6,
-    });
-    heartGeo.computeBoundingBox();
-    const heartGeoCenter = heartGeo.boundingBox.getCenter(new THREE.Vector3());
-    heartGeo.translate(-heartGeoCenter.x, -heartGeoCenter.y, -heartGeoCenter.z);
-    heartGeo.computeBoundingSphere();
-    const heartRadius = heartGeo.boundingSphere ? heartGeo.boundingSphere.radius : 1;
-
-    const heart = new THREE.Group();
-    // 尖端朝下：沿 Z 軸翻轉 180 度（不要在 animate 內旋轉）
-    heart.rotation.set(0.18, 0, Math.PI);
-    scene.add(heart);
-
-    const baseScale = 0.12;
-    heart.scale.setScalar(baseScale);
-
-    // ---------- Glowy Particles ----------
-    function makeRadialGlowTexture({
-      size = 128,
-      innerColor = "rgba(255,255,255,1)",
-      midColor = "rgba(255,255,255,0.25)",
-      outerColor = "rgba(255,255,255,0)",
-    } = {}) {
-      const c = document.createElement("canvas");
-      c.width = c.height = size;
-      const gctx = c.getContext("2d");
-      const g = gctx.createRadialGradient(size * 0.5, size * 0.5, 0, size * 0.5, size * 0.5, size * 0.5);
-      g.addColorStop(0.0, innerColor);
-      g.addColorStop(0.35, midColor);
-      g.addColorStop(1.0, outerColor);
-      gctx.fillStyle = g;
-      gctx.fillRect(0, 0, size, size);
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.minFilter = THREE.LinearMipmapLinearFilter;
-      tex.magFilter = THREE.LinearFilter;
-      tex.needsUpdate = true;
-      return tex;
-    }
-
-    const blueSprite = makeRadialGlowTexture({
-      innerColor: "rgba(215,250,255,1)",
-      midColor: "rgba(140,225,255,0.18)",
-      outerColor: "rgba(140,225,255,0)",
-    });
-
-    const whiteSprite = makeRadialGlowTexture({
-      innerColor: "rgba(255,255,255,1)",
-      midColor: "rgba(255,255,255,0.14)",
-      outerColor: "rgba(255,255,255,0)",
-    });
-
-    // 1) 全場景淡藍粒子（固定在愛心後方，避免蓋住愛心）
-    const ambientCount = isMobile ? 650 : 1200;
-    const ambientBox = new THREE.Vector3(42, 26, 42);
-    const half = ambientBox.clone().multiplyScalar(0.5);
-
-    const ambientZMin = -half.z;
-    const ambientZMax = -0.6;
-
-    const ambientGeo = new THREE.BufferGeometry();
-    const ambientPos = new Float32Array(ambientCount * 3);
-    const ambientVel = new Float32Array(ambientCount * 3);
-    const ambientCol = new Float32Array(ambientCount * 3);
-
-    for (let i = 0; i < ambientCount; i++) {
-      const ix = i * 3;
-      ambientPos[ix + 0] = (Math.random() - 0.5) * ambientBox.x;
-      ambientPos[ix + 1] = (Math.random() - 0.5) * ambientBox.y;
-      ambientPos[ix + 2] = THREE.MathUtils.lerp(ambientZMin, ambientZMax, Math.random());
-
-      ambientVel[ix + 0] = (Math.random() - 0.5) * 0.10;
-      ambientVel[ix + 1] = (Math.random() * 0.6 + 0.4) * 0.16;
-      ambientVel[ix + 2] = (Math.random() - 0.5) * 0.10;
-
-      const c = new THREE.Color(0x7fe6ff);
-      const tint = 0.16 + Math.random() * 0.22;
-      ambientCol[ix + 0] = c.r * tint;
-      ambientCol[ix + 1] = c.g * tint;
-      ambientCol[ix + 2] = c.b * tint;
-    }
-
-    ambientGeo.setAttribute("position", new THREE.BufferAttribute(ambientPos, 3));
-    ambientGeo.setAttribute("color", new THREE.BufferAttribute(ambientCol, 3));
-
-    const ambientMat = new THREE.PointsMaterial({
-      map: blueSprite,
-      transparent: true,
-      opacity: 0.08,
-      alphaTest: 0.02,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      size: 0.060,
-      sizeAttenuation: true,
-      vertexColors: true,
-    });
-
-    const ambientPoints = new THREE.Points(ambientGeo, ambientMat);
-    ambientPoints.renderOrder = -20;
-    scene.add(ambientPoints);
-
-    // 2) 愛心粒子：3D 體積填充（紅色） + 外層白色 halo（沿法線外擴）
-    const samplerMesh = new THREE.Mesh(heartGeo, new THREE.MeshBasicMaterial());
-    samplerMesh.visible = false;
-    const sampler = new MeshSurfaceSampler(samplerMesh).build();
-
-    const _p = new THREE.Vector3();
-    const _n = new THREE.Vector3();
-    const heartPink = new THREE.Color(0xff1e2d);
-    const haloWhite = new THREE.Color(0xffffff);
-    const _col = new THREE.Color();
-
-    // 2-1) 主體：體積填充粒子（在 heartShape 平面內做 point-in-polygon 抽樣，再隨機 z）
-    const coreCount = isMobile ? 12000 : 22000;
-
-    const outline = heartShape.getSpacedPoints(240);
-    const outline2 = outline.map((v) => new THREE.Vector2(v.x, v.y));
-    const outlineBox = new THREE.Box2().setFromPoints(outline2);
-
-    const _v2 = new THREE.Vector2();
-    function sampleInHeart2D(out) {
-      for (;;) {
-        out.set(
-          THREE.MathUtils.lerp(outlineBox.min.x, outlineBox.max.x, Math.random()),
-          THREE.MathUtils.lerp(outlineBox.min.y, outlineBox.max.y, Math.random())
-        );
-        if (THREE.ShapeUtils.isPointInPolygon(out, outline2)) return out;
-      }
-    }
-
-    const coreGeo = new THREE.BufferGeometry();
-    const corePos = new Float32Array(coreCount * 3);
-    const coreCol = new Float32Array(coreCount * 3);
-
-    for (let i = 0; i < coreCount; i++) {
-      const ix = i * 3;
-
-      sampleInHeart2D(_v2);
-      const z = THREE.MathUtils.lerp(0, heartExtrudeDepth, Math.random());
-
-      corePos[ix + 0] = _v2.x - heartGeoCenter.x;
-      corePos[ix + 1] = _v2.y - heartGeoCenter.y;
-      corePos[ix + 2] = z - heartGeoCenter.z;
-
-      _col.copy(heartPink);
-      const w = 0.58 + Math.random() * 0.30;
-      coreCol[ix + 0] = _col.r * w;
-      coreCol[ix + 1] = _col.g * w;
-      coreCol[ix + 2] = _col.b * w;
-    }
-
-    coreGeo.setAttribute("position", new THREE.BufferAttribute(corePos, 3));
-    coreGeo.setAttribute("color", new THREE.BufferAttribute(coreCol, 3));
-
-    const coreMat = new THREE.PointsMaterial({
-      map: whiteSprite,
-      transparent: true,
-      opacity: 0.62,
-      alphaTest: 0.05,
-      depthWrite: true,
-      blending: THREE.AdditiveBlending,
-      size: isMobile ? 0.050 : 0.054,
-      sizeAttenuation: true,
-      vertexColors: true,
-    });
-
-    const corePoints = new THREE.Points(coreGeo, coreMat);
-    corePoints.frustumCulled = false;
-    corePoints.renderOrder = 10;
-    heart.add(corePoints);
-
-    // 2-2) 外層 halo：白色粒子沿法線外擴（輪廓更清楚，可微微呼吸）
-    const haloCount = isMobile ? 2300 : 4400;
-
-    const haloGeo = new THREE.BufferGeometry();
-    const haloPos = new Float32Array(haloCount * 3);
-    const haloBase = new Float32Array(haloCount * 3);
-    const haloNrm = new Float32Array(haloCount * 3);
-    const haloPhase = new Float32Array(haloCount);
-    const haloCol = new Float32Array(haloCount * 3);
-
-    for (let i = 0; i < haloCount; i++) {
-      const ix = i * 3;
-      sampler.sample(_p, _n);
-
-      const expand = 1.05 + Math.random() * 1.75;
-      _p.addScaledVector(_n, expand);
-
-      haloPos[ix + 0] = haloBase[ix + 0] = _p.x;
-      haloPos[ix + 1] = haloBase[ix + 1] = _p.y;
-      haloPos[ix + 2] = haloBase[ix + 2] = _p.z;
-
-      haloNrm[ix + 0] = _n.x;
-      haloNrm[ix + 1] = _n.y;
-      haloNrm[ix + 2] = _n.z;
-
-      haloPhase[i] = Math.random() * Math.PI * 2;
-
-      _col.copy(haloWhite);
-      const w = 0.12 + Math.random() * 0.18;
-      haloCol[ix + 0] = _col.r * w;
-      haloCol[ix + 1] = _col.g * w;
-      haloCol[ix + 2] = _col.b * w;
-    }
-
-    haloGeo.setAttribute("position", new THREE.BufferAttribute(haloPos, 3));
-    haloGeo.setAttribute("color", new THREE.BufferAttribute(haloCol, 3));
-
-    const haloMat = new THREE.PointsMaterial({
-      map: whiteSprite,
-      transparent: true,
-      opacity: 0.20,
-      alphaTest: 0.01,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      size: isMobile ? 0.160 : 0.175,
-      sizeAttenuation: true,
-      vertexColors: true,
-    });
-
-    const haloPoints = new THREE.Points(haloGeo, haloMat);
-    haloPoints.frustumCulled = false;
-    haloPoints.renderOrder = 11;
-    heart.add(haloPoints);
-
-    // ---------- Animation ----------
-    const clock = new THREE.Clock();
-
-    function heartbeatScale(t) {
-      const speed = 3.2;
-      const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 6);
-      const b2 = Math.pow(Math.max(0, Math.sin(t * speed + 1.1)), 10);
-      const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
-      return 1 + 0.11 * (b1 + 0.6 * b2) - 0.045 * relax;
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const dt = Math.min(0.05, clock.getDelta());
-      const t = clock.elapsedTime;
-
-      // 愛心心跳（僅縮放，不旋轉）
-      const pulse = heartbeatScale(t);
-      heart.scale.setScalar(baseScale * pulse);
-
-      // Bloom 跟著心跳呼吸（避免 additive 疊太亮把紅色洗白）
-      const bloomKick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
-      bloomPass.strength = 0.38 + bloomKick * 0.26;
-      bloomPass.radius = 0.33 + bloomKick * 0.05;
-
-      // 背景粒子漂浮（wrap）
-      const pos = ambientGeo.attributes.position.array;
       for (let i = 0; i < ambientCount; i++) {
         const ix = i * 3;
-        pos[ix + 0] += ambientVel[ix + 0] * (dt * 60);
-        pos[ix + 1] += ambientVel[ix + 1] * (dt * 60);
-        pos[ix + 2] += ambientVel[ix + 2] * (dt * 60);
+        ambientPos[ix + 0] = (Math.random() - 0.5) * ambientBox.x;
+        ambientPos[ix + 1] = (Math.random() - 0.5) * ambientBox.y;
+        ambientPos[ix + 2] = THREE.MathUtils.lerp(ambientZMin, ambientZMax, Math.random());
 
-        if (pos[ix + 0] > half.x) pos[ix + 0] = -half.x;
-        if (pos[ix + 0] < -half.x) pos[ix + 0] = half.x;
-        if (pos[ix + 1] > half.y) pos[ix +  1] = -half.y;
-        if (pos[ix + 1] < -half.y) pos[ix + 1] = half.y;
-        if (pos[ix + 2] > ambientZMax) pos[ix + 2] = ambientZMin;
-        if (pos[ix + 2] < ambientZMin) pos[ix + 2] = ambientZMax;
+        ambientVel[ix + 0] = (Math.random() - 0.5) * 0.10;
+        ambientVel[ix + 1] = (Math.random() * 0.6 + 0.4) * 0.16;
+        ambientVel[ix + 2] = (Math.random() - 0.5) * 0.10;
+
+        const tint = 0.16 + Math.random() * 0.22;
+        ambientCol[ix + 0] = 0.50 * tint;
+        ambientCol[ix + 1] = 0.90 * tint;
+        ambientCol[ix + 2] = 1.00 * tint;
       }
-      ambientGeo.attributes.position.needsUpdate = true;
 
-      // halo：沿法線做非常小的呼吸抖動（保持輪廓、避免變雲）
-      const haloArr = haloGeo.attributes.position.array;
+      ambientGeo.setAttribute("position", new THREE.BufferAttribute(ambientPos, 3));
+      ambientGeo.setAttribute("color", new THREE.BufferAttribute(ambientCol, 3));
 
-      const haloAmp = 0.22 + bloomKick * 0.12;
-      const haloFreq = 1.25;
+      const ambientMat = new THREE.PointsMaterial({
+        map: blueSprite,
+        transparent: true,
+        opacity: 0.08,
+        alphaTest: 0.02,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        size: 0.060,
+        sizeAttenuation: true,
+        vertexColors: true,
+      });
+
+      const ambientPoints = new THREE.Points(ambientGeo, ambientMat);
+      ambientPoints.renderOrder = -20;
+      scene.add(ambientPoints);
+
+      // 2) 愛心：體積填充紅色粒子（2D point-in-polygon + 隨機 z 厚度）
+      const coreCount = COUNTS.core;
+      const outline = heartShape.getSpacedPoints(240);
+      const outline2 = outline.map((v) => new THREE.Vector2(v.x, v.y));
+      const outlineBox = new THREE.Box2().setFromPoints(outline2);
+
+      const _v2 = new THREE.Vector2();
+      const isPointInPolygon = (THREE.ShapeUtils && THREE.ShapeUtils.isPointInPolygon)
+        ? function (p, poly) { return THREE.ShapeUtils.isPointInPolygon(p, poly); }
+        : function (p, poly) {
+          let inside = false;
+          for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+            const xi = poly[i].x, yi = poly[i].y;
+            const xj = poly[j].x, yj = poly[j].y;
+            const intersect = ((yi > p.y) !== (yj > p.y))
+              && (p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+          }
+          return inside;
+        };
+
+      function sampleInHeart2D(out) {
+        for (;;) {
+          out.set(
+            THREE.MathUtils.lerp(outlineBox.min.x, outlineBox.max.x, Math.random()),
+            THREE.MathUtils.lerp(outlineBox.min.y, outlineBox.max.y, Math.random())
+          );
+          if (isPointInPolygon(out, outline2)) return out;
+        }
+      }
+
+      const coreGeo = new THREE.BufferGeometry();
+      const corePos = new Float32Array(coreCount * 3);
+      const coreCol = new Float32Array(coreCount * 3);
+
+      for (let i = 0; i < coreCount; i++) {
+        const ix = i * 3;
+        sampleInHeart2D(_v2);
+
+        const z = THREE.MathUtils.lerp(0, heartExtrudeDepth, Math.random());
+        corePos[ix + 0] = _v2.x - heartGeoCenter.x;
+        corePos[ix + 1] = _v2.y - heartGeoCenter.y;
+        corePos[ix + 2] = z - heartGeoCenter.z;
+
+        _col.copy(heartPink);
+        const w = 0.58 + Math.random() * 0.30;
+        coreCol[ix + 0] = _col.r * w;
+        coreCol[ix + 1] = _col.g * w;
+        coreCol[ix + 2] = _col.b * w;
+      }
+
+      coreGeo.setAttribute("position", new THREE.BufferAttribute(corePos, 3));
+      coreGeo.setAttribute("color", new THREE.BufferAttribute(coreCol, 3));
+
+      function makePointsMaterial(opts) {
+        return new THREE.PointsMaterial(Object.assign({
+          map: whiteSprite,
+          transparent: true,
+          depthTest: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          sizeAttenuation: true,
+          vertexColors: true,
+        }, opts));
+      }
+
+      const coreMatSharp = makePointsMaterial({
+        opacity: 0.56,
+        alphaTest: 0.05,
+        depthWrite: true,
+        size: isMobile ? 0.048 : 0.054,
+      });
+      const coreMatGlow1 = makePointsMaterial({
+        opacity: 0.14,
+        alphaTest: 0.02,
+        size: isMobile ? 0.110 : 0.120,
+      });
+      const coreMatGlow2 = makePointsMaterial({
+        opacity: 0.05,
+        alphaTest: 0.01,
+        size: isMobile ? 0.220 : 0.250,
+      });
+
+      const corePointsSharp = new THREE.Points(coreGeo, coreMatSharp);
+      const corePointsGlow1 = new THREE.Points(coreGeo, coreMatGlow1);
+      const corePointsGlow2 = new THREE.Points(coreGeo, coreMatGlow2);
+      corePointsSharp.frustumCulled = corePointsGlow1.frustumCulled = corePointsGlow2.frustumCulled = false;
+
+      corePointsSharp.renderOrder = 10;
+      corePointsGlow1.renderOrder = 9;
+      corePointsGlow2.renderOrder = 8;
+
+      heart.add(corePointsGlow2);
+      heart.add(corePointsGlow1);
+      heart.add(corePointsSharp);
+
+      // 3) halo：白色粒子（自製 surface sampler 取表面點與法線，再沿法線外擴）
+      const haloCount = COUNTS.halo;
+
+      const haloGeo = new THREE.BufferGeometry();
+      const haloPos = new Float32Array(haloCount * 3);
+      const haloBase = new Float32Array(haloCount * 3);
+      const haloNrm = new Float32Array(haloCount * 3);
+      const haloPhase = new Float32Array(haloCount);
+      const haloCol = new Float32Array(haloCount * 3);
 
       for (let i = 0; i < haloCount; i++) {
         const ix = i * 3;
-        const s = Math.sin(t * haloFreq + haloPhase[i]);
-        const amp = haloAmp * (0.5 + 0.5 * s);
-        haloArr[ix + 0] = haloBase[ix + 0] + haloNrm[ix + 0] * amp;
-        haloArr[ix + 1] = haloBase[ix + 1] + haloNrm[ix + 1] * amp;
-        haloArr[ix + 2] = haloBase[ix + 2] + haloNrm[ix + 2] * amp;
+        surfaceSampler.sample(_p, _n);
+
+        const expand = 1.05 + Math.random() * 1.75;
+        _p.addScaledVector(_n, expand);
+
+        haloPos[ix + 0] = haloBase[ix + 0] = _p.x;
+        haloPos[ix + 1] = haloBase[ix + 1] = _p.y;
+        haloPos[ix + 2] = haloBase[ix + 2] = _p.z;
+
+        haloNrm[ix + 0] = _n.x;
+        haloNrm[ix + 1] = _n.y;
+        haloNrm[ix + 2] = _n.z;
+
+        haloPhase[i] = Math.random() * Math.PI * 2;
+
+        _col.copy(haloWhite);
+        const w = 0.12 + Math.random() * 0.18;
+        haloCol[ix + 0] = _col.r * w;
+        haloCol[ix + 1] = _col.g * w;
+        haloCol[ix + 2] = _col.b * w;
       }
-      haloGeo.attributes.position.needsUpdate = true;
 
-      composer.render();
-    }
-    animate();
+      haloGeo.setAttribute("position", new THREE.BufferAttribute(haloPos, 3));
+      haloGeo.setAttribute("color", new THREE.BufferAttribute(haloCol, 3));
 
-    // 若能跑到這裡，代表 three / addons 載入成功，隱藏提示
-    const hintEl = document.getElementById("hint");
-    if (hintEl) {
-      hintEl.style.opacity = "0";
-      hintEl.style.transition = "opacity 600ms ease";
-      hintEl.style.pointerEvents = "none";
-      window.setTimeout(() => hintEl.remove(), 900);
-    }
+      const haloMatSharp = makePointsMaterial({
+        opacity: 0.22,
+        alphaTest: 0.01,
+        size: isMobile ? 0.155 : 0.175,
+      });
+      const haloMatGlow1 = makePointsMaterial({
+        opacity: 0.10,
+        alphaTest: 0.01,
+        size: isMobile ? 0.300 : 0.340,
+      });
 
-    // ---------- Resize ----------
-    window.addEventListener("resize", () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+      const haloPointsSharp = new THREE.Points(haloGeo, haloMatSharp);
+      const haloPointsGlow1 = new THREE.Points(haloGeo, haloMatGlow1);
+      haloPointsSharp.frustumCulled = haloPointsGlow1.frustumCulled = false;
+      haloPointsSharp.renderOrder = 20;
+      haloPointsGlow1.renderOrder = 19;
 
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      camera.lookAt(0, 0, 0);
+      heart.add(haloPointsGlow1);
+      heart.add(haloPointsSharp);
 
-      renderer.setPixelRatio(dpr);
-      renderer.setSize(w, h);
-      composer.setPixelRatio(dpr);
-      composer.setSize(w, h);
+      // ---------- Animation ----------
+      const clock = new THREE.Clock();
 
-      bloomPass.setSize(w, h);
-    }, { passive: true });
+      function heartbeatScale(t) {
+        const speed = 3.2;
+        const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 6);
+        const b2 = Math.pow(Math.max(0, Math.sin(t * speed + 1.1)), 10);
+        const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
+        return 1 + 0.11 * (b1 + 0.6 * b2) - 0.045 * relax;
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const dt = Math.min(0.05, clock.getDelta());
+        const t = clock.elapsedTime;
+
+        // 愛心心跳（僅縮放，不旋轉）
+        const pulse = heartbeatScale(t);
+        heart.scale.setScalar(baseScale * pulse);
+
+        // 背景粒子漂浮（wrap）
+        const pos = ambientGeo.attributes.position.array;
+        for (let i = 0; i < ambientCount; i++) {
+          const ix = i * 3;
+          pos[ix + 0] += ambientVel[ix + 0] * (dt * 60);
+          pos[ix + 1] += ambientVel[ix + 1] * (dt * 60);
+          pos[ix + 2] += ambientVel[ix + 2] * (dt * 60);
+
+          if (pos[ix + 0] > half.x) pos[ix + 0] = -half.x;
+          if (pos[ix + 0] < -half.x) pos[ix + 0] = half.x;
+          if (pos[ix + 1] > half.y) pos[ix + 1] = -half.y;
+          if (pos[ix + 1] < -half.y) pos[ix + 1] = half.y;
+          if (pos[ix + 2] > ambientZMax) pos[ix + 2] = ambientZMin;
+          if (pos[ix + 2] < ambientZMin) pos[ix + 2] = ambientZMax;
+        }
+        ambientGeo.attributes.position.needsUpdate = true;
+
+        // halo：沿法線做非常小的呼吸抖動（保持輪廓、避免變雲）
+        const haloArr = haloGeo.attributes.position.array;
+        const kick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
+        const haloAmp = 0.22 + kick * 0.12;
+        const haloFreq = 1.25;
+
+        for (let i = 0; i < haloCount; i++) {
+          const ix = i * 3;
+          const s = Math.sin(t * haloFreq + haloPhase[i]);
+          const amp = haloAmp * (0.5 + 0.5 * s);
+          haloArr[ix + 0] = haloBase[ix + 0] + haloNrm[ix + 0] * amp;
+          haloArr[ix + 1] = haloBase[ix + 1] + haloNrm[ix + 1] * amp;
+          haloArr[ix + 2] = haloBase[ix + 2] + haloNrm[ix + 2] * amp;
+        }
+        haloGeo.attributes.position.needsUpdate = true;
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      // 成功跑起來就移除 debug hint
+      if (hintEl) {
+        hintEl.style.opacity = "0";
+        hintEl.style.transition = "opacity 400ms ease";
+        hintEl.style.pointerEvents = "none";
+        window.setTimeout(() => hintEl.remove(), 650);
+      }
+
+      // ---------- Resize ----------
+      window.addEventListener("resize", () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        camera.lookAt(0, 0, 0);
+
+        renderer.setPixelRatio(dpr);
+        renderer.setSize(w, h);
+      }, { passive: true });
+    })();
   </script>
 </body>
 </html>
