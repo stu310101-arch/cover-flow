@@ -211,6 +211,456 @@
     }
 
     (async () => {
+      const isQA = new URL(location.href).searchParams.get("qa") === "1";
+
+      if (isQA) {
+        window.__HEART_OK__ = true;
+
+        const titleEl = overlayEl ? overlayEl.querySelector(".title") : null;
+        const descEl = overlayEl ? overlayEl.querySelector(".desc") : null;
+
+        if (titleEl) titleEl.textContent = "QA 模式";
+        if (descEl) descEl.style.whiteSpace = "pre";
+        if (descEl) descEl.textContent = "計算中…";
+
+        const startedAt = performance.now();
+
+        const rand = (() => {
+          let seed = 1337;
+          return () => {
+            seed |= 0;
+            seed = (seed + 0x6D2B79F5) | 0;
+            let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        })();
+
+        const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+
+        const normalize2 = (x, y) => {
+          const inv = 1 / Math.max(1e-6, Math.hypot(x, y));
+          return [x * inv, y * inv];
+        };
+
+        const rotate2D = (x, y, angle) => {
+          const c = Math.cos(angle);
+          const s = Math.sin(angle);
+          return [x * c - y * s, x * s + y * c];
+        };
+
+        const OUTWARD_MAX = {
+          outerDust: 4.2,
+          fill: 8.0,
+          edge: 2.2,
+          sparkle: 2.6,
+        };
+
+        const PULSE_GAIN = 2.8;
+        const ANGLE_SPREAD = 0.55;
+        const FILL_ACCEPT_EXP = 1.9;
+        const FILL_MIN_ACCEPT = 0.28;
+
+        function heartbeatScale(t) {
+          const speed = 3.2;
+          const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 6);
+          const b2 = Math.pow(Math.max(0, Math.sin(t * speed + 1.1)), 10);
+          const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
+          return 1 + 0.11 * (b1 + 0.6 * b2) - 0.045 * relax;
+        }
+
+        function computePulse(t) {
+          const pulse = heartbeatScale(t);
+          const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
+          const kick = clamp((pulseBoost - 1) / 0.10, 0, 1);
+          const outward = Math.pow(kick, 0.65);
+          const dirMix = 0.85 * outward;
+          return { pulse, pulseBoost, kick, outward, dirMix };
+        }
+
+        const outlineCount = 520;
+        const outline = new Array(outlineCount);
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        for (let i = 0; i < outlineCount; i++) {
+          const a = (i / outlineCount) * Math.PI * 2;
+          const x = 16 * Math.pow(Math.sin(a), 3);
+          const y = 13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a);
+          outline[i] = { x, y };
+
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
+        }
+
+        const centerX = (minX + maxX) * 0.5;
+        const centerY = (minY + maxY) * 0.5;
+
+        minX = Infinity;
+        maxX = -Infinity;
+        minY = Infinity;
+        maxY = -Infinity;
+
+        for (let i = 0; i < outlineCount; i++) {
+          outline[i].x -= centerX;
+          outline[i].y -= centerY;
+
+          minX = Math.min(minX, outline[i].x);
+          maxX = Math.max(maxX, outline[i].x);
+          minY = Math.min(minY, outline[i].y);
+          maxY = Math.max(maxY, outline[i].y);
+        }
+
+        let fillMaxR = 0;
+        for (let i = 0; i < outlineCount; i++) {
+          fillMaxR = Math.max(fillMaxR, Math.hypot(outline[i].x, outline[i].y));
+        }
+
+        function isPointInPolygon(x, y, poly) {
+          let inside = false;
+          for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+            const xi = poly[i].x, yi = poly[i].y;
+            const xj = poly[j].x, yj = poly[j].y;
+            const intersect = ((yi > y) !== (yj > y))
+              && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+          }
+          return inside;
+        }
+
+        function sampleInHeart2D() {
+          for (let tries = 0; tries < 900; tries++) {
+            const x = lerp(minX, maxX, rand());
+            const y = lerp(minY, maxY, rand());
+            if (isPointInPolygon(x, y, outline)) return [x, y];
+          }
+          return [0, 0];
+        }
+
+        function makeLayer(count) {
+          return {
+            count,
+            basePos: new Float32Array(count * 2),
+            baseDir: new Float32Array(count * 2),
+            rotDir: new Float32Array(count * 2),
+            amp: new Float32Array(count),
+          };
+        }
+
+        const counts = {
+          heartFill: 1400,
+          heartEdge: outlineCount,
+          outerDust: 1200,
+          sparkle: 420,
+        };
+
+        const heartFill = makeLayer(counts.heartFill);
+        const heartEdge = makeLayer(counts.heartEdge);
+        const outerDust = makeLayer(counts.outerDust);
+        const sparkle = makeLayer(counts.sparkle);
+
+        for (let i = 0; i < heartFill.count; i++) {
+          let px = 0;
+          let py = 0;
+
+          for (let tries = 0; tries < 800; tries++) {
+            [px, py] = sampleInHeart2D();
+            const rNorm = fillMaxR > 0 ? Math.min(1, Math.hypot(px, py) / fillMaxR) : 0;
+            const acceptProb = FILL_MIN_ACCEPT + (1 - FILL_MIN_ACCEPT) * Math.pow(rNorm, FILL_ACCEPT_EXP);
+            if (rand() < acceptProb) break;
+          }
+
+          heartFill.basePos[i * 2 + 0] = px;
+          heartFill.basePos[i * 2 + 1] = py;
+
+          const r = Math.hypot(px, py);
+          let dx = 0;
+          let dy = 0;
+
+          if (r < 1e-6) {
+            const a = rand() * Math.PI * 2;
+            dx = Math.cos(a);
+            dy = Math.sin(a);
+          } else {
+            dx = px / r;
+            dy = py / r;
+          }
+
+          heartFill.baseDir[i * 2 + 0] = dx;
+          heartFill.baseDir[i * 2 + 1] = dy;
+
+          const ang = (rand() * 2 - 1) * ANGLE_SPREAD;
+          const [rdx, rdy] = rotate2D(dx, dy, ang);
+          heartFill.rotDir[i * 2 + 0] = rdx;
+          heartFill.rotDir[i * 2 + 1] = rdy;
+
+          const rNorm = fillMaxR > 0 ? Math.min(1, r / fillMaxR) : 0;
+          heartFill.amp[i] = (0.20 + 0.80 * Math.pow(rNorm, 1.2)) * (0.55 + 0.45 * rand());
+        }
+
+        const edgeJitter = 0.26;
+
+        for (let i = 0; i < outlineCount; i++) {
+          const prev = outline[(i - 1 + outlineCount) % outlineCount];
+          const curr = outline[i];
+          const next = outline[(i + 1) % outlineCount];
+
+          const tx = next.x - prev.x;
+          const ty = next.y - prev.y;
+          const invLen = 1 / Math.max(1e-6, Math.hypot(tx, ty));
+
+          let nx = -ty * invLen;
+          let ny = tx * invLen;
+
+          if (nx * curr.x + ny * curr.y < 0) {
+            nx = -nx;
+            ny = -ny;
+          }
+
+          const j = (rand() - 0.5) * 2 * edgeJitter;
+
+          heartEdge.basePos[i * 2 + 0] = curr.x + nx * j;
+          heartEdge.basePos[i * 2 + 1] = curr.y + ny * j;
+
+          heartEdge.baseDir[i * 2 + 0] = nx;
+          heartEdge.baseDir[i * 2 + 1] = ny;
+
+          const ang = (rand() * 2 - 1) * ANGLE_SPREAD;
+          const [rdx, rdy] = rotate2D(nx, ny, ang);
+
+          heartEdge.rotDir[i * 2 + 0] = rdx;
+          heartEdge.rotDir[i * 2 + 1] = rdy;
+
+          heartEdge.amp[i] = 0.20 + 0.80 * Math.pow(rand(), 1.25);
+        }
+
+        const dustMin = 0.55;
+        const dustMax = 5.6;
+        const dustPow = 2.2;
+
+        const pickFillChance = heartFill.count / (heartFill.count + outlineCount);
+
+        for (let i = 0; i < outerDust.count; i++) {
+          const pickFill = rand() < pickFillChance;
+
+          const baseArr = pickFill ? heartFill.basePos : heartEdge.basePos;
+          const baseCount = pickFill ? heartFill.count : outlineCount;
+          const si = Math.floor(rand() * baseCount) * 2;
+
+          const bx = baseArr[si + 0];
+          const by = baseArr[si + 1];
+
+          const a = rand() * Math.PI * 2;
+          const dx = Math.cos(a);
+          const dy = Math.sin(a);
+
+          const r = dustMin + (dustMax - dustMin) * Math.pow(rand(), dustPow);
+          const jitter = (rand() - 0.5) * 0.22;
+
+          const px = bx + dx * (r + jitter);
+          const py = by + dy * (r + jitter);
+
+          outerDust.basePos[i * 2 + 0] = px;
+          outerDust.basePos[i * 2 + 1] = py;
+
+          const [ndx, ndy] = normalize2(px, py);
+          outerDust.baseDir[i * 2 + 0] = ndx;
+          outerDust.baseDir[i * 2 + 1] = ndy;
+
+          const ang = (rand() * 2 - 1) * ANGLE_SPREAD;
+          const [rdx, rdy] = rotate2D(ndx, ndy, ang);
+
+          outerDust.rotDir[i * 2 + 0] = rdx;
+          outerDust.rotDir[i * 2 + 1] = rdy;
+
+          outerDust.amp[i] = 0.25 + 0.75 * Math.pow(rand(), 0.70);
+        }
+
+        for (let i = 0; i < sparkle.count; i++) {
+          const edgeIndex = Math.floor(rand() * outlineCount);
+
+          const outDx = heartEdge.baseDir[edgeIndex * 2 + 0];
+          const outDy = heartEdge.baseDir[edgeIndex * 2 + 1];
+
+          sparkle.baseDir[i * 2 + 0] = outDx;
+          sparkle.baseDir[i * 2 + 1] = outDy;
+
+          const ang = (rand() * 2 - 1) * ANGLE_SPREAD;
+          const [rdx, rdy] = rotate2D(outDx, outDy, ang);
+
+          sparkle.rotDir[i * 2 + 0] = rdx;
+          sparkle.rotDir[i * 2 + 1] = rdy;
+
+          const bx = heartEdge.basePos[edgeIndex * 2 + 0];
+          const by = heartEdge.basePos[edgeIndex * 2 + 1];
+
+          const a = rand() * Math.PI * 2;
+          const dx = Math.cos(a);
+          const dy = Math.sin(a);
+
+          const r = 0.10 + rand() * 0.46;
+          const jitter = (rand() - 0.5) * 0.10;
+
+          sparkle.basePos[i * 2 + 0] = bx + dx * (r + jitter);
+          sparkle.basePos[i * 2 + 1] = by + dy * (r + jitter);
+
+          sparkle.amp[i] = 0.20 + 0.80 * Math.pow(rand(), 1.10);
+        }
+
+        function computePositions(layer, outwardMax, pulseInfo) {
+          const { outward, dirMix } = pulseInfo;
+          const out = new Float32Array(layer.count * 2);
+
+          for (let i = 0; i < layer.count; i++) {
+            const bdx = layer.baseDir[i * 2 + 0];
+            const bdy = layer.baseDir[i * 2 + 1];
+            const rdx = layer.rotDir[i * 2 + 0];
+            const rdy = layer.rotDir[i * 2 + 1];
+
+            let fx = bdx + (rdx - bdx) * dirMix;
+            let fy = bdy + (rdy - bdy) * dirMix;
+            const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
+            fx *= invLen;
+            fy *= invLen;
+
+            const amp = layer.amp[i] * outwardMax * outward;
+            out[i * 2 + 0] = layer.basePos[i * 2 + 0] + fx * amp;
+            out[i * 2 + 1] = layer.basePos[i * 2 + 1] + fy * amp;
+          }
+
+          return out;
+        }
+
+        const t0 = 0.30;
+        const t1 = 0.90;
+
+        const pulse0 = computePulse(t0);
+        const pulse1 = computePulse(t1);
+
+        const frame0 = {
+          heartFill: computePositions(heartFill, OUTWARD_MAX.fill, pulse0),
+          heartEdge: computePositions(heartEdge, OUTWARD_MAX.edge, pulse0),
+          outerDust: computePositions(outerDust, OUTWARD_MAX.outerDust, pulse0),
+          sparkle: computePositions(sparkle, OUTWARD_MAX.sparkle, pulse0),
+        };
+
+        const frame1 = {
+          heartFill: computePositions(heartFill, OUTWARD_MAX.fill, pulse1),
+          heartEdge: computePositions(heartEdge, OUTWARD_MAX.edge, pulse1),
+          outerDust: computePositions(outerDust, OUTWARD_MAX.outerDust, pulse1),
+          sparkle: computePositions(sparkle, OUTWARD_MAX.sparkle, pulse1),
+        };
+
+        function avgAbsDelta(p0, p1) {
+          const n = Math.min(p0.length, p1.length) / 2;
+          let sum = 0;
+
+          for (let i = 0; i < n; i++) {
+            const dx = p1[i * 2 + 0] - p0[i * 2 + 0];
+            const dy = p1[i * 2 + 1] - p0[i * 2 + 1];
+            sum += (Math.abs(dx) + Math.abs(dy)) * 0.5;
+          }
+
+          return n ? sum / n : 0;
+        }
+
+        const canvasSize = 256;
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = canvasSize;
+
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.imageSmoothingEnabled = false;
+
+        const extent = fillMaxR + dustMax + OUTWARD_MAX.fill;
+        const scale = (canvasSize * 0.5 - 10) / Math.max(1e-6, extent);
+        const cx = canvasSize * 0.5;
+        const cy = canvasSize * 0.5;
+
+        function drawPoints(points, size) {
+          const half = (size - 1) * 0.5;
+
+          for (let i = 0; i < points.length; i += 2) {
+            const x = (cx + points[i + 0] * scale) - half;
+            const y = (cy - points[i + 1] * scale) - half;
+
+            const px = x | 0;
+            const py = y | 0;
+
+            if (px + size < 0 || py + size < 0 || px >= canvasSize || py >= canvasSize) continue;
+            ctx.fillRect(px, py, size, size);
+          }
+        }
+
+        function renderFrame(frame) {
+          ctx.clearRect(0, 0, canvasSize, canvasSize);
+          ctx.fillStyle = "#000";
+          ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+          ctx.fillStyle = "#fff";
+          drawPoints(frame.heartFill, 2);
+
+          ctx.fillStyle = "#ff7bd6";
+          drawPoints(frame.heartEdge, 2);
+
+          ctx.fillStyle = "#b23bff";
+          drawPoints(frame.outerDust, 1);
+
+          ctx.fillStyle = "#ffffff";
+          drawPoints(frame.sparkle, 2);
+
+          return ctx.getImageData(0, 0, canvasSize, canvasSize).data;
+        }
+
+        const img0 = renderFrame(frame0);
+        const img1 = renderFrame(frame1);
+
+        let changed = 0;
+        const total = canvasSize * canvasSize;
+        const threshold = 20;
+
+        for (let i = 0; i < img0.length; i += 4) {
+          const dr = Math.abs(img1[i + 0] - img0[i + 0]);
+          const dg = Math.abs(img1[i + 1] - img0[i + 1]);
+          const db = Math.abs(img1[i + 2] - img0[i + 2]);
+          const mean = (dr + dg + db) / 3;
+          if (mean > threshold) changed++;
+        }
+
+        const result = {
+          qa: true,
+          t0,
+          t1,
+          outward0: pulse0.outward,
+          outward1: pulse1.outward,
+          positionDelta: {
+            avgAbsDelta: {
+              heartFill: avgAbsDelta(frame0.heartFill, frame1.heartFill),
+              heartEdge: avgAbsDelta(frame0.heartEdge, frame1.heartEdge),
+              outerDust: avgAbsDelta(frame0.outerDust, frame1.outerDust),
+              sparkle: avgAbsDelta(frame0.sparkle, frame1.sparkle),
+            },
+          },
+          pixelDiff: {
+            threshold,
+            changedPercent: (changed / total) * 100,
+          },
+          ms: {
+            total: performance.now() - startedAt,
+          },
+        };
+
+        if (titleEl) titleEl.textContent = "QA 結果";
+        if (descEl) descEl.textContent = JSON.stringify(result, null, 2);
+
+        return;
+      }
+
       const { THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass } = await loadThreeModules();
 
       function hideOverlay() {
@@ -401,6 +851,17 @@
         dst[ix + 2] = _c.b;
       }
 
+      const ANGLE_SPREAD = 0.55;
+      const _rot2 = new Float32Array(2);
+
+      function rotate2D(x, y, angle, out = _rot2) {
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        out[0] = x * c - y * s;
+        out[1] = x * s + y * c;
+        return out;
+      }
+
       // ---------- Layer A: heartFill (almost 2D) ----------
       const heartFillCount = COUNTS.heartFill;
       const heartFillGeo = new THREE.BufferGeometry();
@@ -443,6 +904,8 @@
 
       const heartFillBasePos = heartFillPos.slice();
       const heartFillDir = new Float32Array(heartFillCount * 2);
+      const heartFillRotDir = new Float32Array(heartFillCount * 2);
+      const heartFillAngle = new Float32Array(heartFillCount);
       const heartFillAmp = new Float32Array(heartFillCount);
 
       for (let i = 0; i < heartFillCount; i++) {
@@ -450,12 +913,32 @@
         const px = heartFillBasePos[ix + 0];
         const py = heartFillBasePos[ix + 1];
         const r = Math.hypot(px, py);
-        const invLen = 1 / Math.max(1e-6, r);
-        heartFillDir[i * 2 + 0] = px * invLen;
-        heartFillDir[i * 2 + 1] = py * invLen;
+
+        let dx = 0;
+        let dy = 0;
+
+        if (r < 1e-6) {
+          const a = Math.random() * Math.PI * 2;
+          dx = Math.cos(a);
+          dy = Math.sin(a);
+        } else {
+          const invLen = 1 / r;
+          dx = px * invLen;
+          dy = py * invLen;
+        }
+
+        heartFillDir[i * 2 + 0] = dx;
+        heartFillDir[i * 2 + 1] = dy;
+
+        const ang = (Math.random() * 2 - 1) * ANGLE_SPREAD;
+        heartFillAngle[i] = ang;
+
+        const rDir = rotate2D(dx, dy, ang);
+        heartFillRotDir[i * 2 + 0] = rDir[0];
+        heartFillRotDir[i * 2 + 1] = rDir[1];
 
         const rNorm = fillMaxR > 0 ? Math.min(1, r / fillMaxR) : 0;
-        heartFillAmp[i] = Math.pow(rNorm, 1.8) * (0.35 + 0.65 * Math.random());
+        heartFillAmp[i] = (0.20 + 0.80 * Math.pow(rNorm, 1.2)) * (0.55 + 0.45 * Math.random());
       }
 
       // Glow layer (soft sprite; additive; vertexColors stay pink)
@@ -510,6 +993,8 @@
       const edgeZJitter = 0.04;
 
       const heartEdgeOutDir = new Float32Array(edgePoints.length * 2);
+      const heartEdgeRotDir = new Float32Array(edgePoints.length * 2);
+      const heartEdgeAngle = new Float32Array(edgePoints.length);
 
       for (let i = 0; i < edgePoints.length; i++) {
         const ix = i * 3;
@@ -532,6 +1017,13 @@
 
         heartEdgeOutDir[i * 2 + 0] = nx;
         heartEdgeOutDir[i * 2 + 1] = ny;
+
+        const ang = (Math.random() * 2 - 1) * ANGLE_SPREAD;
+        heartEdgeAngle[i] = ang;
+
+        const rDir = rotate2D(nx, ny, ang);
+        heartEdgeRotDir[i * 2 + 0] = rDir[0];
+        heartEdgeRotDir[i * 2 + 1] = rDir[1];
 
         const j = (Math.random() - 0.5) * 2 * edgeJitter;
 
@@ -621,6 +1113,8 @@
 
       const outerDustBasePos = outerDustPos.slice();
       const outerDustDir = new Float32Array(outerDustCount * 2);
+      const outerDustRotDir = new Float32Array(outerDustCount * 2);
+      const outerDustAngle = new Float32Array(outerDustCount);
       const outerDustAmp = new Float32Array(outerDustCount);
 
       for (let i = 0; i < outerDustCount; i++) {
@@ -628,8 +1122,20 @@
         const px = outerDustBasePos[ix + 0];
         const py = outerDustBasePos[ix + 1];
         const invLen = 1 / Math.max(1e-6, Math.hypot(px, py));
-        outerDustDir[i * 2 + 0] = px * invLen;
-        outerDustDir[i * 2 + 1] = py * invLen;
+
+        const dx = px * invLen;
+        const dy = py * invLen;
+
+        outerDustDir[i * 2 + 0] = dx;
+        outerDustDir[i * 2 + 1] = dy;
+
+        const ang = (Math.random() * 2 - 1) * ANGLE_SPREAD;
+        outerDustAngle[i] = ang;
+
+        const rDir = rotate2D(dx, dy, ang);
+        outerDustRotDir[i * 2 + 0] = rDir[0];
+        outerDustRotDir[i * 2 + 1] = rDir[1];
+
         outerDustAmp[i] = 0.25 + 0.75 * Math.pow(Math.random(), 0.70);
       }
 
@@ -660,6 +1166,8 @@
       const sparklePhase = new Float32Array(sparkleCount);
       const sparkleSpeed = new Float32Array(sparkleCount);
       const sparkleOutDir = new Float32Array(sparkleCount * 2);
+      const sparkleRotDir = new Float32Array(sparkleCount * 2);
+      const sparkleAngle = new Float32Array(sparkleCount);
       const sparkleEdgeIndex = new Uint16Array(sparkleCount);
 
       for (let i = 0; i < sparkleCount; i++) {
@@ -667,8 +1175,19 @@
 
         const edgeIndex = Math.floor(Math.random() * edgePoints.length);
         sparkleEdgeIndex[i] = edgeIndex;
-        sparkleOutDir[i * 2 + 0] = heartEdgeOutDir[edgeIndex * 2 + 0];
-        sparkleOutDir[i * 2 + 1] = heartEdgeOutDir[edgeIndex * 2 + 1];
+
+        const outDx = heartEdgeOutDir[edgeIndex * 2 + 0];
+        const outDy = heartEdgeOutDir[edgeIndex * 2 + 1];
+
+        sparkleOutDir[i * 2 + 0] = outDx;
+        sparkleOutDir[i * 2 + 1] = outDy;
+
+        const ang = (Math.random() * 2 - 1) * ANGLE_SPREAD;
+        sparkleAngle[i] = ang;
+
+        const rDir = rotate2D(outDx, outDy, ang);
+        sparkleRotDir[i * 2 + 0] = rDir[0];
+        sparkleRotDir[i * 2 + 1] = rDir[1];
 
         const si = edgeIndex * 3;
         const bx = heartEdgeBasePos[si + 0];
@@ -738,12 +1257,14 @@
       sparkle.renderOrder = 30;
       heart.add(sparkle);
 
+      window.__HEART_DEBUG__ = { heartFill, heartEdge, outerDust, sparkle };
+
       // ---------- Heartbeat outward offsets ----------
       const OUTWARD_MAX = {
-        outerDust: isMobile ? 0.9 : 1.15,
-        fill: isMobile ? 2.0 : 2.8,
-        edge: 0.6,
-        sparkle: 0.55,
+        outerDust: isMobile ? 3.2 : 4.2,
+        fill: isMobile ? 6.0 : 8.0,
+        edge: 2.2,
+        sparkle: 2.6,
       };
 
       // ---------- Animation ----------
@@ -756,6 +1277,8 @@
         const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.75)), 2);
         return 1 + 0.11 * (b1 + 0.6 * b2) - 0.045 * relax;
       }
+
+      const PULSE_GAIN = 2.8;
 
       let didMarkOk = false;
 
@@ -772,50 +1295,91 @@
 
         // 心跳：中心固定，粒子向外擴散（不使用 group scale 做 pulse）
         const pulse = heartbeatScale(t);
-        const pulseBoost = 1 + (pulse - 1) * 1.6;
-        const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.12, 0, 1);
-        const outward = kick;
+        const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
+        const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.10, 0, 1);
+        const outward = Math.pow(kick, 0.65);
+        const dirMix = 0.85 * outward;
 
         for (let i = 0; i < heartFillCount; i++) {
           const ix = i * 3;
-          const dx = heartFillDir[i * 2 + 0];
-          const dy = heartFillDir[i * 2 + 1];
+
+          const bdx = heartFillDir[i * 2 + 0];
+          const bdy = heartFillDir[i * 2 + 1];
+          const rdx = heartFillRotDir[i * 2 + 0];
+          const rdy = heartFillRotDir[i * 2 + 1];
+
+          let fx = bdx + (rdx - bdx) * dirMix;
+          let fy = bdy + (rdy - bdy) * dirMix;
+          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
+          fx *= invLen;
+          fy *= invLen;
+
           const amp = heartFillAmp[i] * OUTWARD_MAX.fill * outward;
-          heartFillPos[ix + 0] = heartFillBasePos[ix + 0] + dx * amp;
-          heartFillPos[ix + 1] = heartFillBasePos[ix + 1] + dy * amp;
+          heartFillPos[ix + 0] = heartFillBasePos[ix + 0] + fx * amp;
+          heartFillPos[ix + 1] = heartFillBasePos[ix + 1] + fy * amp;
           heartFillPos[ix + 2] = heartFillBasePos[ix + 2];
         }
         heartFillGeo.attributes.position.needsUpdate = true;
 
         for (let i = 0; i < outerDustCount; i++) {
           const ix = i * 3;
-          const dx = outerDustDir[i * 2 + 0];
-          const dy = outerDustDir[i * 2 + 1];
+
+          const bdx = outerDustDir[i * 2 + 0];
+          const bdy = outerDustDir[i * 2 + 1];
+          const rdx = outerDustRotDir[i * 2 + 0];
+          const rdy = outerDustRotDir[i * 2 + 1];
+
+          let fx = bdx + (rdx - bdx) * dirMix;
+          let fy = bdy + (rdy - bdy) * dirMix;
+          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
+          fx *= invLen;
+          fy *= invLen;
+
           const amp = outerDustAmp[i] * OUTWARD_MAX.outerDust * outward;
-          outerDustPos[ix + 0] = outerDustBasePos[ix + 0] + dx * amp;
-          outerDustPos[ix + 1] = outerDustBasePos[ix + 1] + dy * amp;
+          outerDustPos[ix + 0] = outerDustBasePos[ix + 0] + fx * amp;
+          outerDustPos[ix + 1] = outerDustBasePos[ix + 1] + fy * amp;
           outerDustPos[ix + 2] = outerDustBasePos[ix + 2];
         }
         outerDustGeo.attributes.position.needsUpdate = true;
 
         for (let i = 0; i < edgePoints.length; i++) {
           const ix = i * 3;
-          const dx = heartEdgeOutDir[i * 2 + 0];
-          const dy = heartEdgeOutDir[i * 2 + 1];
+
+          const bdx = heartEdgeOutDir[i * 2 + 0];
+          const bdy = heartEdgeOutDir[i * 2 + 1];
+          const rdx = heartEdgeRotDir[i * 2 + 0];
+          const rdy = heartEdgeRotDir[i * 2 + 1];
+
+          let fx = bdx + (rdx - bdx) * dirMix;
+          let fy = bdy + (rdy - bdy) * dirMix;
+          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
+          fx *= invLen;
+          fy *= invLen;
+
           const amp = heartEdgeAmp[i] * OUTWARD_MAX.edge * outward;
-          heartEdgePos[ix + 0] = heartEdgeBasePos[ix + 0] + dx * amp;
-          heartEdgePos[ix + 1] = heartEdgeBasePos[ix + 1] + dy * amp;
+          heartEdgePos[ix + 0] = heartEdgeBasePos[ix + 0] + fx * amp;
+          heartEdgePos[ix + 1] = heartEdgeBasePos[ix + 1] + fy * amp;
           heartEdgePos[ix + 2] = heartEdgeBasePos[ix + 2];
         }
         heartEdgeGeo.attributes.position.needsUpdate = true;
 
         for (let i = 0; i < sparkleCount; i++) {
           const ix = i * 3;
-          const dx = sparkleOutDir[i * 2 + 0];
-          const dy = sparkleOutDir[i * 2 + 1];
+
+          const bdx = sparkleOutDir[i * 2 + 0];
+          const bdy = sparkleOutDir[i * 2 + 1];
+          const rdx = sparkleRotDir[i * 2 + 0];
+          const rdy = sparkleRotDir[i * 2 + 1];
+
+          let fx = bdx + (rdx - bdx) * dirMix;
+          let fy = bdy + (rdy - bdy) * dirMix;
+          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
+          fx *= invLen;
+          fy *= invLen;
+
           const amp = sparkleAmp[i] * OUTWARD_MAX.sparkle * outward;
-          sparklePos[ix + 0] = sparkleBasePos[ix + 0] + dx * amp;
-          sparklePos[ix + 1] = sparkleBasePos[ix + 1] + dy * amp;
+          sparklePos[ix + 0] = sparkleBasePos[ix + 0] + fx * amp;
+          sparklePos[ix + 1] = sparkleBasePos[ix + 1] + fy * amp;
           sparklePos[ix + 2] = sparkleBasePos[ix + 2];
         }
         sparkleGeo.attributes.position.needsUpdate = true;
