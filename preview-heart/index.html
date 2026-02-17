@@ -133,9 +133,9 @@
     const renderPass = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.72,  // strength
-      0.45,  // radius
-      0.85   // threshold
+      0.55,  // strength（降低避免粉紅被洗白）
+      0.35,  // radius
+      0.90   // threshold
     );
 
     composer.addPass(renderPass);
@@ -418,8 +418,8 @@
 
       // Bloom 跟著心跳呼吸（避免 additive 疊太亮把粉紅洗白）
       const bloomKick = THREE.MathUtils.clamp((pulse - 1) / 0.11, 0, 1);
-      bloomPass.strength = 0.68 + bloomKick * 0.44;
-      bloomPass.radius = 0.45 + bloomKick * 0.06;
+      bloomPass.strength = 0.45 + bloomKick * 0.30;
+      bloomPass.radius = 0.35 + bloomKick * 0.05;
 
       // 背景粒子漂浮（wrap）
       const pos = ambientGeo.attributes.position.array;
