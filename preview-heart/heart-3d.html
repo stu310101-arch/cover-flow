@@ -257,27 +257,42 @@
           sparkle: 2.6,
         };
 
-        const PULSE_GAIN = 2.8;
         const ANGLE_SPREAD = 0.55;
         const FILL_ACCEPT_EXP = 1.9;
         const FILL_MIN_ACCEPT = 0.28;
 
-        function heartbeatScale(t) {
-          const speed = 3.25;
-          const offset2 = 1.12;
-          const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 5);
-          const b2 = Math.pow(Math.max(0, Math.sin(t * speed + offset2)), 7);
-          const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.86)), 2);
-          return 1 + 0.12 * (b1 + 0.58 * b2) - 0.05 * relax;
+        const HEARTBEAT = {
+          PERIOD: 1.30,
+
+          LUB_MU: 0.11,
+          LUB_RISE: 0.030,
+          LUB_DECAY: 0.075,
+          LUB_GAIN: 1.20,
+
+          DUB_MU: 0.26,
+          DUB_RISE: 0.040,
+          DUB_DECAY: 0.095,
+          DUB_GAIN: 0.78,
+
+          OUTWARD_POW: 0.75,
+        };
+
+        function smoothstep01(v) { return v <= 0 ? 0 : v >= 1 ? 1 : v * v * (3 - 2 * v); }
+
+        function spike(x, mu, rise, decay) {
+          const r = smoothstep01((x - (mu - rise)) / rise);
+          const d = Math.exp(-Math.max(0, x - mu) / decay);
+          return r * d;
         }
 
         function computePulse(t) {
-          const pulse = heartbeatScale(t);
-          const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
-          const kick = clamp((pulseBoost - 1) / 0.10, 0, 1);
-          const outward = Math.pow(kick, 0.65);
+          const x = (t % HEARTBEAT.PERIOD) / HEARTBEAT.PERIOD;
+          const lub = spike(x, HEARTBEAT.LUB_MU, HEARTBEAT.LUB_RISE, HEARTBEAT.LUB_DECAY);
+          const dub = spike(x, HEARTBEAT.DUB_MU, HEARTBEAT.DUB_RISE, HEARTBEAT.DUB_DECAY);
+          const kick = Math.min(1, HEARTBEAT.LUB_GAIN * lub + HEARTBEAT.DUB_GAIN * dub);
+          const outward = Math.pow(kick, HEARTBEAT.OUTWARD_POW);
           const dirMix = 0.85 * outward;
-          return { pulse, pulseBoost, kick, outward, dirMix };
+          return { kick, outward, dirMix };
         }
 
         const outlineCount = 520;
@@ -1437,9 +1452,10 @@
       enableOutwardDisplacement(outerDustMat, uOutwardOuterDust, uDirMixMax);
       enableOutwardDisplacement(sparkleMat, uOutwardSparkle, uDirMixMax);
 
-      renderer.autoClear = true;
+      const textScene = new THREE.Scene();
+      renderer.autoClear = false;
 
-      // ---------- Center Text (always readable) ----------
+      // ---------- Center Text (always readable; no bloom) ----------
       function canvasToTexture(canvas) {
         const tex = new THREE.CanvasTexture(canvas);
         tex.colorSpace = THREE.SRGBColorSpace;
@@ -1466,59 +1482,54 @@
         ctx.lineCap = "round";
 
         const fontFamily = "\"DFKai-SB\", \"KaiTi\", \"STKaiti\", \"YuKyokasho\", \"Noto Sans TC\", \"PingFang TC\", \"Microsoft JhengHei\", system-ui, sans-serif";
-        const y0 = h * 0.38;
-        const y1 = h * 0.72;
-
-        function drawMarker(text, y, size) {
-          if (!text) return;
-          ctx.font = `650 ${size}px ${fontFamily}`;
-
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
-          ctx.shadowColor = "rgba(80,255,150,0.92)";
-          ctx.shadowBlur = size * 0.34;
-
-          ctx.fillStyle = "rgba(80,255,150,0.22)";
-          ctx.strokeStyle = "rgba(80,255,150,0.55)";
-          const lw = size * 0.18;
-          ctx.lineWidth = lw;
-
-          const j = size * 0.020;
-          for (let k = 0; k < 9; k++) {
-            const a = k * 2.399963229728653;
-            const jx = Math.cos(a) * j;
-            const jy = Math.sin(a) * j;
-            ctx.fillText(text, cx + jx, y + jy);
-            ctx.strokeText(text, cx + jx, y + jy);
-          }
-
-          ctx.shadowBlur = 0;
-          ctx.shadowColor = "rgba(0,0,0,0)";
-        }
+        const y0 = h * 0.36;
+        const y1 = h * 0.74;
 
         function drawWhite(text, y, size) {
           if (!text) return;
           ctx.font = `650 ${size}px ${fontFamily}`;
 
-          ctx.shadowBlur = 0;
-          ctx.shadowColor = "rgba(0,0,0,0)";
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = size * 0.010;
+          ctx.shadowColor = "rgba(0,0,0,0.55)";
+          ctx.shadowBlur = size * 0.060;
 
-          ctx.strokeStyle = "rgba(255,255,255,0.65)";
-          ctx.lineWidth = size * 0.020;
+          ctx.strokeStyle = "rgba(12,22,40,0.55)";
+          ctx.lineWidth = size * 0.030;
           ctx.strokeText(text, cx, y);
 
           ctx.fillStyle = "#fff";
           ctx.fillText(text, cx, y);
+
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = "rgba(0,0,0,0)";
         }
 
-        if (mode === "marker") {
-          drawMarker(lines[0] || "", y0, 272);
-          drawMarker(lines[1] || "", y1, 248);
+        function drawGreenOutline(text, y, size) {
+          if (!text) return;
+          ctx.font = `650 ${size}px ${fontFamily}`;
+
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowColor = "rgba(80,255,150,0.95)";
+          ctx.shadowBlur = size * 0.22;
+
+          ctx.strokeStyle = "rgba(80,255,150,0.92)";
+          ctx.lineWidth = size * 0.14;
+          ctx.strokeText(text, cx, y);
+
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = "rgba(0,0,0,0)";
+        }
+
+        if (mode === "greenOutline") {
+          drawGreenOutline(lines[0] || "", y0, 300);
+          drawGreenOutline(lines[1] || "", y1, 270);
           return canvas;
         }
 
-        drawWhite(lines[0] || "", y0, 272);
-        drawWhite(lines[1] || "", y1, 248);
+        drawWhite(lines[0] || "", y0, 300);
+        drawWhite(lines[1] || "", y1, 270);
         return canvas;
       }
 
@@ -1526,24 +1537,13 @@
       const TEXT_CANVAS_H = 1024;
       const TEXT_LINES = ["陳巧恩", "新年快樂"];
 
-      const markerCanvas = makeHandTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "marker" });
       const whiteCanvas = makeHandTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "white" });
+      const greenOutlineCanvas = makeHandTextCanvas({ lines: TEXT_LINES, w: TEXT_CANVAS_W, h: TEXT_CANVAS_H, mode: "greenOutline" });
 
-      const markerTex = canvasToTexture(markerCanvas);
       const whiteTex = canvasToTexture(whiteCanvas);
+      const greenOutlineTex = canvasToTexture(greenOutlineCanvas);
 
-      const textMarkerMat = new THREE.SpriteMaterial({
-        map: markerTex,
-        transparent: true,
-        opacity: 0.95,
-        alphaTest: 0.01,
-        depthTest: false,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        toneMapped: false,
-      });
-
-      const textWhiteMat = new THREE.SpriteMaterial({
+      const whiteSpriteMat = new THREE.SpriteMaterial({
         map: whiteTex,
         transparent: true,
         opacity: 1.0,
@@ -1554,44 +1554,69 @@
         toneMapped: false,
       });
 
-      const textMarker = new THREE.Sprite(textMarkerMat);
-      const textWhite = new THREE.Sprite(textWhiteMat);
+      const greenSpriteMat = new THREE.SpriteMaterial({
+        map: greenOutlineTex,
+        transparent: true,
+        opacity: 0.90,
+        alphaTest: 0.01,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      });
+
+      const whiteSprite = new THREE.Sprite(whiteSpriteMat);
+      const greenSprite = new THREE.Sprite(greenSpriteMat);
 
       const textZ = 0.35;
-      textMarker.position.set(0, 0, textZ);
-      textWhite.position.set(0, 0, textZ + 0.001);
+      whiteSprite.position.set(0, 0, textZ);
+      greenSprite.position.set(0, 0, textZ + 0.001);
 
-      const textHeight = isMobile ? 0.64 : 0.74;
+      const textHeight = isMobile ? 0.76 : 0.86;
       const textAspect = whiteCanvas.width / whiteCanvas.height;
-      textWhite.scale.set(textHeight * textAspect, textHeight, 1);
-      textMarker.scale.copy(textWhite.scale);
+      whiteSprite.scale.set(textHeight * textAspect, textHeight, 1);
+      greenSprite.scale.copy(whiteSprite.scale);
 
-      textMarker.renderOrder = 110;
-      textWhite.renderOrder = 120;
+      whiteSprite.renderOrder = 120;
+      greenSprite.renderOrder = 130;
 
-      scene.add(textMarker);
-      scene.add(textWhite);
+      textScene.add(whiteSprite);
+      textScene.add(greenSprite);
 
       // ---------- Animation ----------
       const clock = new THREE.Clock();
 
-      function heartbeatScale(t) {
-        const speed = 3.25;
-        const offset2 = 1.12;
-        const b1 = Math.pow(Math.max(0, Math.sin(t * speed)), 5);
-        const b2 = Math.pow(Math.max(0, Math.sin(t * speed + offset2)), 7);
-        const relax = Math.pow(Math.max(0, Math.sin(t * speed + Math.PI * 0.86)), 2);
-        return 1 + 0.12 * (b1 + 0.58 * b2) - 0.05 * relax;
+      const HEARTBEAT = {
+        PERIOD: 1.30,
+
+        LUB_MU: 0.11,
+        LUB_RISE: 0.030,
+        LUB_DECAY: 0.075,
+        LUB_GAIN: 1.20,
+
+        DUB_MU: 0.26,
+        DUB_RISE: 0.040,
+        DUB_DECAY: 0.095,
+        DUB_GAIN: 0.78,
+
+        OUTWARD_POW: 0.75,
+      };
+
+      function smoothstep01(v) { return v <= 0 ? 0 : v >= 1 ? 1 : v * v * (3 - 2 * v); }
+
+      function spike(x, mu, rise, decay) {
+        const r = smoothstep01((x - (mu - rise)) / rise);
+        const d = Math.exp(-Math.max(0, x - mu) / decay);
+        return r * d;
       }
 
-      const PULSE_GAIN = 2.8;
-
       function computePulse(t) {
-        const pulse = heartbeatScale(t);
-        const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
-        const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.10, 0, 1);
-        const outward = Math.pow(kick, 0.65);
-        return { pulse, pulseBoost, kick, outward };
+        const x = (t % HEARTBEAT.PERIOD) / HEARTBEAT.PERIOD;
+        const lub = spike(x, HEARTBEAT.LUB_MU, HEARTBEAT.LUB_RISE, HEARTBEAT.LUB_DECAY);
+        const dub = spike(x, HEARTBEAT.DUB_MU, HEARTBEAT.DUB_RISE, HEARTBEAT.DUB_DECAY);
+        const kick = Math.min(1, HEARTBEAT.LUB_GAIN * lub + HEARTBEAT.DUB_GAIN * dub);
+        const outward = Math.pow(kick, HEARTBEAT.OUTWARD_POW);
+        return { kick, outward };
       }
 
       let didMarkOk = false;
@@ -1628,7 +1653,10 @@
         }
         sparkleGeo.attributes.color.needsUpdate = true;
 
+        renderer.clear();
         composer.render();
+        renderer.clearDepth();
+        renderer.render(textScene, camera);
       }
 
       animate();
