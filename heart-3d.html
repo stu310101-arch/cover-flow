@@ -262,7 +262,7 @@
         const FILL_MIN_ACCEPT = 0.28;
 
         const HEARTBEAT = {
-          PERIOD: 1.30,
+          PERIOD: 1.45,
 
           LUB_MU: 0.11,
           LUB_RISE: 0.030,
@@ -750,7 +750,7 @@
       const dprCap = isMobile ? 1.1 : 1.4;
       const ppScale = isMobile ? 0.72 : 0.80;
 
-      const COUNT_SCALE = 0.70;
+      const COUNT_SCALE = 0.55;
 
       const COUNTS = {
         heartFill: Math.floor((isMobile ? 11000 : 20000) * COUNT_SCALE),
@@ -1511,11 +1511,11 @@
 
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
-          ctx.shadowColor = "rgba(80,255,150,0.95)";
-          ctx.shadowBlur = size * 0.22;
+          ctx.shadowColor = "rgba(80,255,150,0.70)";
+          ctx.shadowBlur = size * 0.16;
 
-          ctx.strokeStyle = "rgba(80,255,150,0.92)";
-          ctx.lineWidth = size * 0.14;
+          ctx.strokeStyle = "rgba(80,255,150,0.70)";
+          ctx.lineWidth = size * 0.12;
           ctx.strokeText(text, cx, y);
 
           ctx.shadowBlur = 0;
@@ -1557,7 +1557,7 @@
       const greenSpriteMat = new THREE.SpriteMaterial({
         map: greenOutlineTex,
         transparent: true,
-        opacity: 0.90,
+        opacity: 0.70,
         alphaTest: 0.01,
         depthTest: false,
         depthWrite: false,
@@ -1569,8 +1569,8 @@
       const greenSprite = new THREE.Sprite(greenSpriteMat);
 
       const textZ = 0.35;
-      whiteSprite.position.set(0, 0, textZ);
-      greenSprite.position.set(0, 0, textZ + 0.001);
+      whiteSprite.position.set(0, 0.06, textZ);
+      greenSprite.position.set(0, 0.06, textZ + 0.001);
 
       const textHeight = isMobile ? 0.76 : 0.86;
       const textAspect = whiteCanvas.width / whiteCanvas.height;
@@ -1587,7 +1587,7 @@
       const clock = new THREE.Clock();
 
       const HEARTBEAT = {
-        PERIOD: 1.30,
+        PERIOD: 1.45,
 
         LUB_MU: 0.11,
         LUB_RISE: 0.030,
