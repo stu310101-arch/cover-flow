@@ -1267,6 +1267,186 @@
         sparkle: 2.6,
       };
 
+      const DIR_MIX_MAX = 0.85;
+
+      function buildOutwardAttributes({ count, baseDir, rotDir, amp, outwardMax }) {
+        const aDir = new Float32Array(count * 2);
+        const aAmp = new Float32Array(count);
+
+        for (let i = 0; i < count; i++) {
+          const bdx = baseDir[i * 2 + 0];
+          const bdy = baseDir[i * 2 + 1];
+          const rdx = rotDir[i * 2 + 0];
+          const rdy = rotDir[i * 2 + 1];
+
+          let fx = bdx + (rdx - bdx) * DIR_MIX_MAX;
+          let fy = bdy + (rdy - bdy) * DIR_MIX_MAX;
+          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
+          fx *= invLen;
+          fy *= invLen;
+
+          aDir[i * 2 + 0] = fx;
+          aDir[i * 2 + 1] = fy;
+          aAmp[i] = amp[i] * outwardMax;
+        }
+
+        return { aDir, aAmp };
+      }
+
+      const outwardAttrsFill = buildOutwardAttributes({
+        count: heartFillCount,
+        baseDir: heartFillDir,
+        rotDir: heartFillRotDir,
+        amp: heartFillAmp,
+        outwardMax: OUTWARD_MAX.fill,
+      });
+      heartFillGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsFill.aDir, 2));
+      heartFillGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsFill.aAmp, 1));
+
+      const outwardAttrsEdge = buildOutwardAttributes({
+        count: edgePoints.length,
+        baseDir: heartEdgeOutDir,
+        rotDir: heartEdgeRotDir,
+        amp: heartEdgeAmp,
+        outwardMax: OUTWARD_MAX.edge,
+      });
+      heartEdgeGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsEdge.aDir, 2));
+      heartEdgeGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsEdge.aAmp, 1));
+
+      const outwardAttrsOuterDust = buildOutwardAttributes({
+        count: outerDustCount,
+        baseDir: outerDustDir,
+        rotDir: outerDustRotDir,
+        amp: outerDustAmp,
+        outwardMax: OUTWARD_MAX.outerDust,
+      });
+      outerDustGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsOuterDust.aDir, 2));
+      outerDustGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsOuterDust.aAmp, 1));
+
+      const outwardAttrsSparkle = buildOutwardAttributes({
+        count: sparkleCount,
+        baseDir: sparkleOutDir,
+        rotDir: sparkleRotDir,
+        amp: sparkleAmp,
+        outwardMax: OUTWARD_MAX.sparkle,
+      });
+      sparkleGeo.setAttribute("aDir", new THREE.BufferAttribute(outwardAttrsSparkle.aDir, 2));
+      sparkleGeo.setAttribute("aAmp", new THREE.BufferAttribute(outwardAttrsSparkle.aAmp, 1));
+
+      function enableOutwardDisplacement(material, outwardUniform) {
+        material.onBeforeCompile = (shader) => {
+          shader.uniforms.uOutward = outwardUniform;
+
+          shader.vertexShader = `\nattribute vec2 aDir;\nattribute float aAmp;\nuniform float uOutward;\n` + shader.vertexShader;
+
+          shader.vertexShader = shader.vertexShader.replace(
+            "#include <begin_vertex>",
+            `#include <begin_vertex>\ntransformed.xy += aDir * (aAmp * uOutward);`
+          );
+        };
+
+        material.customProgramCacheKey = () => "outwardDisplacement-v1";
+        material.needsUpdate = true;
+      }
+
+      const uOutwardFill = { value: 0 };
+      const uOutwardEdge = { value: 0 };
+      const uOutwardOuterDust = { value: 0 };
+      const uOutwardSparkle = { value: 0 };
+
+      enableOutwardDisplacement(heartGlowMat, uOutwardFill);
+      enableOutwardDisplacement(heartFillMat, uOutwardFill);
+      enableOutwardDisplacement(heartEdgeMat, uOutwardEdge);
+      enableOutwardDisplacement(outerDustMat, uOutwardOuterDust);
+      enableOutwardDisplacement(sparkleMat, uOutwardSparkle);
+
+      function makeNeonTextTexture(lines) {
+        const w = 1024;
+        const h = 512;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, w, h);
+
+        const cx = w * 0.5;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+
+        const fontFamily = "\"Noto Sans TC\", \"PingFang TC\", \"Microsoft JhengHei\", system-ui, sans-serif";
+        const y0 = h * 0.40;
+        const y1 = h * 0.66;
+
+        function drawLine(text, y, size) {
+          ctx.font = `900 ${size}px ${fontFamily}`;
+
+          ctx.shadowColor = "rgba(60, 255, 140, 0.95)";
+          ctx.shadowBlur = size * 0.32;
+          ctx.strokeStyle = "rgba(40, 255, 120, 0.22)";
+          ctx.lineWidth = size * 0.42;
+
+          for (let k = 0; k < 10; k++) {
+            const ox = (Math.random() - 0.5) * (size * 0.05);
+            const oy = (Math.random() - 0.5) * (size * 0.05);
+            ctx.strokeText(text, cx + ox, y + oy);
+          }
+
+          ctx.shadowBlur = size * 0.22;
+          ctx.strokeStyle = "rgba(140, 255, 190, 0.60)";
+          ctx.lineWidth = size * 0.16;
+          for (let k = 0; k < 6; k++) {
+            const ox = (Math.random() - 0.5) * (size * 0.03);
+            const oy = (Math.random() - 0.5) * (size * 0.03);
+            ctx.strokeText(text, cx + ox, y + oy);
+          }
+
+          ctx.shadowBlur = size * 0.10;
+          ctx.fillStyle = "rgba(35, 255, 120, 0.95)";
+          for (let k = 0; k < 4; k++) {
+            const ox = (Math.random() - 0.5) * (size * 0.02);
+            const oy = (Math.random() - 0.5) * (size * 0.02);
+            ctx.fillText(text, cx + ox, y + oy);
+          }
+
+          ctx.shadowBlur = size * 0.06;
+          ctx.fillStyle = "rgba(235, 255, 245, 0.35)";
+          ctx.fillText(text, cx, y - size * 0.02);
+        }
+
+        drawLine(lines[0] || "", y0, 150);
+        drawLine(lines[1] || "", y1, 140);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
+        tex.needsUpdate = true;
+        return tex;
+      }
+
+      const textTex = makeNeonTextTexture(["陳巧恩", "新年快樂"]);
+      const textMat = new THREE.SpriteMaterial({
+        map: textTex,
+        transparent: true,
+        opacity: 0.92,
+        alphaTest: 0.02,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+
+      const textSprite = new THREE.Sprite(textMat);
+      textSprite.position.set(0, 0.02, 0.22);
+      const textHeight = isMobile ? 0.54 : 0.62;
+      const textAspect = textTex.image.width / textTex.image.height;
+      textSprite.scale.set(textHeight * textAspect, textHeight, 1);
+      textSprite.renderOrder = 120;
+      scene.add(textSprite);
+
       // ---------- Animation ----------
       const clock = new THREE.Clock();
 
@@ -1297,92 +1477,12 @@
         const pulse = heartbeatScale(t);
         const pulseBoost = 1 + (pulse - 1) * PULSE_GAIN;
         const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.10, 0, 1);
-        const outward = Math.pow(kick, 0.65);
-        const dirMix = 0.85 * outward;
+        const outward = kick;
 
-        for (let i = 0; i < heartFillCount; i++) {
-          const ix = i * 3;
-
-          const bdx = heartFillDir[i * 2 + 0];
-          const bdy = heartFillDir[i * 2 + 1];
-          const rdx = heartFillRotDir[i * 2 + 0];
-          const rdy = heartFillRotDir[i * 2 + 1];
-
-          let fx = bdx + (rdx - bdx) * dirMix;
-          let fy = bdy + (rdy - bdy) * dirMix;
-          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
-          fx *= invLen;
-          fy *= invLen;
-
-          const amp = heartFillAmp[i] * OUTWARD_MAX.fill * outward;
-          heartFillPos[ix + 0] = heartFillBasePos[ix + 0] + fx * amp;
-          heartFillPos[ix + 1] = heartFillBasePos[ix + 1] + fy * amp;
-          heartFillPos[ix + 2] = heartFillBasePos[ix + 2];
-        }
-        heartFillGeo.attributes.position.needsUpdate = true;
-
-        for (let i = 0; i < outerDustCount; i++) {
-          const ix = i * 3;
-
-          const bdx = outerDustDir[i * 2 + 0];
-          const bdy = outerDustDir[i * 2 + 1];
-          const rdx = outerDustRotDir[i * 2 + 0];
-          const rdy = outerDustRotDir[i * 2 + 1];
-
-          let fx = bdx + (rdx - bdx) * dirMix;
-          let fy = bdy + (rdy - bdy) * dirMix;
-          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
-          fx *= invLen;
-          fy *= invLen;
-
-          const amp = outerDustAmp[i] * OUTWARD_MAX.outerDust * outward;
-          outerDustPos[ix + 0] = outerDustBasePos[ix + 0] + fx * amp;
-          outerDustPos[ix + 1] = outerDustBasePos[ix + 1] + fy * amp;
-          outerDustPos[ix + 2] = outerDustBasePos[ix + 2];
-        }
-        outerDustGeo.attributes.position.needsUpdate = true;
-
-        for (let i = 0; i < edgePoints.length; i++) {
-          const ix = i * 3;
-
-          const bdx = heartEdgeOutDir[i * 2 + 0];
-          const bdy = heartEdgeOutDir[i * 2 + 1];
-          const rdx = heartEdgeRotDir[i * 2 + 0];
-          const rdy = heartEdgeRotDir[i * 2 + 1];
-
-          let fx = bdx + (rdx - bdx) * dirMix;
-          let fy = bdy + (rdy - bdy) * dirMix;
-          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
-          fx *= invLen;
-          fy *= invLen;
-
-          const amp = heartEdgeAmp[i] * OUTWARD_MAX.edge * outward;
-          heartEdgePos[ix + 0] = heartEdgeBasePos[ix + 0] + fx * amp;
-          heartEdgePos[ix + 1] = heartEdgeBasePos[ix + 1] + fy * amp;
-          heartEdgePos[ix + 2] = heartEdgeBasePos[ix + 2];
-        }
-        heartEdgeGeo.attributes.position.needsUpdate = true;
-
-        for (let i = 0; i < sparkleCount; i++) {
-          const ix = i * 3;
-
-          const bdx = sparkleOutDir[i * 2 + 0];
-          const bdy = sparkleOutDir[i * 2 + 1];
-          const rdx = sparkleRotDir[i * 2 + 0];
-          const rdy = sparkleRotDir[i * 2 + 1];
-
-          let fx = bdx + (rdx - bdx) * dirMix;
-          let fy = bdy + (rdy - bdy) * dirMix;
-          const invLen = 1 / Math.max(1e-6, Math.hypot(fx, fy));
-          fx *= invLen;
-          fy *= invLen;
-
-          const amp = sparkleAmp[i] * OUTWARD_MAX.sparkle * outward;
-          sparklePos[ix + 0] = sparkleBasePos[ix + 0] + fx * amp;
-          sparklePos[ix + 1] = sparkleBasePos[ix + 1] + fy * amp;
-          sparklePos[ix + 2] = sparkleBasePos[ix + 2];
-        }
-        sparkleGeo.attributes.position.needsUpdate = true;
+        uOutwardFill.value = outward;
+        uOutwardEdge.value = outward;
+        uOutwardOuterDust.value = outward;
+        uOutwardSparkle.value = outward;
 
         const breath = 0.03 * Math.sin(t * 0.9);
         bloomPass.strength = BLOOM.strength * THREE.MathUtils.clamp(0.86 + 0.20 * kick + breath, 0.76, 1.02);
