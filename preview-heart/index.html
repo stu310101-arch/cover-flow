@@ -272,11 +272,16 @@
 
         const ctx = c.getContext("2d");
         ctx.clearRect(0, 0, size, size);
-        ctx.fillStyle = "rgba(255,255,255,1)";
-        ctx.beginPath();
-        ctx.arc(size * 0.5, size * 0.5, size * 0.46, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fill();
+
+        const r = size * 0.5;
+        const g = ctx.createRadialGradient(r, r, 0, r, r, r);
+        g.addColorStop(0, "rgba(255,255,255,1)");
+        g.addColorStop(0.4, "rgba(255,255,255,1)");
+        g.addColorStop(0.75, "rgba(255,255,255,0.25)");
+        g.addColorStop(1, "rgba(255,255,255,0)");
+
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, size, size);
 
         const tex = new THREE.CanvasTexture(c);
         tex.colorSpace = THREE.SRGBColorSpace;
@@ -415,19 +420,43 @@
         writePinkColor(heartFillCol, ix, 0.58, 0.18);
       }
 
-      heartFillGeo.setAttribute("position", new THREE.BufferAttribute(heartFillPos, 3));
+      const heartFillPosAttr = new THREE.BufferAttribute(heartFillPos, 3);
+      heartFillPosAttr.setUsage(THREE.DynamicDrawUsage);
+      heartFillGeo.setAttribute("position", heartFillPosAttr);
       heartFillGeo.setAttribute("color", new THREE.BufferAttribute(heartFillCol, 3));
+
+      const heartFillBasePos = heartFillPos.slice();
+      const heartFillDir = new Float32Array(heartFillCount * 2);
+      const heartFillAmp = new Float32Array(heartFillCount);
+
+      let fillMaxR = 0;
+      for (let i = 0; i < outlinePoly.length; i++) {
+        fillMaxR = Math.max(fillMaxR, Math.hypot(outlinePoly[i].x, outlinePoly[i].y));
+      }
+
+      for (let i = 0; i < heartFillCount; i++) {
+        const ix = i * 3;
+        const px = heartFillBasePos[ix + 0];
+        const py = heartFillBasePos[ix + 1];
+        const r = Math.hypot(px, py);
+        const invLen = 1 / Math.max(1e-6, r);
+        heartFillDir[i * 2 + 0] = px * invLen;
+        heartFillDir[i * 2 + 1] = py * invLen;
+
+        const rNorm = fillMaxR > 0 ? Math.min(1, r / fillMaxR) : 0;
+        heartFillAmp[i] = Math.pow(rNorm, 1.8) * (0.35 + 0.65 * Math.random());
+      }
 
       // Glow layer (soft sprite; additive; vertexColors stay pink)
       const heartGlowMat = new THREE.PointsMaterial({
         map: glowTex,
         transparent: true,
-        opacity: isMobile ? 0.12 : 0.14,
+        opacity: isMobile ? 0.16 : 0.18,
         alphaTest: 0.02,
         depthTest: false,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
-        size: isMobile ? 0.095 : 0.105,
+        size: isMobile ? 0.12 : 0.13,
         sizeAttenuation: true,
         vertexColors: true,
       });
@@ -441,7 +470,7 @@
         map: dotTex,
         transparent: true,
         opacity: 0.78,
-        alphaTest: 0.70,
+        alphaTest: 0.15,
         depthTest: false,
         depthWrite: false,
         blending: THREE.NormalBlending,
@@ -515,7 +544,7 @@
         map: dotTex,
         transparent: true,
         opacity: 0.68,
-        alphaTest: 0.70,
+        alphaTest: 0.18,
         depthTest: false,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
@@ -591,14 +620,14 @@
       }
 
       const outerDustMat = new THREE.PointsMaterial({
-        map: dotTex,
+        map: glowTex,
         transparent: true,
-        opacity: 0.15,
-        alphaTest: 0.62,
+        opacity: isMobile ? 0.12 : 0.14,
+        alphaTest: 0.03,
         depthTest: false,
         depthWrite: false,
-        blending: THREE.NormalBlending,
-        size: isMobile ? 0.040 : 0.042,
+        blending: THREE.AdditiveBlending,
+        size: isMobile ? 0.052 : 0.055,
         sizeAttenuation: true,
         vertexColors: true,
       });
@@ -698,6 +727,7 @@
       // ---------- Heartbeat outward offsets ----------
       const OUTWARD_MAX = {
         outerDust: isMobile ? 0.75 : 0.95,
+        fill: isMobile ? 1.0 : 1.2,
         edge: 0.28,
         sparkle: 0.22,
       };
@@ -730,7 +760,18 @@
         const pulse = heartbeatScale(t);
         const pulseBoost = 1 + (pulse - 1) * 1.6;
         const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.18, 0, 1);
-        const outward = Math.pow(kick, 1.35);
+        const outward = kick;
+
+        for (let i = 0; i < heartFillCount; i++) {
+          const ix = i * 3;
+          const dx = heartFillDir[i * 2 + 0];
+          const dy = heartFillDir[i * 2 + 1];
+          const amp = heartFillAmp[i] * OUTWARD_MAX.fill * outward;
+          heartFillPos[ix + 0] = heartFillBasePos[ix + 0] + dx * amp;
+          heartFillPos[ix + 1] = heartFillBasePos[ix + 1] + dy * amp;
+          heartFillPos[ix + 2] = heartFillBasePos[ix + 2];
+        }
+        heartFillGeo.attributes.position.needsUpdate = true;
 
         for (let i = 0; i < outerDustCount; i++) {
           const ix = i * 3;
