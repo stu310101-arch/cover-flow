@@ -409,9 +409,22 @@
 
       const fillZJitter = 0.06;
 
+      let fillMaxR = 0;
+      for (let i = 0; i < outlinePoly.length; i++) {
+        fillMaxR = Math.max(fillMaxR, Math.hypot(outlinePoly[i].x, outlinePoly[i].y));
+      }
+
+      const FILL_ACCEPT_EXP = 2.6;
+
       for (let i = 0; i < heartFillCount; i++) {
         const ix = i * 3;
-        sampleInHeart2D(_v2);
+
+        for (let tries = 0; tries < 2400; tries++) {
+          sampleInHeart2D(_v2);
+          const rNorm = fillMaxR > 0 ? Math.min(1, Math.hypot(_v2.x, _v2.y) / fillMaxR) : 0;
+          const acceptProb = Math.pow(rNorm, FILL_ACCEPT_EXP);
+          if (Math.random() < acceptProb) break;
+        }
 
         heartFillPos[ix + 0] = _v2.x;
         heartFillPos[ix + 1] = _v2.y;
@@ -428,11 +441,6 @@
       const heartFillBasePos = heartFillPos.slice();
       const heartFillDir = new Float32Array(heartFillCount * 2);
       const heartFillAmp = new Float32Array(heartFillCount);
-
-      let fillMaxR = 0;
-      for (let i = 0; i < outlinePoly.length; i++) {
-        fillMaxR = Math.max(fillMaxR, Math.hypot(outlinePoly[i].x, outlinePoly[i].y));
-      }
 
       for (let i = 0; i < heartFillCount; i++) {
         const ix = i * 3;
@@ -498,6 +506,8 @@
       const edgeJitter = 0.26;
       const edgeZJitter = 0.04;
 
+      const heartEdgeOutDir = new Float32Array(edgePoints.length * 2);
+
       for (let i = 0; i < edgePoints.length; i++) {
         const ix = i * 3;
 
@@ -509,8 +519,16 @@
         const ty = next.y - prev.y;
         const invLen = 1 / Math.max(1e-6, Math.hypot(tx, ty));
 
-        const nx = -ty * invLen;
-        const ny = tx * invLen;
+        let nx = -ty * invLen;
+        let ny = tx * invLen;
+
+        if (nx * curr.x + ny * curr.y < 0) {
+          nx = -nx;
+          ny = -ny;
+        }
+
+        heartEdgeOutDir[i * 2 + 0] = nx;
+        heartEdgeOutDir[i * 2 + 1] = ny;
 
         const j = (Math.random() - 0.5) * 2 * edgeJitter;
 
@@ -527,16 +545,9 @@
       heartEdgeGeo.setAttribute("color", new THREE.BufferAttribute(heartEdgeCol, 3));
 
       const heartEdgeBasePos = heartEdgePos.slice();
-      const heartEdgeDir = new Float32Array(edgePoints.length * 2);
       const heartEdgeAmp = new Float32Array(edgePoints.length);
 
       for (let i = 0; i < edgePoints.length; i++) {
-        const ix = i * 3;
-        const px = heartEdgeBasePos[ix + 0];
-        const py = heartEdgeBasePos[ix + 1];
-        const invLen = 1 / Math.max(1e-6, Math.hypot(px, py));
-        heartEdgeDir[i * 2 + 0] = px * invLen;
-        heartEdgeDir[i * 2 + 1] = py * invLen;
         heartEdgeAmp[i] = 0.20 + 0.80 * Math.pow(Math.random(), 1.25);
       }
 
@@ -728,7 +739,7 @@
       const OUTWARD_MAX = {
         outerDust: isMobile ? 0.9 : 1.15,
         fill: isMobile ? 2.0 : 2.8,
-        edge: 0.45,
+        edge: 0.6,
         sparkle: 0.35,
       };
 
@@ -762,11 +773,6 @@
         const kick = THREE.MathUtils.clamp((pulseBoost - 1) / 0.12, 0, 1);
         const outward = kick;
 
-        const wob = (isMobile ? 0.06 : 0.085) * (0.35 + 0.65 * kick);
-        heart.position.x = wob * Math.sin(t * 1.35);
-        heart.position.y = wob * 0.85 * Math.sin(t * 2.05 + 0.7);
-        heart.rotation.z = Math.PI + (isMobile ? 0.06 : 0.085) * (0.35 + 0.65 * kick) * Math.sin(t * 1.45);
-
         for (let i = 0; i < heartFillCount; i++) {
           const ix = i * 3;
           const dx = heartFillDir[i * 2 + 0];
@@ -791,8 +797,8 @@
 
         for (let i = 0; i < edgePoints.length; i++) {
           const ix = i * 3;
-          const dx = heartEdgeDir[i * 2 + 0];
-          const dy = heartEdgeDir[i * 2 + 1];
+          const dx = heartEdgeOutDir[i * 2 + 0];
+          const dy = heartEdgeOutDir[i * 2 + 1];
           const amp = heartEdgeAmp[i] * OUTWARD_MAX.edge * outward;
           heartEdgePos[ix + 0] = heartEdgeBasePos[ix + 0] + dx * amp;
           heartEdgePos[ix + 1] = heartEdgeBasePos[ix + 1] + dy * amp;
