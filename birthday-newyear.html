@@ -277,9 +277,9 @@
         </defs>
 
         <!-- Plate -->
-        <g stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-          <ellipse cx="300" cy="545" rx="250" ry="32" fill="#fff6fb"/>
-          <ellipse cx="300" cy="545" rx="210" ry="22" fill="#ffe2ef"/>
+        <g id="plate" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="300" cy="535" rx="250" ry="32" fill="#fff6fb"/>
+          <ellipse cx="300" cy="535" rx="210" ry="22" fill="#ffe2ef"/>
         </g>
 
         <!-- BOTTOM TIER -->
@@ -457,11 +457,17 @@
         <g id="candles" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
           <!-- candle bodies -->
           <g>
+            <rect x="227" y="98" width="22" height="78" rx="8" fill="#fff6fb"/>
             <rect x="258" y="95" width="22" height="85" rx="8" fill="#fff6fb"/>
             <rect x="289" y="88" width="22" height="92" rx="8" fill="#fff6fb"/>
             <rect x="320" y="95" width="22" height="85" rx="8" fill="#fff6fb"/>
+            <rect x="351" y="98" width="22" height="78" rx="8" fill="#fff6fb"/>
 
             <!-- stripes -->
+            <path d="M227 125 L249 115" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M227 148 L249 138" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M227 171 L249 161" stroke="#ff6b7a" stroke-width="8"/>
+
             <path d="M258 120 L280 110" stroke="#ff6b7a" stroke-width="8"/>
             <path d="M258 145 L280 135" stroke="#ff6b7a" stroke-width="8"/>
             <path d="M258 170 L280 160" stroke="#ff6b7a" stroke-width="8"/>
@@ -473,15 +479,30 @@
             <path d="M320 120 L342 110" stroke="#ff6b7a" stroke-width="8"/>
             <path d="M320 145 L342 135" stroke="#ff6b7a" stroke-width="8"/>
             <path d="M320 170 L342 160" stroke="#ff6b7a" stroke-width="8"/>
+
+            <path d="M351 125 L373 115" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M351 148 L373 138" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M351 171 L373 161" stroke="#ff6b7a" stroke-width="8"/>
           </g>
 
-          <!-- wicks -->
-          <path d="M269 90 C268 82 270 78 271 72" fill="none"/>
-          <path d="M300 83 C299 75 301 71 302 65" fill="none"/>
-          <path d="M331 90 C330 82 332 78 333 72" fill="none"/>
+          <!-- wicks (shorter gap to flame) -->
+          <path d="M238 94 C237 89 239 86 240 78" fill="none"/>
+          <path d="M269 90 C268 86 270 82 271 78" fill="none"/>
+          <path d="M300 83 C299 79 301 75 302 71" fill="none"/>
+          <path d="M331 90 C330 86 332 82 333 78" fill="none"/>
+          <path d="M362 94 C361 89 363 86 364 78" fill="none"/>
 
-          <!-- flames -->
-          <g>
+          <!-- flames (moved closer to candles) -->
+          <g transform="translate(0 12)">
+            <path d="M240 66
+                     C231 56 235 40 243 32
+                     C252 42 255 56 240 66
+                     Z" fill="#ffd05b"/>
+            <path d="M240 62
+                     C235 55 237 46 241 40
+                     C246 46 248 55 240 62
+                     Z" fill="#ff8a2a" stroke="none"/>
+
             <path d="M271 66
                      C262 56 266 40 274 32
                      C283 42 286 56 271 66
@@ -508,8 +529,19 @@
                      C328 55 330 46 334 40
                      C339 46 341 55 333 62
                      Z" fill="#ff8a2a" stroke="none"/>
+
+            <path d="M364 66
+                     C355 56 359 40 367 32
+                     C376 42 379 56 364 66
+                     Z" fill="#ffd05b"/>
+            <path d="M364 62
+                     C359 55 361 46 365 40
+                     C370 46 372 55 364 62
+                     Z" fill="#ff8a2a" stroke="none"/>
           </g>
         </g>
+
+        
       </svg>
     </div>
   </div>
@@ -589,7 +621,7 @@
       }
     })();
 
-    // --- Fireworks (canvas): white core + neon outline, multi-color per burst, slower + fewer ---
+    // --- Fireworks (canvas): white core + neon outline, multi-color per burst, fast + varied rays ---
     (function fireworks() {
       const canvas = document.getElementById('fw');
       if (!(canvas instanceof HTMLCanvasElement)) return;
@@ -614,30 +646,31 @@
 
       const bursts = [];
 
-      // --- Tunables (per your feedback) ---
-      const MIN_BURSTS = 2;              // 同時存在更少
-      const MAX_BURSTS = 6;
-      const SPAWN_MS_MIN = 950;          // 生成變慢
-      const SPAWN_MS_MAX = 1650;
+      // speed: back closer to original
+      const MIN_BURSTS = 6;
+      const MAX_BURSTS = 14;
+      const SPAWN_MS_MIN = 360;
+      const SPAWN_MS_MAX = 740;
 
-      const DOT_MS_MIN = 90;
-      const DOT_MS_MAX = 140;
+      const DOT_MS_MIN = 60;
+      const DOT_MS_MAX = 90;
 
-      const LIFE_MS_MIN = 1700;          // 消失變慢
-      const LIFE_MS_MAX = 2600;
+      const LIFE_MS_MIN = 820;
+      const LIFE_MS_MAX = 1250;
 
-      const RAYS_MIN = 16;               // 線條稍少，但每條多色
-      const RAYS_MAX = 24;
+      // more rays
+      const RAYS_MIN = 24;
+      const RAYS_MAX = 38;
 
-      const MAX_R_MIN = 58;
-      const MAX_R_MAX = 112;
+      const MAX_R_MIN = 60;
+      const MAX_R_MAX = 120;
 
       const clamp01 = (x) => Math.max(0, Math.min(1, x));
       const randBetween = (a, b) => a + Math.random() * (b - a);
       const randInt = (a, b) => Math.floor(randBetween(a, b + 1));
 
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
       const easeInCubic = (t) => t * t * t;
-      const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
       const NEON_HUES = [25, 45, 65, 120, 155, 185, 205, 235, 270, 295, 315, 335];
       function neonColor(h) {
@@ -673,11 +706,15 @@
         for (let k = 0; k < rays; k++) {
           const a = rot + (k / rays) * Math.PI * 2 + randBetween(-0.018, 0.018);
 
-          // 同一個 burst：每條 ray 多色；同一條 ray 分段多色（2~3 段）
           const c1 = Math.random() < 0.5 ? neonFromPalette(14) : neonColor(baseHue + randBetween(-85, 85));
           const c2 = Math.random() < 0.5 ? neonFromPalette(14) : neonColor(baseHue + randBetween(-85, 85));
           const c3 = Math.random() < 0.55 ? neonFromPalette(14) : neonColor(baseHue + randBetween(-85, 85));
-          rayData.push({ a, c1, c2, c3 });
+
+          // 長短 + 速率不一
+          const lenMul = randBetween(0.55, 1.25);
+          const speedMul = randBetween(0.75, 1.35);
+
+          rayData.push({ a, c1, c2, c3, lenMul, speedMul });
         }
 
         const dotColors = [
@@ -699,25 +736,25 @@
 
       function drawDot(b, age) {
         const p = clamp01(age / b.dotMs);
-        const r = 1.8 + 3.8 * p;
+        const r = 0.9 + 1.9 * p;
 
         // neon under (multi-color)
         ctx.save();
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.85;
         ctx.globalCompositeOperation = 'lighter';
 
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 14;
         ctx.shadowColor = b.dotColors[0];
         ctx.fillStyle = b.dotColors[0];
         ctx.beginPath();
-        ctx.arc(b.x, b.y, r + 2.4, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, r + 1.4, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = b.dotColors[1];
         ctx.fillStyle = b.dotColors[1];
         ctx.beginPath();
-        ctx.arc(b.x, b.y, r + 1.2, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, r + 0.7, 0, Math.PI * 2);
         ctx.fill();
 
         // white core over
@@ -731,19 +768,17 @@
         ctx.restore();
       }
 
-      // initial (少一點)
+      // initial (back closer to original)
       const tStart = performance.now();
-      for (let i = 0; i < 2; i++) spawnBurst(tStart);
-      let nextSpawn = tStart + randBetween(SPAWN_MS_MIN, SPAWN_MS_MAX);
+      for (let i = 0; i < 4; i++) spawnBurst(tStart);
+      let nextSpawn = tStart + 220;
 
       function loop(now) {
         ctx.clearRect(0, 0, w, h);
 
-        // spawn control: 變少 + 降低頻率 + 上限控制
-        if (now >= nextSpawn && bursts.length < MAX_BURSTS) {
+        if (now >= nextSpawn) {
           spawnBurst(now);
-          nextSpawn = now + randBetween(SPAWN_MS_MIN, SPAWN_MS_MAX);
-        } else if (now >= nextSpawn) {
+          if (Math.random() < 0.22) spawnBurst(now);
           nextSpawn = now + randBetween(SPAWN_MS_MIN, SPAWN_MS_MAX);
         }
 
@@ -762,27 +797,16 @@
             continue;
           }
 
-          // 外擴速度不要太快：開頭更慢
-          const outerT = easeInOutCubic(clamp01(t));
-          const outer = b.maxR * (0.10 + 0.90 * outerT);
-
-          // inside-out disappearance：延後開始 + 加速吃掉（內 -> 外）
-          const innerT = easeInCubic(clamp01((t - 0.20) / 0.80));
-          const inner = Math.min(outer, b.maxR * innerT * 1.18);
-
-          const alpha = Math.max(0, 1 - Math.pow(t, 1.25));
-          if (inner >= outer - 0.6) {
-            bursts.splice(i, 1);
-            continue;
-          }
+          const alpha = Math.max(0, 1 - Math.pow(t, 1.15));
 
           ctx.lineCap = 'round';
 
-          // neon under (多色：同一條 ray 分段不同色)
+          // neon under
           ctx.save();
           ctx.globalCompositeOperation = 'lighter';
-          ctx.globalAlpha = alpha * 0.92;
-          ctx.lineWidth = 6.2;
+          ctx.globalAlpha = alpha * 0.95;
+          ctx.lineWidth = 6.0;
+          ctx.shadowBlur = 18;
 
           const mid1T = 0.46;
           const mid2T = 0.78;
@@ -790,6 +814,16 @@
           for (let k = 0; k < b.rays; k++) {
             const rd = b.rayData[k];
             const a = rd.a;
+
+            const tRay = clamp01(t * rd.speedMul);
+
+            const outerT = easeOutCubic(clamp01(tRay * 1.05));
+            const outer = (b.maxR * rd.lenMul) * (0.12 + 0.88 * outerT);
+
+            const innerT = easeInCubic(clamp01((tRay - 0.14) / 0.86));
+            const inner = Math.min(outer, (b.maxR * rd.lenMul) * innerT * 1.22);
+
+            if (inner >= outer - 0.6) continue;
 
             const r1 = inner;
             const r2 = inner + (outer - inner) * mid1T;
@@ -804,8 +838,6 @@
             const y3 = b.y + Math.sin(a) * r3;
             const x4 = b.x + Math.cos(a) * r4;
             const y4 = b.y + Math.sin(a) * r4;
-
-            ctx.shadowBlur = 18;
 
             ctx.strokeStyle = rd.c1;
             ctx.shadowColor = rd.c1;
@@ -830,7 +862,7 @@
           }
           ctx.restore();
 
-          // white core on top (保持：白線在上層)
+          // white core on top
           ctx.save();
           ctx.globalCompositeOperation = 'source-over';
           ctx.globalAlpha = alpha;
@@ -839,7 +871,19 @@
           ctx.shadowBlur = 0;
 
           for (let k = 0; k < b.rays; k++) {
-            const a = b.rayData[k].a;
+            const rd = b.rayData[k];
+            const a = rd.a;
+
+            const tRay = clamp01(t * rd.speedMul);
+
+            const outerT = easeOutCubic(clamp01(tRay * 1.05));
+            const outer = (b.maxR * rd.lenMul) * (0.12 + 0.88 * outerT);
+
+            const innerT = easeInCubic(clamp01((tRay - 0.14) / 0.86));
+            const inner = Math.min(outer, (b.maxR * rd.lenMul) * innerT * 1.22);
+
+            if (inner >= outer - 0.6) continue;
+
             const x1 = b.x + Math.cos(a) * inner;
             const y1 = b.y + Math.sin(a) * inner;
             const x2 = b.x + Math.cos(a) * outer;
@@ -852,11 +896,8 @@
           ctx.restore();
         }
 
-        // keep some on screen, but fewer than before
-        if (bursts.length < MIN_BURSTS && now - tStart > 250) {
-          spawnBurst(now);
-          nextSpawn = now + randBetween(SPAWN_MS_MIN, SPAWN_MS_MAX);
-        }
+        while (bursts.length < MIN_BURSTS) spawnBurst(now);
+        while (bursts.length > MAX_BURSTS) bursts.shift();
 
         requestAnimationFrame(loop);
       }
