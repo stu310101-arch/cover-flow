@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>生日快樂 & 新年快樂</title>
+  <style>
+    :root {
+      --bg: #000;
+      --cake: #f2b07d;
+      --cake-shadow: rgba(0, 0, 0, 0.55);
+      --cream: #ffffff;
+      --pink: #ff5db1;
+      --pink-deep: #ff2a9b;
+      --tier-radius: 26px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      overflow: hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .stage {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas#fw {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .cake-wrap {
+      position: relative;
+      z-index: 5;
+      width: min(92vw, 640px);
+      height: min(86vh, 720px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: clamp(12px, 3vh, 28px);
+    }
+
+    .cake {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 2.2vh, 16px);
+      filter: drop-shadow(0 18px 22px rgba(0,0,0,0.65));
+    }
+
+    .tier {
+      position: relative;
+      background:
+        radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
+        linear-gradient(#f6c59c, #e8a871 60%, #dd9a61);
+      border-radius: var(--tier-radius);
+      box-shadow:
+        0 12px 24px var(--cake-shadow),
+        inset 0 10px 18px rgba(255,255,255,0.22);
+      overflow: visible;
+    }
+
+    /* white cream top (with drips) */
+    .tier::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(-1 * clamp(14px, 2.6vh, 18px));
+      height: clamp(28px, 5vh, 36px);
+      background:
+        radial-gradient(circle at 10% 80%, var(--cream) 0 14px, transparent 15px),
+        radial-gradient(circle at 26% 85%, var(--cream) 0 16px, transparent 17px),
+        radial-gradient(circle at 43% 78%, var(--cream) 0 14px, transparent 15px),
+        radial-gradient(circle at 60% 88%, var(--cream) 0 18px, transparent 19px),
+        radial-gradient(circle at 78% 80%, var(--cream) 0 14px, transparent 15px),
+        radial-gradient(circle at 92% 88%, var(--cream) 0 16px, transparent 17px),
+        linear-gradient(var(--cream), var(--cream));
+      border-radius: calc(var(--tier-radius) + 8px);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
+    }
+
+    /* pink frosting ring */
+    .tier::after {
+      content: "";
+      position: absolute;
+      left: -8px;
+      right: -8px;
+      top: clamp(10px, 1.8vh, 14px);
+      height: clamp(12px, 2.2vh, 16px);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.25), rgba(255,255,255,0) 25%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0) 75%, rgba(255,255,255,0.18)),
+        linear-gradient(var(--pink), var(--pink-deep));
+      border-radius: 999px;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.35),
+        0 8px 14px rgba(0,0,0,0.25);
+      opacity: 0.98;
+      pointer-events: none;
+    }
+
+    /* 第一層(最小) -> 第二層 -> 第三層(最大, 最下面) */
+    .tier.top {
+      width: clamp(210px, 46vw, 340px);
+      height: clamp(110px, 16vh, 150px);
+      z-index: 3;
+    }
+
+    .tier.mid {
+      width: clamp(280px, 58vw, 460px);
+      height: clamp(125px, 18vh, 170px);
+      z-index: 2;
+    }
+
+    .tier.bottom {
+      width: clamp(340px, 70vw, 560px);
+      height: clamp(140px, 20vh, 200px);
+      z-index: 1;
+    }
+
+    .plate {
+      width: clamp(420px, 78vw, 660px);
+      height: clamp(24px, 4.4vh, 34px);
+      border-radius: 999px;
+      background:
+        radial-gradient(80% 140% at 50% 30%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
+        linear-gradient(#222, #070707);
+      box-shadow:
+        0 16px 28px rgba(0,0,0,0.7),
+        inset 0 2px 0 rgba(255,255,255,0.15);
+      margin-top: clamp(6px, 1.2vh, 12px);
+      opacity: 0.9;
+    }
+
+    /* 3 big cream dollops on the very top */
+    .dollops {
+      position: absolute;
+      top: calc(-1 * clamp(46px, 6.2vh, 60px));
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      gap: clamp(10px, 2.5vw, 22px);
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .dollop {
+      position: relative;
+      width: clamp(46px, 8vw, 66px);
+      height: clamp(46px, 8vw, 66px);
+      border-radius: 50% 50% 48% 48%;
+      background:
+        radial-gradient(140% 120% at 35% 20%, rgba(255,255,255,0.95), rgba(255,255,255,0.88) 55%, rgba(255,255,255,0.82)),
+        linear-gradient(#fff, #f2f2f2);
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,0.35));
+    }
+
+    .dollop::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -18%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 60%;
+      border-radius: 60% 60% 55% 55%;
+      background: linear-gradient(#fff, #f1f1f1);
+    }
+
+    /* Candles */
+    .candles {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      top: clamp(-54px, -7.5vh, -40px);
+      height: clamp(86px, 12.5vh, 112px);
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .candle {
+      position: absolute;
+      bottom: 0;
+      width: clamp(8px, 1.6vw, 11px);
+      height: clamp(34px, 6vh, 48px);
+      border-radius: 999px;
+      background:
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.65) 0 3px, rgba(255,255,255,0.05) 3px 6px),
+        linear-gradient(#ffd5ea, #ff6fb8);
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.45),
+        0 10px 14px rgba(0,0,0,0.35);
+      transform: translateX(-50%) rotate(var(--r, 0deg)) scale(var(--s, 1));
+    }
+
+    .wick {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      width: 2px;
+      height: 8px;
+      background: #1b1b1b;
+      transform: translateX(-50%);
+      border-radius: 4px;
+    }
+
+    .flame {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      width: 14px;
+      height: 18px;
+      transform: translateX(-50%);
+      border-radius: 60% 60% 60% 60%;
+      background:
+        radial-gradient(circle at 35% 30%, #fff6bf 0 25%, rgba(255,246,191,0) 60%),
+        radial-gradient(circle at 50% 55%, #ffb100 0 45%, rgba(255,177,0,0) 75%),
+        radial-gradient(circle at 50% 85%, #ff4a00 0 55%, rgba(255,74,0,0) 85%);
+      filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.55));
+      animation: flicker 0.12s infinite alternate;
+    }
+
+    @keyframes flicker {
+      0% { transform: translateX(-50%) rotate(-2deg) scale(1); opacity: 0.95; }
+      100% { transform: translateX(-50%) rotate(2deg) scale(1.06); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flame { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="fw"></canvas>
+
+    <div class="cake-wrap" aria-hidden="true">
+      <div class="cake">
+        <div class="tier top" id="topTier">
+          <div class="candles" id="candles"></div>
+          <div class="dollops">
+            <div class="dollop"></div>
+            <div class="dollop"></div>
+            <div class="dollop"></div>
+          </div>
+        </div>
+        <div class="tier mid"></div>
+        <div class="tier bottom"></div>
+        <div class="plate"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Candles: fill the top tier surface impression ---
+    (function initCandles() {
+      const container = document.getElementById('candles');
+      if (!container) return;
+
+      const seed0 = Math.floor(Math.random() * 1e9);
+      let resizeTimer;
+
+      function render() {
+        const base = Math.max(52, Math.min(92, Math.floor(window.innerWidth / 14)));
+        const count = base; // "插滿"的感覺
+        container.replaceChildren();
+
+        // deterministic-ish randomness (stable per page load)
+        let seed = seed0;
+        const rand = () => {
+          seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+          return ((seed >>> 0) / 4294967296);
+        };
+
+        for (let i = 0; i < count; i++) {
+          // sample inside a disk => map to ellipse (gives a "top surface" spread)
+          let u = 0, v = 0;
+          do {
+            u = rand() * 2 - 1;
+            v = rand() * 2 - 1;
+          } while (u * u + v * v > 1);
+
+          const depth = v; // -1..1 (back..front)
+          const left = 50 + u * 44; // percent
+          const bottom = Math.max(0, 6 - depth * 10); // back appears higher
+          const hScale = 0.75 + rand() * 0.55;
+          const rot = (rand() * 10 - 5);
+          const scale = (1 - depth * 0.06);
+
+          const candle = document.createElement('div');
+          candle.className = 'candle';
+          candle.style.left = `${left}%`;
+          candle.style.bottom = `${bottom}px`;
+          candle.style.setProperty('--r', `${rot.toFixed(1)}deg`);
+          candle.style.setProperty('--s', `${scale.toFixed(2)}`);
+          candle.style.height = `calc(clamp(34px, 6vh, 48px) * ${hScale.toFixed(2)})`;
+          candle.style.zIndex = String(Math.round((depth + 1) * 50));
+
+          // subtle hue variation
+          const hue = Math.floor(310 + rand() * 75);
+          candle.style.background = `
+            repeating-linear-gradient(135deg, rgba(255,255,255,0.65) 0 3px, rgba(255,255,255,0.05) 3px 6px),
+            linear-gradient(hsl(${hue} 100% 90%), hsl(${hue} 95% 62%))
+          `;
+
+          const wick = document.createElement('div');
+          wick.className = 'wick';
+
+          const flame = document.createElement('div');
+          flame.className = 'flame';
+          flame.style.animationDelay = `${(rand() * 0.18).toFixed(2)}s`;
+
+          candle.appendChild(wick);
+          candle.appendChild(flame);
+          container.appendChild(candle);
+        }
+      }
+
+      render();
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(render, 200);
+      }, { passive: true });
+    })();
+
+    // --- Fireworks (canvas): white core + neon outline, bloom then inside-out disappearance ---
+    (function fireworks() {
+      const canvas = document.getElementById('fw');
+      if (!(canvas instanceof HTMLCanvasElement)) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let w = 0, h = 0, dpr = DPR();
+
+      function resize() {
+        dpr = DPR();
+        w = Math.floor(window.innerWidth);
+        h = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+
+      const bursts = [];
+
+      const clamp01 = (x) => Math.max(0, Math.min(1, x));
+      const randBetween = (a, b) => a + Math.random() * (b - a);
+      const randInt = (a, b) => Math.floor(randBetween(a, b + 1));
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+      const easeInCubic = (t) => t * t * t;
+
+      function neonColor() {
+        const hue = Math.floor(Math.random() * 360);
+        return `hsl(${hue} 100% 65%)`;
+      }
+
+      function pickSpawn() {
+        // "中心以外"：避開中心附近
+        const cx = w / 2;
+        const cy = h / 2;
+        const minDist = Math.min(w, h) * 0.14;
+
+        for (let tries = 0; tries < 40; tries++) {
+          const x = randBetween(50, w - 50);
+          const y = randBetween(50, h - 90);
+          if (Math.hypot(x - cx, y - cy) >= minDist) return { x, y };
+        }
+        return { x: randBetween(50, w - 50), y: randBetween(50, h - 90) };
+      }
+
+      function spawnBurst(now) {
+        const { x, y } = pickSpawn();
+        bursts.push({
+          x, y,
+          color: neonColor(),
+          rays: randInt(18, 30),
+          maxR: randBetween(60, 120),
+          rot: randBetween(0, Math.PI * 2),
+          t0: now,
+          dotMs: 70,
+          lifeMs: randBetween(820, 1250),
+        });
+      }
+
+      // initial
+      const tStart = performance.now();
+      for (let i = 0; i < 4; i++) spawnBurst(tStart);
+      let nextSpawn = tStart + 220;
+
+      function drawDot(b, age) {
+        const p = age / b.dotMs;
+        const r = 1.6 + 3.2 * p;
+
+        // neon under
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, r + 2.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // white core over
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function loop(now) {
+        ctx.clearRect(0, 0, w, h);
+
+        if (now >= nextSpawn) {
+          spawnBurst(now);
+          if (Math.random() < 0.28) spawnBurst(now);
+          nextSpawn = now + randBetween(360, 740);
+        }
+
+        for (let i = bursts.length - 1; i >= 0; i--) {
+          const b = bursts[i];
+          const age = now - b.t0;
+
+          if (age < b.dotMs) {
+            drawDot(b, age);
+            continue;
+          }
+
+          const t = (age - b.dotMs) / b.lifeMs;
+          if (t >= 1) {
+            bursts.splice(i, 1);
+            continue;
+          }
+
+          // Outward bloom: quickly reaches near max, then only tiny growth.
+          const outerT = easeOutCubic(clamp01(t * 1.05));
+          const outer = b.maxR * (0.12 + 0.88 * outerT);
+
+          // Inside-out disappearance: delay a bit, then start slowly and accelerate (inside -> outside).
+          // Also ensures disappearance eventually overtakes the outward bloom.
+          const innerT = easeInCubic(clamp01((t - 0.14) / 0.86));
+          const inner = Math.min(outer, b.maxR * innerT * 1.22);
+
+          const alpha = Math.max(0, 1 - Math.pow(t, 1.15));
+          if (inner >= outer - 0.6) {
+            bursts.splice(i, 1);
+            continue;
+          }
+
+          ctx.lineCap = 'round';
+
+          // neon under
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = alpha * 0.95;
+          ctx.strokeStyle = b.color;
+          ctx.lineWidth = 6.0;
+          ctx.shadowColor = b.color;
+          ctx.shadowBlur = 18;
+          for (let k = 0; k < b.rays; k++) {
+            const a = b.rot + (k / b.rays) * Math.PI * 2;
+            const x1 = b.x + Math.cos(a) * inner;
+            const y1 = b.y + Math.sin(a) * inner;
+            const x2 = b.x + Math.cos(a) * outer;
+            const y2 = b.y + Math.sin(a) * outer;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+          ctx.restore();
+
+          // white core on top
+          ctx.save();
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = 'rgba(255,255,255,0.98)';
+          ctx.lineWidth = 2.1;
+          ctx.shadowBlur = 0;
+          for (let k = 0; k < b.rays; k++) {
+            const a = b.rot + (k / b.rays) * Math.PI * 2;
+            const x1 = b.x + Math.cos(a) * inner;
+            const y1 = b.y + Math.sin(a) * inner;
+            const x2 = b.x + Math.cos(a) * outer;
+            const y2 = b.y + Math.sin(a) * outer;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        while (bursts.length < 6) spawnBurst(now);
+        while (bursts.length > 14) bursts.shift();
+
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
