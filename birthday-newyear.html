@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>生日快樂 & 新年快樂</title>
+  <style>
+    :root {
+      --bg: #000;
+      --cake: #f2b07d;
+      --cake-shadow: rgba(0, 0, 0, 0.55);
+      --cream: #ffffff;
+      --pink: #ff5db1;
+      --pink-deep: #ff2a9b;
+      --tier-radius: 26px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      overflow: hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .stage {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: flex-end; /* phone-first: cake sits at the bottom */
+      justify-content: center;
+    }
+
+    canvas#fw {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .cake-wrap {
+      position: relative;
+      z-index: 5;
+      width: min(92vw, 640px);
+      height: min(90vh, 760px);
+      display: flex;
+      align-items: flex-end; /* keep cake closer to the plate/bottom */
+      justify-content: center;
+      padding-bottom: 0;
+    }
+
+    .cake-svg{
+      display:block;
+      width: min(94vw, 600px);
+      height:auto;
+      max-height: min(86vh, 720px);
+      filter: drop-shadow(0 18px 22px rgba(0,0,0,0.65));
+    }
+
+    .message {
+      position: absolute;
+      top: clamp(14px, 3.2vh, 28px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.15;
+      font-size: clamp(28px, 6.1vw, 56px);
+      color: #fff;
+      -webkit-text-stroke: 2.6px rgba(0, 255, 102, 0.88);
+      text-shadow:
+        0 0 5px rgba(0, 255, 102, 0.55),
+        0 0 12px rgba(0, 255, 102, 0.32),
+        0 2px 5px rgba(0, 0, 0, 0.72);
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6));
+      pointer-events: none;
+      user-select: none;
+      padding: 0 10px;
+      max-width: calc(100vw - 18px);
+    }
+
+    .message .msg-line1,
+    .message .msg-line2 {
+      display: block;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px), (max-height: 740px) {
+      .cake-wrap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+      }
+
+      .cake-svg {
+        width: min(96vw, 520px);
+        /* keep space for the long greeting */
+        max-height: calc(100vh - 120px);
+      }
+
+      .message {
+        top: 14px;
+        font-size: clamp(19px, 6.4vw, 35px);
+        -webkit-text-stroke: 1.3px rgba(0, 255, 102, 0.38);
+        text-shadow:
+          0 0 2px rgba(0, 255, 102, 0.22),
+          0 2px 6px rgba(0, 0, 0, 0.85);
+        filter: drop-shadow(0 8px 14px rgba(0,0,0,0.55));
+      }
+
+      
+    }
+
+    
+
+    .cake {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 2.2vh, 16px);
+      filter: drop-shadow(0 18px 22px rgba(0,0,0,0.65));
+    }
+
+    .tier {
+      position: relative;
+      background:
+        radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
+        linear-gradient(#f6c59c, #e8a871 60%, #dd9a61);
+      border-radius: var(--tier-radius);
+      box-shadow:
+        0 12px 24px var(--cake-shadow),
+        inset 0 10px 18px rgba(255,255,255,0.22);
+      overflow: visible;
+    }
+
+    /* white cream top (with drips) */
+    .tier::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(-1 * clamp(14px, 2.6vh, 18px));
+      height: clamp(28px, 5vh, 36px);
+      background:
+        radial-gradient(circle at 10% 80%, var(--cream) 0 14px, transparent 15px),
+        radial-gradient(circle at 26% 85%, var(--cream) 0 16px, transparent 17px),
+        radial-gradient(circle at 43% 78%, var(--cream) 0 14px, transparent 15px),
+        radial-gradient(circle at 60% 88%, var(--cream) 0 18px, transparent 19px),
+        radial-gradient(circle at 78% 80%, var(--cream) 0 14px, transparent 15px),
+        radial-gradient(circle at 92% 88%, var(--cream) 0 16px, transparent 17px),
+        linear-gradient(var(--cream), var(--cream));
+      border-radius: calc(var(--tier-radius) + 8px);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
+    }
+
+    /* pink frosting ring */
+    .tier::after {
+      content: "";
+      position: absolute;
+      left: -8px;
+      right: -8px;
+      top: clamp(10px, 1.8vh, 14px);
+      height: clamp(12px, 2.2vh, 16px);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.25), rgba(255,255,255,0) 25%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0) 75%, rgba(255,255,255,0.18)),
+        linear-gradient(var(--pink), var(--pink-deep));
+      border-radius: 999px;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.35),
+        0 8px 14px rgba(0,0,0,0.25);
+      opacity: 0.98;
+      pointer-events: none;
+    }
+
+    /* 第一層(最小) -> 第二層 -> 第三層(最大, 最下面) */
+    .tier.top {
+      width: clamp(210px, 46vw, 340px);
+      height: clamp(110px, 16vh, 150px);
+      z-index: 3;
+    }
+
+    .tier.mid {
+      width: clamp(280px, 58vw, 460px);
+      height: clamp(125px, 18vh, 170px);
+      z-index: 2;
+    }
+
+    .tier.bottom {
+      width: clamp(340px, 70vw, 560px);
+      height: clamp(140px, 20vh, 200px);
+      z-index: 1;
+    }
+
+    .plate {
+      width: clamp(420px, 78vw, 660px);
+      height: clamp(24px, 4.4vh, 34px);
+      border-radius: 999px;
+      background:
+        radial-gradient(80% 140% at 50% 30%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
+        linear-gradient(#222, #070707);
+      box-shadow:
+        0 16px 28px rgba(0,0,0,0.7),
+        inset 0 2px 0 rgba(255,255,255,0.15);
+      margin-top: clamp(6px, 1.2vh, 12px);
+      opacity: 0.9;
+    }
+
+    /* 3 big cream dollops on the very top */
+    .dollops {
+      position: absolute;
+      top: calc(-1 * clamp(46px, 6.2vh, 60px));
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      gap: clamp(10px, 2.5vw, 22px);
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .dollop {
+      position: relative;
+      width: clamp(46px, 8vw, 66px);
+      height: clamp(46px, 8vw, 66px);
+      border-radius: 50% 50% 48% 48%;
+      background:
+        radial-gradient(140% 120% at 35% 20%, rgba(255,255,255,0.95), rgba(255,255,255,0.88) 55%, rgba(255,255,255,0.82)),
+        linear-gradient(#fff, #f2f2f2);
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,0.35));
+    }
+
+    .dollop::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -18%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 60%;
+      border-radius: 60% 60% 55% 55%;
+      background: linear-gradient(#fff, #f1f1f1);
+    }
+
+    /* Candles */
+    .candles {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      top: clamp(-54px, -7.5vh, -40px);
+      height: clamp(86px, 12.5vh, 112px);
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .candle {
+      position: absolute;
+      bottom: 0;
+      width: clamp(8px, 1.6vw, 11px);
+      height: clamp(34px, 6vh, 48px);
+      border-radius: 999px;
+      background:
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.65) 0 3px, rgba(255,255,255,0.05) 3px 6px),
+        linear-gradient(#ffd5ea, #ff6fb8);
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.45),
+        0 10px 14px rgba(0,0,0,0.35);
+      transform: translateX(-50%) rotate(var(--r, 0deg)) scale(var(--s, 1));
+    }
+
+    .wick {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      width: 2px;
+      height: 8px;
+      background: #1b1b1b;
+      transform: translateX(-50%);
+      border-radius: 4px;
+    }
+
+    .flame {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      width: 14px;
+      height: 18px;
+      transform: translateX(-50%);
+      border-radius: 60% 60% 60% 60%;
+      background:
+        radial-gradient(circle at 35% 30%, #fff6bf 0 25%, rgba(255,246,191,0) 60%),
+        radial-gradient(circle at 50% 55%, #ffb100 0 45%, rgba(255,177,0,0) 75%),
+        radial-gradient(circle at 50% 85%, #ff4a00 0 55%, rgba(255,74,0,0) 85%);
+      filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.55));
+      animation: flicker 0.12s infinite alternate;
+    }
+
+    @keyframes flicker {
+      0% { transform: translateX(-50%) rotate(-2deg) scale(1); opacity: 0.95; }
+      100% { transform: translateX(-50%) rotate(2deg) scale(1.06); opacity: 1; }
+    }
+
+    /* SVG candle flames (the cake illustration itself) */
+    svg .svg-flame__g {
+      transform-box: fill-box;
+      transform-origin: 50% 100%;
+      filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.55));
+      animation: svg-flame-flicker var(--flame-dur, 0.9s) infinite ease-in-out;
+      animation-delay: var(--flame-delay, 0s);
+      will-change: transform, opacity;
+    }
+
+    svg .svg-flame__core {
+      transform-box: fill-box;
+      transform-origin: 50% 100%;
+      animation: svg-flame-core var(--flame-dur, 0.9s) infinite ease-in-out;
+      animation-delay: var(--flame-delay, 0s);
+      will-change: transform, opacity;
+    }
+
+    @keyframes svg-flame-flicker {
+      0%   { transform: rotate(-3deg) scale(0.98, 1.02); opacity: 0.92; }
+      35%  { transform: rotate(2deg)  scale(1.03, 0.98); opacity: 1; }
+      70%  { transform: rotate(-4deg) scale(0.96, 1.08); opacity: 0.94; }
+      100% { transform: rotate(3deg)  scale(1.04, 0.99); opacity: 1; }
+    }
+
+    @keyframes svg-flame-core {
+      0%   { transform: scale(0.92, 0.96); opacity: 0.88; }
+      50%  { transform: scale(1.06, 1.10); opacity: 1; }
+      100% { transform: scale(0.95, 1.02); opacity: 0.9; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flame,
+      svg .svg-flame__g,
+      svg .svg-flame__core {
+        animation: none !important;
+      }
+    }
+
+    
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="message" role="heading" aria-level="1">
+      <span class="msg-line1">祝千薰學姊</span>
+      <span class="msg-line2">生日快樂&amp;新年快樂</span>
+    </div>
+    <canvas id="fw"></canvas>
+
+    <div class="cake-wrap" aria-hidden="true">
+      <svg class="cake-svg" viewBox="0 0 600 604" xmlns="http://www.w3.org/2000/svg" aria-label="Birthday cake">
+        <defs>
+          <!-- Sprinkle clip areas (brown sides only) -->
+          <clipPath id="clip-bottom" clipPathUnits="userSpaceOnUse">
+            <rect x="125" y="395" width="350" height="120" rx="48" />
+          </clipPath>
+          <clipPath id="clip-mid" clipPathUnits="userSpaceOnUse">
+            <rect x="185" y="305" width="230" height="78" rx="38" />
+          </clipPath>
+          <clipPath id="clip-top" clipPathUnits="userSpaceOnUse">
+            <rect x="235" y="228" width="130" height="48" rx="26" />
+          </clipPath>
+        </defs>
+
+        <!-- Plate -->
+        <g id="plate" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="300" cy="568" rx="250" ry="32" fill="#fff6fb"/>
+          <ellipse cx="300" cy="568" rx="210" ry="22" fill="#ffe2ef"/>
+        </g>
+
+        <!-- Cake (moved down so it sits into the plate; plate stays fixed) -->
+        <g id="cake" transform="translate(0 26)">
+
+        <!-- BOTTOM TIER -->
+        <g id="tier-bottom" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <!-- cake side -->
+          <rect x="110" y="360" width="380" height="170" rx="60" fill="#b2704c"/>
+          <!-- sprinkles injected by JS -->
+          <g id="sprinkles-bottom" clip-path="url(#clip-bottom)" stroke="none" stroke-width="0"></g>
+
+          <!-- yellow filling band -->
+          <path d="M110 402
+                   C145 387 210 410 245 398
+                   C275 388 310 410 340 398
+                   C375 384 450 410 490 395
+                   L490 425
+                   C450 440 375 416 340 430
+                   C310 442 275 418 245 432
+                   C180 446 145 420 110 435
+                   Z" fill="#f6e28a"/>
+
+          <!-- icing top -->
+          <ellipse cx="300" cy="355" rx="195" ry="52" fill="#f3a7b1"/>
+          <!-- icing drips -->
+          <path d="M125 356
+                   C165 330 205 342 238 356
+                   C255 364 252 392 235 402
+                   C215 415 225 436 252 434
+                   C282 432 275 405 298 404
+                   C325 403 315 438 346 436
+                   C376 434 364 404 392 402
+                   C420 400 405 432 438 430
+                   C468 428 470 403 455 392
+                   C438 380 452 364 475 356
+                   C438 338 405 340 372 353
+                   C340 366 320 338 300 344
+                   C270 354 235 332 125 356
+                   Z" fill="#f3a7b1"/>
+
+          <!-- blue ribbon band (extended further left; slight overlap to remove gap) -->
+          <path d="M104 468
+                   C134 446 164 492 215 468
+                   C245 444 275 492 305 468
+                   C335 444 365 492 395 468
+                   C425 444 455 492 485 468
+                   L485 498
+                   C455 520 425 470 395 498
+                   C365 526 335 470 305 498
+                   C275 526 245 470 215 498
+                   C164 526 134 470 104 498
+                   Z" fill="#2aa7ff"/>
+          <path d="M104 486
+                   C134 468 164 505 215 486
+                   C245 467 275 505 305 486
+                   C335 467 365 505 395 486
+                   C425 467 455 505 485 486" fill="none" stroke="#0b6bbd" stroke-width="10"/>
+
+          <!-- ribbon hanging tails -->
+          <path d="M175 495
+                   C165 528 185 545 200 560
+                   C215 545 225 528 215 498
+                   Z" fill="#2aa7ff"/>
+          <path d="M425 495
+                   C415 528 435 545 450 560
+                   C465 545 475 528 465 498
+                   Z" fill="#2aa7ff"/>
+          <path d="M175 495
+                   C165 528 185 545 200 560" fill="none" stroke="#0b6bbd" stroke-width="10"/>
+          <path d="M425 495
+                   C415 528 435 545 450 560" fill="none" stroke="#0b6bbd" stroke-width="10"/>
+
+          <!-- bow -->
+          <path d="M292 488
+                   C260 470 242 456 232 468
+                   C220 484 242 505 275 510
+                   C290 512 300 506 300 498
+                   C300 506 310 512 325 510
+                   C358 505 380 484 368 468
+                   C358 456 340 470 308 488
+                   Z" fill="#2aa7ff"/>
+          <circle cx="300" cy="492" r="16" fill="#0b6bbd"/>
+        </g>
+
+        <!-- MIDDLE TIER -->
+        <g id="tier-mid" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="165" y="275" width="270" height="120" rx="52" fill="#b2704c"/>
+          <g id="sprinkles-mid" clip-path="url(#clip-mid)" stroke="none" stroke-width="0"></g>
+
+          <path d="M165 312
+                   C190 300 240 318 265 308
+                   C290 298 315 318 340 308
+                   C370 296 420 318 435 304
+                   L435 332
+                   C417 346 370 322 342 336
+                   C316 350 290 324 266 340
+                   C215 356 190 328 165 346
+                   Z" fill="#f6e28a"/>
+
+          <ellipse cx="300" cy="270" rx="140" ry="40" fill="#f3a7b1"/>
+          <path d="M182 273
+                   C205 252 235 260 260 272
+                   C276 280 272 302 258 310
+                   C244 318 254 336 274 334
+                   C296 332 290 312 307 311
+                   C326 310 320 338 342 336
+                   C362 334 352 312 370 310
+                   C388 308 380 332 403 330
+                   C420 328 426 310 412 300
+                   C398 290 410 280 418 274
+                   C392 258 368 260 348 270
+                   C328 280 318 258 300 264
+                   C278 272 240 250 182 273
+                   Z" fill="#f3a7b1"/>
+        </g>
+
+        <!-- TOP TIER -->
+        <g id="tier-top" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="215" y="200" width="170" height="85" rx="40" fill="#b2704c"/>
+          <g id="sprinkles-top" clip-path="url(#clip-top)" stroke="none" stroke-width="0"></g>
+
+          <path d="M215 230
+                   C232 222 270 238 288 230
+                   C306 222 324 238 342 230
+                   C360 222 380 236 385 224
+                   L385 248
+                   C378 262 360 244 342 256
+                   C324 268 306 248 288 260
+                   C250 272 232 252 215 266
+                   Z" fill="#f6e28a"/>
+
+          <ellipse cx="300" cy="195" rx="92" ry="28" fill="#f3a7b1"/>
+          <path d="M222 197
+                   C238 183 258 188 275 196
+                   C288 202 286 220 276 226
+                   C266 232 272 246 288 245
+                   C305 244 302 228 314 228
+                   C328 228 326 248 344 246
+                   C360 244 356 228 369 226
+                   C382 224 378 240 388 238
+                   C398 236 400 224 392 216
+                   C384 208 392 202 395 198
+                   C376 186 356 188 340 196
+                   C324 204 316 188 300 192
+                   C282 196 252 182 222 197
+                   Z" fill="#f3a7b1"/>
+        </g>
+
+        <!-- CHERRIES -->
+        <g id="cherries" stroke="#000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+          <!-- bottom tier cherries -->
+          <g>
+            <circle cx="185" cy="320" r="16" fill="#e23b3b"/><circle cx="179" cy="314" r="5" fill="#ff9aa0" stroke="none"/>
+            <circle cx="245" cy="312" r="16" fill="#e23b3b"/><circle cx="239" cy="306" r="5" fill="#ff9aa0" stroke="none"/>
+            <circle cx="300" cy="318" r="16" fill="#e23b3b"/><circle cx="294" cy="312" r="5" fill="#ff9aa0" stroke="none"/>
+            <circle cx="355" cy="312" r="16" fill="#e23b3b"/><circle cx="349" cy="306" r="5" fill="#ff9aa0" stroke="none"/>
+            <circle cx="415" cy="320" r="16" fill="#e23b3b"/><circle cx="409" cy="314" r="5" fill="#ff9aa0" stroke="none"/>
+          </g>
+
+          <!-- mid tier cherries -->
+          <g>
+            <circle cx="225" cy="240" r="14" fill="#e23b3b"/><circle cx="220" cy="235" r="4.5" fill="#ff9aa0" stroke="none"/>
+            <circle cx="275" cy="232" r="14" fill="#e23b3b"/><circle cx="270" cy="227" r="4.5" fill="#ff9aa0" stroke="none"/>
+            <circle cx="325" cy="232" r="14" fill="#e23b3b"/><circle cx="320" cy="227" r="4.5" fill="#ff9aa0" stroke="none"/>
+            <circle cx="375" cy="240" r="14" fill="#e23b3b"/><circle cx="370" cy="235" r="4.5" fill="#ff9aa0" stroke="none"/>
+          </g>
+
+          <!-- top tier cherries -->
+          <g>
+            <circle cx="265" cy="172" r="12" fill="#e23b3b"/><circle cx="261" cy="168" r="4" fill="#ff9aa0" stroke="none"/>
+            <circle cx="300" cy="166" r="12" fill="#e23b3b"/><circle cx="296" cy="162" r="4" fill="#ff9aa0" stroke="none"/>
+            <circle cx="335" cy="172" r="12" fill="#e23b3b"/><circle cx="331" cy="168" r="4" fill="#ff9aa0" stroke="none"/>
+          </g>
+        </g>
+
+        <!-- CANDLES + FLAMES -->
+        <g id="candles" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <!-- candle bodies -->
+          <g>
+            <rect x="227" y="98" width="22" height="78" rx="8" fill="#fff6fb"/>
+            <rect x="258" y="95" width="22" height="85" rx="8" fill="#fff6fb"/>
+            <rect x="289" y="88" width="22" height="92" rx="8" fill="#fff6fb"/>
+            <rect x="320" y="95" width="22" height="85" rx="8" fill="#fff6fb"/>
+            <rect x="351" y="98" width="22" height="78" rx="8" fill="#fff6fb"/>
+
+            <!-- stripes -->
+            <path d="M227 125 L249 115" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M227 148 L249 138" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M227 171 L249 161" stroke="#ff6b7a" stroke-width="8"/>
+
+            <path d="M258 120 L280 110" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M258 145 L280 135" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M258 170 L280 160" stroke="#ff6b7a" stroke-width="8"/>
+
+            <path d="M289 115 L311 105" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M289 140 L311 130" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M289 165 L311 155" stroke="#ff6b7a" stroke-width="8"/>
+
+            <path d="M320 120 L342 110" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M320 145 L342 135" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M320 170 L342 160" stroke="#ff6b7a" stroke-width="8"/>
+
+            <path d="M351 125 L373 115" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M351 148 L373 138" stroke="#ff6b7a" stroke-width="8"/>
+            <path d="M351 171 L373 161" stroke="#ff6b7a" stroke-width="8"/>
+          </g>
+
+          <!-- wicks (shorter gap to flame; adjusted per candle height) -->
+          <path d="M238 96 C237 92 239 89 240 86" fill="none"/>
+          <path d="M269 93 C268 89 270 86 271 83" fill="none"/>
+          <path d="M300 86 C299 82 301 79 302 76" fill="none"/>
+          <path d="M331 93 C330 89 332 86 333 83" fill="none"/>
+          <path d="M362 96 C361 92 363 89 364 86" fill="none"/>
+
+          <!-- flames (closer to each candle; taller candles get lower flames) -->
+          <!-- NOTE: keep translate on an outer <g>, and animate an inner <g> so CSS transform doesn't override SVG translate -->
+          <g transform="translate(0 30)">
+            <g class="svg-flame__g" style="--flame-dur: 0.88s; --flame-delay: -0.12s;">
+              <path d="M240 66
+                       C231 56 235 40 243 32
+                       C252 42 255 56 240 66
+                       Z" fill="#ffd05b"/>
+              <path class="svg-flame__core" d="M240 62
+                       C235 55 237 46 241 40
+                       C246 46 248 55 240 62
+                       Z" fill="#ff8a2a" stroke="none"/>
+            </g>
+          </g>
+
+          <g transform="translate(0 27)">
+            <g class="svg-flame__g" style="--flame-dur: 0.95s; --flame-delay: -0.31s;">
+              <path d="M271 66
+                       C262 56 266 40 274 32
+                       C283 42 286 56 271 66
+                       Z" fill="#ffd05b"/>
+              <path class="svg-flame__core" d="M271 62
+                       C266 55 268 46 272 40
+                       C277 46 279 55 271 62
+                       Z" fill="#ff8a2a" stroke="none"/>
+            </g>
+          </g>
+
+          <g transform="translate(0 20)">
+            <g class="svg-flame__g" style="--flame-dur: 0.83s; --flame-delay: -0.22s;">
+              <path d="M302 59
+                       C293 49 297 33 305 25
+                       C314 35 317 49 302 59
+                       Z" fill="#ffd05b"/>
+              <path class="svg-flame__core" d="M302 55
+                       C297 48 299 39 303 33
+                       C308 39 310 48 302 55
+                       Z" fill="#ff8a2a" stroke="none"/>
+            </g>
+          </g>
+
+          <g transform="translate(0 27)">
+            <g class="svg-flame__g" style="--flame-dur: 0.92s; --flame-delay: -0.39s;">
+              <path d="M333 66
+                       C324 56 328 40 336 32
+                       C345 42 348 56 333 66
+                       Z" fill="#ffd05b"/>
+              <path class="svg-flame__core" d="M333 62
+                       C328 55 330 46 334 40
+                       C339 46 341 55 333 62
+                       Z" fill="#ff8a2a" stroke="none"/>
+            </g>
+          </g>
+
+          <g transform="translate(0 30)">
+            <g class="svg-flame__g" style="--flame-dur: 0.90s; --flame-delay: -0.27s;">
+              <path d="M364 66
+                       C355 56 359 40 367 32
+                       C376 42 379 56 364 66
+                       Z" fill="#ffd05b"/>
+              <path class="svg-flame__core" d="M364 62
+                       C359 55 361 46 365 40
+                       C370 46 372 55 364 62
+                       Z" fill="#ff8a2a" stroke="none"/>
+            </g>
+          </g>
+        </g>
+
+        </g><!-- /#cake -->
+      </svg>
+    </div>
+  </div>
+
+  <audio id="bgm" src="生日快樂.mp3" loop preload="auto" autoplay playsinline></audio>
+
+  <script>
+    // --- Sprinkles (SVG) ---
+    (function initSprinkles() {
+      const svg = document.querySelector('.cake-svg');
+      if (!svg) return;
+
+      const ns = 'http://www.w3.org/2000/svg';
+
+      // bright candy colors like the reference image
+      const palette = [
+        '#ff595e', '#ffca3a', '#8ac926', '#1982c4',
+        '#6a4c93', '#ff7aa2', '#00d2d3', '#ff9f1a'
+      ];
+
+      // deterministic-ish randomness per load
+      let seed = Math.floor(Math.random() * 1e9);
+      const rand = () => {
+        seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+        return ((seed >>> 0) / 4294967296);
+      };
+
+      const configs = [
+        { id: 'sprinkles-bottom', count: 190, rect: { x: 125, y: 395, w: 350, h: 120 } },
+        { id: 'sprinkles-mid', count: 120, rect: { x: 185, y: 305, w: 230, h: 78 } },
+        { id: 'sprinkles-top', count: 70, rect: { x: 235, y: 228, w: 130, h: 48 } },
+      ];
+
+      function pick(arr) { return arr[Math.floor(rand() * arr.length)]; }
+
+      function addPill(g, cx, cy, w, h, rot, color) {
+        const r = document.createElementNS(ns, 'rect');
+        r.setAttribute('x', (cx - w / 2).toFixed(2));
+        r.setAttribute('y', (cy - h / 2).toFixed(2));
+        r.setAttribute('width', w.toFixed(2));
+        r.setAttribute('height', h.toFixed(2));
+        r.setAttribute('rx', (Math.min(w, h) * 0.5).toFixed(2));
+        r.setAttribute('fill', color);
+        r.setAttribute('stroke', 'none');
+        r.setAttribute('transform', `rotate(${rot.toFixed(1)} ${cx.toFixed(2)} ${cy.toFixed(2)})`);
+        g.appendChild(r);
+      }
+
+      function addDot(g, cx, cy, rad, color) {
+        const c = document.createElementNS(ns, 'circle');
+        c.setAttribute('cx', cx.toFixed(2));
+        c.setAttribute('cy', cy.toFixed(2));
+        c.setAttribute('r', rad.toFixed(2));
+        c.setAttribute('fill', color);
+        c.setAttribute('stroke', 'none');
+        g.appendChild(c);
+      }
+
+      for (const cfg of configs) {
+        const g = svg.querySelector(`#${cfg.id}`);
+        if (!g) continue;
+        g.replaceChildren();
+        g.setAttribute('stroke', 'none');
+
+        for (let i = 0; i < cfg.count; i++) {
+          const x = cfg.rect.x + rand() * cfg.rect.w;
+          const y = cfg.rect.y + rand() * cfg.rect.h;
+          const color = pick(palette);
+
+          if (rand() < 0.22) {
+            addDot(g, x, y, 2.0 + rand() * 2.2, color);
+          } else {
+            const w = 5.5 + rand() * 7.5;
+            const h = 2.6 + rand() * 2.2;
+            const rot = rand() * 180;
+            addPill(g, x, y, w, h, rot, color);
+          }
+        }
+      }
+    })();
+
+    // --- Fireworks (canvas): white core on top, neon base per burst + small per-ray RGB jitter, mobile-optimized ---
+    (function fireworks() {
+      const canvas = document.getElementById('fw');
+      if (!(canvas instanceof HTMLCanvasElement)) return;
+      const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+      if (!ctx) return;
+
+      const isMobile =
+        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+        (navigator.maxTouchPoints || 0) > 0 ||
+        Math.min(window.innerWidth, window.innerHeight) < 520;
+
+      const DPR = () => {
+        const raw = window.devicePixelRatio || 1;
+        const cap = isMobile ? 1.25 : 2;
+        return Math.max(1, Math.min(cap, raw));
+      };
+
+      let w = 0, h = 0, dpr = DPR();
+
+      function resize() {
+        dpr = DPR();
+        w = Math.floor(window.innerWidth);
+        h = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+
+      const bursts = [];
+      const pool = [];
+
+      // speed: keep fast feel, but LESS dense + smoother on mobile
+      const MIN_BURSTS = isMobile ? 2 : 5;
+      const MAX_BURSTS = isMobile ? 6 : 12;
+
+      const SPAWN_MS_MIN = isMobile ? 420 : 360;
+      const SPAWN_MS_MAX = isMobile ? 900 : 740;
+      const DOUBLE_SPAWN_CHANCE = isMobile ? 0.08 : 0.18;
+
+      const DOT_MS_MIN = 55;
+      const DOT_MS_MAX = 85;
+
+      const LIFE_MS_MIN = 820;
+      const LIFE_MS_MAX = 1250;
+
+      // more rays (denser / closer to the original “many segments” look)
+      const RAYS_MIN = isMobile ? 14 : 26;
+      const RAYS_MAX = isMobile ? 22 : 38;
+      const MAX_RAYS = RAYS_MAX;
+
+      const MAX_R_MIN = isMobile ? 66 : 78;
+      const MAX_R_MAX = isMobile ? 140 : 165;
+
+      const NEON_LINE_W = isMobile ? 4.8 : 6.0;
+      const NEON_SHADOW = isMobile ? 12 : 18;
+      const DOT_SHADOW = isMobile ? 10 : 14;
+
+      const clamp01 = (x) => Math.max(0, Math.min(1, x));
+      const randBetween = (a, b) => a + Math.random() * (b - a);
+      const randInt = (a, b) => Math.floor(randBetween(a, b + 1));
+
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+      const easeInCubic = (t) => t * t * t;
+
+      const clamp255 = (x) => Math.max(0, Math.min(255, x));
+
+      // Per-channel RGB jitter around a single base color (tune as desired).
+      const COLOR_JITTER = 70;
+
+      function pickNeonBaseRGB() {
+        // bright + saturated (avoid pastel) without HSL palette picking
+        const hi = 255;
+        const mid = randInt(140, 255);
+        const lo = randInt(0, 80);
+        const channels = [hi, mid, lo];
+        for (let i = channels.length - 1; i > 0; i--) {
+          const j = randInt(0, i);
+          [channels[i], channels[j]] = [channels[j], channels[i]];
+        }
+        return { r: channels[0], g: channels[1], b: channels[2] };
+      }
+
+      function jitterFromBase(base) {
+        const j = () => randInt(-COLOR_JITTER, COLOR_JITTER);
+        return {
+          r: clamp255(base.r + j()),
+          g: clamp255(base.g + j()),
+          b: clamp255(base.b + j()),
+        };
+      }
+
+      function allocBurst() {
+        const b = pool.pop();
+        if (b) return b;
+        return {
+          ux: new Float32Array(MAX_RAYS),
+          uy: new Float32Array(MAX_RAYS),
+          lenMul: new Float32Array(MAX_RAYS),
+          speedMul: new Float32Array(MAX_RAYS),
+          rayR: new Uint8Array(MAX_RAYS),
+          rayG: new Uint8Array(MAX_RAYS),
+          rayB: new Uint8Array(MAX_RAYS),
+          rays: 0,
+          x: 0,
+          y: 0,
+          maxR: 0,
+          t0: 0,
+          dotMs: 0,
+          lifeMs: 0,
+          dotR: 0,
+          dotG: 0,
+          dotB: 0,
+        };
+      }
+
+      function releaseBurst(b) {
+        if (pool.length < 24) pool.push(b);
+      }
+
+      function pickSpawn() {
+        // "中心以外"：避開中心附近
+        const cx = w / 2;
+        const cy = h / 2;
+        const minDist = Math.min(w, h) * 0.14;
+
+        for (let tries = 0; tries < 40; tries++) {
+          const x = randBetween(50, w - 50);
+          const y = randBetween(50, h - 90);
+          if (Math.hypot(x - cx, y - cy) >= minDist) return { x, y };
+        }
+        return { x: randBetween(50, w - 50), y: randBetween(50, h - 90) };
+      }
+
+      function spawnBurst(now) {
+        const { x, y } = pickSpawn();
+        const b = allocBurst();
+
+        b.x = x;
+        b.y = y;
+        b.rays = randInt(RAYS_MIN, RAYS_MAX);
+        b.maxR = randBetween(MAX_R_MIN, MAX_R_MAX);
+        b.t0 = now;
+        b.dotMs = randBetween(DOT_MS_MIN, DOT_MS_MAX);
+        b.lifeMs = randBetween(LIFE_MS_MIN, LIFE_MS_MAX);
+
+        const rot = randBetween(0, Math.PI * 2);
+        const base = pickNeonBaseRGB();
+
+        for (let k = 0; k < b.rays; k++) {
+          const a = rot + (k / b.rays) * Math.PI * 2 + randBetween(-0.018, 0.018);
+          b.ux[k] = Math.cos(a);
+          b.uy[k] = Math.sin(a);
+          b.lenMul[k] = randBetween(0.55, 1.25);
+          b.speedMul[k] = randBetween(0.75, 1.35);
+
+          const c = jitterFromBase(base);
+          b.rayR[k] = c.r;
+          b.rayG[k] = c.g;
+          b.rayB[k] = c.b;
+        }
+
+        const dotK = randInt(0, b.rays - 1);
+        b.dotR = b.rayR[dotK];
+        b.dotG = b.rayG[dotK];
+        b.dotB = b.rayB[dotK];
+
+        bursts.push(b);
+      }
+
+      function drawDot(b, age) {
+        const p = clamp01(age / b.dotMs);
+        const r = 0.8 + 1.6 * p;
+        const c = `rgb(${b.dotR},${b.dotG},${b.dotB})`;
+
+        // neon under
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.shadowBlur = DOT_SHADOW;
+        ctx.shadowColor = c;
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, r + 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // white core over
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // initial
+      const tStart = performance.now();
+      const initialBursts = isMobile ? 3 : 4;
+      for (let i = 0; i < initialBursts; i++) spawnBurst(tStart);
+      let nextSpawn = tStart + 220;
+
+      function loop(now) {
+        ctx.clearRect(0, 0, w, h);
+
+        if (now >= nextSpawn) {
+          spawnBurst(now);
+          if (Math.random() < DOUBLE_SPAWN_CHANCE) spawnBurst(now);
+          nextSpawn = now + randBetween(SPAWN_MS_MIN, SPAWN_MS_MAX);
+        }
+
+        ctx.lineCap = 'round';
+
+        for (let i = bursts.length - 1; i >= 0; i--) {
+          const b = bursts[i];
+          const age = now - b.t0;
+
+          if (age < b.dotMs) {
+            drawDot(b, age);
+            continue;
+          }
+
+          const t = (age - b.dotMs) / b.lifeMs;
+          if (t >= 1) {
+            bursts.splice(i, 1);
+            releaseBurst(b);
+            continue;
+          }
+
+          const alpha = Math.max(0, 1 - Math.pow(t, 1.15));
+
+          // neon under
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = alpha * 0.95;
+          ctx.lineWidth = NEON_LINE_W;
+          ctx.shadowBlur = NEON_SHADOW;
+
+          for (let k = 0; k < b.rays; k++) {
+            const tRay = clamp01(t * b.speedMul[k]);
+
+            const outerT = easeOutCubic(clamp01(tRay * 1.05));
+            const outer = (b.maxR * b.lenMul[k]) * (0.12 + 0.88 * outerT);
+
+            const innerT = easeInCubic(clamp01((tRay - 0.14) / 0.86));
+            const inner = Math.min(outer, (b.maxR * b.lenMul[k]) * innerT * 1.22);
+
+            if (inner >= outer - 0.6) continue;
+
+            const c = `rgb(${b.rayR[k]},${b.rayG[k]},${b.rayB[k]})`;
+            ctx.strokeStyle = c;
+            ctx.shadowColor = c;
+            ctx.beginPath();
+            ctx.moveTo(b.x + b.ux[k] * inner, b.y + b.uy[k] * inner);
+            ctx.lineTo(b.x + b.ux[k] * outer, b.y + b.uy[k] * outer);
+            ctx.stroke();
+          }
+          ctx.restore();
+
+          // white core on top
+          ctx.save();
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = 'rgba(255,255,255,0.98)';
+          ctx.lineWidth = isMobile ? 1.8 : 2.1;
+          ctx.shadowBlur = 0;
+
+          for (let k = 0; k < b.rays; k++) {
+            const tRay = clamp01(t * b.speedMul[k]);
+
+            const outerT = easeOutCubic(clamp01(tRay * 1.05));
+            const outer = (b.maxR * b.lenMul[k]) * (0.12 + 0.88 * outerT);
+
+            const innerT = easeInCubic(clamp01((tRay - 0.14) / 0.86));
+            const inner = Math.min(outer, (b.maxR * b.lenMul[k]) * innerT * 1.22);
+
+            if (inner >= outer - 0.6) continue;
+
+            ctx.beginPath();
+            ctx.moveTo(b.x + b.ux[k] * inner, b.y + b.uy[k] * inner);
+            ctx.lineTo(b.x + b.ux[k] * outer, b.y + b.uy[k] * outer);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        while (bursts.length < MIN_BURSTS) spawnBurst(now);
+        while (bursts.length > MAX_BURSTS) releaseBurst(bursts.shift());
+
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    })();
+
+    // --- Background music (autoplay only; no UI) ---
+    (function bgmAutoplay() {
+      const audio = document.getElementById('bgm');
+      if (!(audio instanceof HTMLAudioElement)) return;
+
+      async function tryPlayUnmuted() {
+        audio.muted = false;
+        return audio.play();
+      }
+
+      async function tryPlayMuted() {
+        audio.muted = true;
+        try { await audio.play(); } catch { /* ignore */ }
+      }
+
+      window.addEventListener('load', async () => {
+        try {
+          await tryPlayUnmuted();
+        } catch {
+          // Many browsers block unmuted autoplay. Start muted (usually allowed),
+          // then unmute on the first user interaction.
+          await tryPlayMuted();
+
+          // Try to unmute immediately (may succeed in some browsers once playback started)
+          try {
+            audio.muted = false;
+            await audio.play();
+            return;
+          } catch { /* ignore */ }
+
+          // Otherwise unmute on first user interaction.
+          window.addEventListener('pointerdown', async () => {
+            audio.muted = false;
+            try { await audio.play(); } catch { /* ignore */ }
+          }, { once: true, passive: true });
+        }
+      }, { once: true });
+    })();
+
+    // --- Greeting auto-fit + positioning ---
+    (function greetingAutoFit() {
+      const message = document.querySelector('.message');
+      const line2 = message && message.querySelector('.msg-line2');
+      const cakeWrap = document.querySelector('.cake-wrap');
+      if (!message || !line2 || !cakeWrap) return;
+
+      let rafId = 0;
+
+      function fit() {
+        rafId = 0;
+
+        message.style.fontSize = '';
+        message.style.top = '';
+
+        const cakeTop = cakeWrap.getBoundingClientRect().top;
+        if (!Number.isFinite(cakeTop) || cakeTop <= 0) return;
+
+        const cs = getComputedStyle(message);
+        const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+
+        const gap = Math.round(Math.max(14, Math.min(28, window.innerHeight * 0.028)));
+        const minTop = 18;
+
+        const widthLimit = Math.max(0, window.innerWidth - 18 - padX - 4);
+        const heightLimit = Math.max(0, cakeTop - gap - minTop);
+        if (widthLimit <= 0 || heightLimit <= 0) return;
+
+        let lo = 14;
+        let hi = 240;
+        let best = lo;
+
+        while (lo <= hi) {
+          const mid = (lo + hi) >> 1;
+          message.style.fontSize = mid + 'px';
+
+          const w2 = line2.getBoundingClientRect().width;
+          const hMsg = message.getBoundingClientRect().height;
+
+          if (w2 <= widthLimit && hMsg <= heightLimit) {
+            best = mid;
+            lo = mid + 1;
+          } else {
+            hi = mid - 1;
+          }
+        }
+
+        message.style.fontSize = best + 'px';
+
+        const msgH = message.getBoundingClientRect().height;
+        const cakeTop2 = cakeWrap.getBoundingClientRect().top;
+
+        // Place closer to the visual center of the screen, but never below the cake.
+        const desiredCenterTop = (window.innerHeight * 0.40) - (msgH / 2);
+        const topMax = cakeTop2 - gap - msgH;
+        const top = Math.max(minTop, Math.min(desiredCenterTop, topMax));
+        message.style.top = Math.round(top) + 'px';
+      }
+
+      function schedule() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(fit);
+      }
+
+      window.addEventListener('resize', schedule, { passive: true });
+      window.addEventListener('load', schedule, { once: true });
+      schedule();
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(schedule);
+      }
+    })();
+  </script>
+</body>
+</html>
