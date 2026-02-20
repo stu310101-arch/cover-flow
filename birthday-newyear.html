@@ -30,7 +30,7 @@
       height: 100%;
       width: 100%;
       display: flex;
-      align-items: center;
+      align-items: flex-end; /* phone-first: cake sits at the bottom */
       justify-content: center;
     }
 
@@ -61,6 +61,56 @@
       max-height: min(84vh, 640px);
       filter: drop-shadow(0 18px 22px rgba(0,0,0,0.65));
     }
+
+    .message {
+      position: absolute;
+      top: clamp(14px, 3.2vh, 28px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.15;
+      font-size: clamp(20px, 4.8vw, 38px);
+      color: #fff;
+      -webkit-text-stroke: 3px rgba(0, 255, 102, 0.95);
+      text-shadow:
+        0 0 6px rgba(0, 255, 102, 0.75),
+        0 0 14px rgba(0, 255, 102, 0.5),
+        0 0 26px rgba(0, 255, 102, 0.35);
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6));
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @media (max-width: 520px), (max-height: 740px) {
+      .cake-wrap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+      }
+
+      .cake-svg {
+        width: min(96vw, 520px);
+        /* keep space for the long greeting */
+        max-height: calc(100vh - 120px);
+      }
+
+      .message {
+        top: 14px;
+        font-size: clamp(18px, 5.6vw, 26px);
+        -webkit-text-stroke: 2.4px rgba(0, 255, 102, 0.95);
+      }
+    }
+
+    
 
     .cake {
       position: relative;
@@ -259,10 +309,11 @@
 </head>
 <body>
   <div class="stage">
+    <div class="message" role="heading" aria-level="1">祝千薰學姊生日快樂&amp;新年快樂</div>
     <canvas id="fw"></canvas>
 
     <div class="cake-wrap" aria-hidden="true">
-      <svg class="cake-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-label="Birthday cake">
+      <svg class="cake-svg" viewBox="0 0 600 604" xmlns="http://www.w3.org/2000/svg" aria-label="Birthday cake">
         <defs>
           <!-- Sprinkle clip areas (brown sides only) -->
           <clipPath id="clip-bottom" clipPathUnits="userSpaceOnUse">
@@ -278,8 +329,8 @@
 
         <!-- Plate -->
         <g id="plate" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-          <ellipse cx="300" cy="535" rx="250" ry="32" fill="#fff6fb"/>
-          <ellipse cx="300" cy="535" rx="210" ry="22" fill="#ffe2ef"/>
+          <ellipse cx="300" cy="568" rx="250" ry="32" fill="#fff6fb"/>
+          <ellipse cx="300" cy="568" rx="210" ry="22" fill="#ffe2ef"/>
         </g>
 
         <!-- BOTTOM TIER -->
@@ -318,9 +369,9 @@
                    C270 354 235 332 125 356
                    Z" fill="#f3a7b1"/>
 
-          <!-- blue ribbon band -->
-          <path d="M125 468
-                   C155 446 185 492 215 468
+          <!-- blue ribbon band (extended further left; slight overlap to remove gap) -->
+          <path d="M104 468
+                   C134 446 164 492 215 468
                    C245 444 275 492 305 468
                    C335 444 365 492 395 468
                    C425 444 455 492 485 468
@@ -328,10 +379,10 @@
                    C455 520 425 470 395 498
                    C365 526 335 470 305 498
                    C275 526 245 470 215 498
-                   C185 526 155 470 125 498
+                   C164 526 134 470 104 498
                    Z" fill="#2aa7ff"/>
-          <path d="M125 486
-                   C155 468 185 505 215 486
+          <path d="M104 486
+                   C134 468 164 505 215 486
                    C245 467 275 505 305 486
                    C335 467 365 505 395 486
                    C425 467 455 505 485 486" fill="none" stroke="#0b6bbd" stroke-width="10"/>
@@ -485,15 +536,15 @@
             <path d="M351 171 L373 161" stroke="#ff6b7a" stroke-width="8"/>
           </g>
 
-          <!-- wicks (shorter gap to flame) -->
-          <path d="M238 94 C237 89 239 86 240 78" fill="none"/>
-          <path d="M269 90 C268 86 270 82 271 78" fill="none"/>
-          <path d="M300 83 C299 79 301 75 302 71" fill="none"/>
-          <path d="M331 90 C330 86 332 82 333 78" fill="none"/>
-          <path d="M362 94 C361 89 363 86 364 78" fill="none"/>
+          <!-- wicks (shorter gap to flame; adjusted per candle height) -->
+          <path d="M238 96 C237 92 239 89 240 86" fill="none"/>
+          <path d="M269 93 C268 89 270 86 271 83" fill="none"/>
+          <path d="M300 86 C299 82 301 79 302 76" fill="none"/>
+          <path d="M331 93 C330 89 332 86 333 83" fill="none"/>
+          <path d="M362 96 C361 92 363 89 364 86" fill="none"/>
 
-          <!-- flames (moved closer to candles) -->
-          <g transform="translate(0 12)">
+          <!-- flames (closer to each candle; taller candles get lower flames) -->
+          <g transform="translate(0 30)">
             <path d="M240 66
                      C231 56 235 40 243 32
                      C252 42 255 56 240 66
@@ -502,7 +553,9 @@
                      C235 55 237 46 241 40
                      C246 46 248 55 240 62
                      Z" fill="#ff8a2a" stroke="none"/>
+          </g>
 
+          <g transform="translate(0 27)">
             <path d="M271 66
                      C262 56 266 40 274 32
                      C283 42 286 56 271 66
@@ -511,7 +564,9 @@
                      C266 55 268 46 272 40
                      C277 46 279 55 271 62
                      Z" fill="#ff8a2a" stroke="none"/>
+          </g>
 
+          <g transform="translate(0 20)">
             <path d="M302 59
                      C293 49 297 33 305 25
                      C314 35 317 49 302 59
@@ -520,7 +575,9 @@
                      C297 48 299 39 303 33
                      C308 39 310 48 302 55
                      Z" fill="#ff8a2a" stroke="none"/>
+          </g>
 
+          <g transform="translate(0 27)">
             <path d="M333 66
                      C324 56 328 40 336 32
                      C345 42 348 56 333 66
@@ -529,7 +586,9 @@
                      C328 55 330 46 334 40
                      C339 46 341 55 333 62
                      Z" fill="#ff8a2a" stroke="none"/>
+          </g>
 
+          <g transform="translate(0 30)">
             <path d="M364 66
                      C355 56 359 40 367 32
                      C376 42 379 56 364 66
@@ -621,14 +680,24 @@
       }
     })();
 
-    // --- Fireworks (canvas): white core + neon outline, multi-color per burst, fast + varied rays ---
+    // --- Fireworks (canvas): white core on top, one neon color per ray, mobile-optimized ---
     (function fireworks() {
       const canvas = document.getElementById('fw');
       if (!(canvas instanceof HTMLCanvasElement)) return;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
       if (!ctx) return;
 
-      const DPR = () => Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const isMobile =
+        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+        (navigator.maxTouchPoints || 0) > 0 ||
+        Math.min(window.innerWidth, window.innerHeight) < 520;
+
+      const DPR = () => {
+        const raw = window.devicePixelRatio || 1;
+        const cap = isMobile ? 1.25 : 2;
+        return Math.max(1, Math.min(cap, raw));
+      };
+
       let w = 0, h = 0, dpr = DPR();
 
       function resize() {
@@ -645,25 +714,33 @@
       window.addEventListener('resize', resize, { passive: true });
 
       const bursts = [];
+      const pool = [];
 
-      // speed: back closer to original
-      const MIN_BURSTS = 6;
-      const MAX_BURSTS = 14;
-      const SPAWN_MS_MIN = 360;
-      const SPAWN_MS_MAX = 740;
+      // speed: keep fast feel, but LESS dense + smoother on mobile
+      const MIN_BURSTS = isMobile ? 2 : 5;
+      const MAX_BURSTS = isMobile ? 6 : 12;
 
-      const DOT_MS_MIN = 60;
-      const DOT_MS_MAX = 90;
+      const SPAWN_MS_MIN = isMobile ? 420 : 360;
+      const SPAWN_MS_MAX = isMobile ? 900 : 740;
+      const DOUBLE_SPAWN_CHANCE = isMobile ? 0.08 : 0.18;
+
+      const DOT_MS_MIN = 55;
+      const DOT_MS_MAX = 85;
 
       const LIFE_MS_MIN = 820;
       const LIFE_MS_MAX = 1250;
 
-      // more rays
-      const RAYS_MIN = 24;
-      const RAYS_MAX = 38;
+      // fewer rays (less dense)
+      const RAYS_MIN = isMobile ? 10 : 16;
+      const RAYS_MAX = isMobile ? 14 : 24;
+      const MAX_RAYS = RAYS_MAX;
 
-      const MAX_R_MIN = 60;
-      const MAX_R_MAX = 120;
+      const MAX_R_MIN = isMobile ? 56 : 60;
+      const MAX_R_MAX = isMobile ? 110 : 120;
+
+      const NEON_LINE_W = isMobile ? 4.8 : 6.0;
+      const NEON_SHADOW = isMobile ? 12 : 18;
+      const DOT_SHADOW = isMobile ? 10 : 14;
 
       const clamp01 = (x) => Math.max(0, Math.min(1, x));
       const randBetween = (a, b) => a + Math.random() * (b - a);
@@ -673,13 +750,31 @@
       const easeInCubic = (t) => t * t * t;
 
       const NEON_HUES = [25, 45, 65, 120, 155, 185, 205, 235, 270, 295, 315, 335];
-      function neonColor(h) {
-        const hue = ((h % 360) + 360) % 360;
-        return `hsl(${hue} 100% 65%)`;
+      const NEON_PALETTE = NEON_HUES.map((h) => `hsl(${h} 100% 65%)`);
+      const pickNeonIndex = () => randInt(0, NEON_PALETTE.length - 1);
+
+      function allocBurst() {
+        const b = pool.pop();
+        if (b) return b;
+        return {
+          ux: new Float32Array(MAX_RAYS),
+          uy: new Float32Array(MAX_RAYS),
+          lenMul: new Float32Array(MAX_RAYS),
+          speedMul: new Float32Array(MAX_RAYS),
+          colorIdx: new Uint8Array(MAX_RAYS),
+          rays: 0,
+          x: 0,
+          y: 0,
+          maxR: 0,
+          t0: 0,
+          dotMs: 0,
+          lifeMs: 0,
+          dotColorIdx: 0,
+        };
       }
-      function neonFromPalette(jitter = 0) {
-        const base = NEON_HUES[randInt(0, NEON_HUES.length - 1)];
-        return neonColor(base + randBetween(-jitter, jitter));
+
+      function releaseBurst(b) {
+        if (pool.length < 24) pool.push(b);
       }
 
       function pickSpawn() {
@@ -698,63 +793,45 @@
 
       function spawnBurst(now) {
         const { x, y } = pickSpawn();
-        const rays = randInt(RAYS_MIN, RAYS_MAX);
+        const b = allocBurst();
+
+        b.x = x;
+        b.y = y;
+        b.rays = randInt(RAYS_MIN, RAYS_MAX);
+        b.maxR = randBetween(MAX_R_MIN, MAX_R_MAX);
+        b.t0 = now;
+        b.dotMs = randBetween(DOT_MS_MIN, DOT_MS_MAX);
+        b.lifeMs = randBetween(LIFE_MS_MIN, LIFE_MS_MAX);
+
         const rot = randBetween(0, Math.PI * 2);
-        const baseHue = randBetween(0, 360);
 
-        const rayData = [];
-        for (let k = 0; k < rays; k++) {
-          const a = rot + (k / rays) * Math.PI * 2 + randBetween(-0.018, 0.018);
-
-          const c1 = Math.random() < 0.5 ? neonFromPalette(14) : neonColor(baseHue + randBetween(-85, 85));
-          const c2 = Math.random() < 0.5 ? neonFromPalette(14) : neonColor(baseHue + randBetween(-85, 85));
-          const c3 = Math.random() < 0.55 ? neonFromPalette(14) : neonColor(baseHue + randBetween(-85, 85));
-
-          // 長短 + 速率不一
-          const lenMul = randBetween(0.55, 1.25);
-          const speedMul = randBetween(0.75, 1.35);
-
-          rayData.push({ a, c1, c2, c3, lenMul, speedMul });
+        for (let k = 0; k < b.rays; k++) {
+          const a = rot + (k / b.rays) * Math.PI * 2 + randBetween(-0.018, 0.018);
+          b.ux[k] = Math.cos(a);
+          b.uy[k] = Math.sin(a);
+          b.lenMul[k] = randBetween(0.55, 1.25);
+          b.speedMul[k] = randBetween(0.75, 1.35);
+          b.colorIdx[k] = pickNeonIndex();
         }
 
-        const dotColors = [
-          rayData[randInt(0, rayData.length - 1)].c1,
-          rayData[randInt(0, rayData.length - 1)].c2,
-        ];
-
-        bursts.push({
-          x, y,
-          rays,
-          rayData,
-          maxR: randBetween(MAX_R_MIN, MAX_R_MAX),
-          t0: now,
-          dotMs: randBetween(DOT_MS_MIN, DOT_MS_MAX),
-          lifeMs: randBetween(LIFE_MS_MIN, LIFE_MS_MAX),
-          dotColors,
-        });
+        b.dotColorIdx = b.colorIdx[randInt(0, b.rays - 1)];
+        bursts.push(b);
       }
 
       function drawDot(b, age) {
         const p = clamp01(age / b.dotMs);
-        const r = 0.9 + 1.9 * p;
+        const r = 0.8 + 1.6 * p;
+        const c = NEON_PALETTE[b.dotColorIdx];
 
-        // neon under (multi-color)
+        // neon under
         ctx.save();
         ctx.globalAlpha = 0.85;
         ctx.globalCompositeOperation = 'lighter';
-
-        ctx.shadowBlur = 14;
-        ctx.shadowColor = b.dotColors[0];
-        ctx.fillStyle = b.dotColors[0];
+        ctx.shadowBlur = DOT_SHADOW;
+        ctx.shadowColor = c;
+        ctx.fillStyle = c;
         ctx.beginPath();
-        ctx.arc(b.x, b.y, r + 1.4, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = b.dotColors[1];
-        ctx.fillStyle = b.dotColors[1];
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, r + 0.7, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, r + 1.2, 0, Math.PI * 2);
         ctx.fill();
 
         // white core over
@@ -768,9 +845,10 @@
         ctx.restore();
       }
 
-      // initial (back closer to original)
+      // initial
       const tStart = performance.now();
-      for (let i = 0; i < 4; i++) spawnBurst(tStart);
+      const initialBursts = isMobile ? 3 : 4;
+      for (let i = 0; i < initialBursts; i++) spawnBurst(tStart);
       let nextSpawn = tStart + 220;
 
       function loop(now) {
@@ -778,9 +856,11 @@
 
         if (now >= nextSpawn) {
           spawnBurst(now);
-          if (Math.random() < 0.22) spawnBurst(now);
+          if (Math.random() < DOUBLE_SPAWN_CHANCE) spawnBurst(now);
           nextSpawn = now + randBetween(SPAWN_MS_MIN, SPAWN_MS_MAX);
         }
+
+        ctx.lineCap = 'round';
 
         for (let i = bursts.length - 1; i >= 0; i--) {
           const b = bursts[i];
@@ -794,70 +874,36 @@
           const t = (age - b.dotMs) / b.lifeMs;
           if (t >= 1) {
             bursts.splice(i, 1);
+            releaseBurst(b);
             continue;
           }
 
           const alpha = Math.max(0, 1 - Math.pow(t, 1.15));
 
-          ctx.lineCap = 'round';
-
           // neon under
           ctx.save();
           ctx.globalCompositeOperation = 'lighter';
           ctx.globalAlpha = alpha * 0.95;
-          ctx.lineWidth = 6.0;
-          ctx.shadowBlur = 18;
-
-          const mid1T = 0.46;
-          const mid2T = 0.78;
+          ctx.lineWidth = NEON_LINE_W;
+          ctx.shadowBlur = NEON_SHADOW;
 
           for (let k = 0; k < b.rays; k++) {
-            const rd = b.rayData[k];
-            const a = rd.a;
-
-            const tRay = clamp01(t * rd.speedMul);
+            const tRay = clamp01(t * b.speedMul[k]);
 
             const outerT = easeOutCubic(clamp01(tRay * 1.05));
-            const outer = (b.maxR * rd.lenMul) * (0.12 + 0.88 * outerT);
+            const outer = (b.maxR * b.lenMul[k]) * (0.12 + 0.88 * outerT);
 
             const innerT = easeInCubic(clamp01((tRay - 0.14) / 0.86));
-            const inner = Math.min(outer, (b.maxR * rd.lenMul) * innerT * 1.22);
+            const inner = Math.min(outer, (b.maxR * b.lenMul[k]) * innerT * 1.22);
 
             if (inner >= outer - 0.6) continue;
 
-            const r1 = inner;
-            const r2 = inner + (outer - inner) * mid1T;
-            const r3 = inner + (outer - inner) * mid2T;
-            const r4 = outer;
-
-            const x1 = b.x + Math.cos(a) * r1;
-            const y1 = b.y + Math.sin(a) * r1;
-            const x2 = b.x + Math.cos(a) * r2;
-            const y2 = b.y + Math.sin(a) * r2;
-            const x3 = b.x + Math.cos(a) * r3;
-            const y3 = b.y + Math.sin(a) * r3;
-            const x4 = b.x + Math.cos(a) * r4;
-            const y4 = b.y + Math.sin(a) * r4;
-
-            ctx.strokeStyle = rd.c1;
-            ctx.shadowColor = rd.c1;
+            const c = NEON_PALETTE[b.colorIdx[k]];
+            ctx.strokeStyle = c;
+            ctx.shadowColor = c;
             ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-
-            ctx.strokeStyle = rd.c2;
-            ctx.shadowColor = rd.c2;
-            ctx.beginPath();
-            ctx.moveTo(x2, y2);
-            ctx.lineTo(x3, y3);
-            ctx.stroke();
-
-            ctx.strokeStyle = rd.c3;
-            ctx.shadowColor = rd.c3;
-            ctx.beginPath();
-            ctx.moveTo(x3, y3);
-            ctx.lineTo(x4, y4);
+            ctx.moveTo(b.x + b.ux[k] * inner, b.y + b.uy[k] * inner);
+            ctx.lineTo(b.x + b.ux[k] * outer, b.y + b.uy[k] * outer);
             ctx.stroke();
           }
           ctx.restore();
@@ -867,37 +913,30 @@
           ctx.globalCompositeOperation = 'source-over';
           ctx.globalAlpha = alpha;
           ctx.strokeStyle = 'rgba(255,255,255,0.98)';
-          ctx.lineWidth = 2.1;
+          ctx.lineWidth = isMobile ? 1.8 : 2.1;
           ctx.shadowBlur = 0;
 
           for (let k = 0; k < b.rays; k++) {
-            const rd = b.rayData[k];
-            const a = rd.a;
-
-            const tRay = clamp01(t * rd.speedMul);
+            const tRay = clamp01(t * b.speedMul[k]);
 
             const outerT = easeOutCubic(clamp01(tRay * 1.05));
-            const outer = (b.maxR * rd.lenMul) * (0.12 + 0.88 * outerT);
+            const outer = (b.maxR * b.lenMul[k]) * (0.12 + 0.88 * outerT);
 
             const innerT = easeInCubic(clamp01((tRay - 0.14) / 0.86));
-            const inner = Math.min(outer, (b.maxR * rd.lenMul) * innerT * 1.22);
+            const inner = Math.min(outer, (b.maxR * b.lenMul[k]) * innerT * 1.22);
 
             if (inner >= outer - 0.6) continue;
 
-            const x1 = b.x + Math.cos(a) * inner;
-            const y1 = b.y + Math.sin(a) * inner;
-            const x2 = b.x + Math.cos(a) * outer;
-            const y2 = b.y + Math.sin(a) * outer;
             ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
+            ctx.moveTo(b.x + b.ux[k] * inner, b.y + b.uy[k] * inner);
+            ctx.lineTo(b.x + b.ux[k] * outer, b.y + b.uy[k] * outer);
             ctx.stroke();
           }
           ctx.restore();
         }
 
         while (bursts.length < MIN_BURSTS) spawnBurst(now);
-        while (bursts.length > MAX_BURSTS) bursts.shift();
+        while (bursts.length > MAX_BURSTS) releaseBurst(bursts.shift());
 
         requestAnimationFrame(loop);
       }
