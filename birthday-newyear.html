@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>生日快樂 & 新年快樂</title>
   <style>
     :root {
@@ -74,14 +74,22 @@
       line-height: 1.15;
       font-size: clamp(28px, 6.1vw, 56px);
       color: #fff;
-      -webkit-text-stroke: 3px rgba(0, 255, 102, 0.95);
+      -webkit-text-stroke: 2.6px rgba(0, 255, 102, 0.88);
       text-shadow:
-        0 0 6px rgba(0, 255, 102, 0.75),
-        0 0 14px rgba(0, 255, 102, 0.5),
-        0 0 26px rgba(0, 255, 102, 0.35);
+        0 0 5px rgba(0, 255, 102, 0.55),
+        0 0 12px rgba(0, 255, 102, 0.32),
+        0 2px 5px rgba(0, 0, 0, 0.72);
       filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6));
       pointer-events: none;
       user-select: none;
+      padding: 0 10px;
+      max-width: calc(100vw - 18px);
+    }
+
+    .message .msg-line1,
+    .message .msg-line2 {
+      display: block;
+      white-space: nowrap;
     }
 
     @media (max-width: 520px), (max-height: 740px) {
@@ -105,9 +113,15 @@
 
       .message {
         top: 14px;
-        font-size: clamp(22px, 6.8vw, 38px);
-        -webkit-text-stroke: 2.4px rgba(0, 255, 102, 0.95);
+        font-size: clamp(19px, 6.4vw, 35px);
+        -webkit-text-stroke: 1.3px rgba(0, 255, 102, 0.38);
+        text-shadow:
+          0 0 2px rgba(0, 255, 102, 0.22),
+          0 2px 6px rgba(0, 0, 0, 0.85);
+        filter: drop-shadow(0 8px 14px rgba(0,0,0,0.55));
       }
+
+      .message .msg-line2 { font-size: 0.95em; }
     }
 
     
@@ -341,60 +355,15 @@
       }
     }
 
-    /* --- Background music UI --- */
-    .bgm-toggle {
-      position: fixed;
-      right: 14px;
-      top: 14px;
-      z-index: 60;
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      border: 2px solid rgba(255,255,255,0.75);
-      background: rgba(0,0,0,0.35);
-      color: #fff;
-      font-size: 18px;
-      font-weight: 800;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 18px rgba(0,0,0,0.55);
-    }
-
-    .bgm-toggle:active { transform: scale(0.98); }
-
-    .bgm-start {
-      position: fixed;
-      left: 50%;
-      bottom: 16px;
-      transform: translateX(-50%);
-      z-index: 60;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 2px solid rgba(255,255,255,0.8);
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 12px 22px rgba(0,0,0,0.6);
-    }
-
-    .bgm-start:active { transform: translateX(-50%) scale(0.98); }
+    
   </style>
 </head>
 <body>
   <div class="stage">
-    <div class="message" role="heading" aria-level="1">祝千薰學姊<br>生日快樂&amp;新年快樂</div>
+    <div class="message" role="heading" aria-level="1">
+      <span class="msg-line1">祝千薰學姊</span>
+      <span class="msg-line2">生日快樂&amp;新年快樂</span>
+    </div>
     <canvas id="fw"></canvas>
 
     <div class="cake-wrap" aria-hidden="true">
@@ -704,9 +673,7 @@
     </div>
   </div>
 
-  <audio id="bgm" src="生日快樂.mp3" loop preload="auto" playsinline></audio>
-  <button class="bgm-toggle" type="button" aria-label="背景音樂" aria-pressed="false">♪</button>
-  <button class="bgm-start" type="button" hidden>點我播放音樂</button>
+  <audio id="bgm" src="生日快樂.mp3" loop preload="auto" autoplay playsinline></audio>
 
   <script>
     // --- Sprinkles (SVG) ---
@@ -1083,80 +1050,43 @@
       requestAnimationFrame(loop);
     })();
 
-    // --- Background music ---
-    (function bgm() {
+    // --- Background music (autoplay only; no UI) ---
+    (function bgmAutoplay() {
       const audio = document.getElementById('bgm');
-      const toggle = document.querySelector('.bgm-toggle');
-      const start = document.querySelector('.bgm-start');
-
       if (!(audio instanceof HTMLAudioElement)) return;
-      if (!(toggle instanceof HTMLButtonElement)) return;
-      if (!(start instanceof HTMLButtonElement)) return;
 
-      let started = false;
-
-      function isPlaying() {
-        return !audio.paused && !audio.ended;
+      async function tryPlayUnmuted() {
+        audio.muted = false;
+        return audio.play();
       }
 
-      function updateUI() {
-        const playing = isPlaying();
-        toggle.textContent = playing ? '❚❚' : '♪';
-        toggle.setAttribute('aria-pressed', playing ? 'true' : 'false');
+      async function tryPlayMuted() {
+        audio.muted = true;
+        try { await audio.play(); } catch { /* ignore */ }
       }
-
-      function setStartVisible(visible) {
-        start.hidden = !visible;
-      }
-
-      async function tryPlay() {
-        if (started && isPlaying()) return true;
-        try {
-          await audio.play();
-          started = true;
-          setStartVisible(false);
-          updateUI();
-          return true;
-        } catch {
-          updateUI();
-          return false;
-        }
-      }
-
-      toggle.addEventListener('click', async () => {
-        if (!started) {
-          const ok = await tryPlay();
-          if (!ok) setStartVisible(true);
-          return;
-        }
-
-        if (isPlaying()) {
-          audio.pause();
-          updateUI();
-        } else {
-          await tryPlay();
-        }
-      });
-
-      start.addEventListener('click', async () => {
-        await tryPlay();
-      });
-
-      audio.addEventListener('play', updateUI);
-      audio.addEventListener('pause', updateUI);
 
       window.addEventListener('load', async () => {
-        const ok = await tryPlay();
-        if (!ok) setStartVisible(true);
+        try {
+          await tryPlayUnmuted();
+        } catch {
+          // Many browsers block unmuted autoplay. Start muted (usually allowed),
+          // then unmute on the first user interaction.
+          await tryPlayMuted();
+
+          // Try to unmute immediately (may succeed in some browsers once playback started)
+          try {
+            audio.muted = false;
+            await audio.play();
+            return;
+          } catch { /* ignore */ }
+
+          // Otherwise unmute on first user interaction.
+          window.addEventListener('pointerdown', async () => {
+            audio.muted = false;
+            try { await audio.play(); } catch { /* ignore */ }
+          }, { once: true, passive: true });
+        }
       }, { once: true });
-
-      window.addEventListener('pointerdown', async () => {
-        if (started) return;
-        const ok = await tryPlay();
-        if (!ok) setStartVisible(true);
-      }, { once: true, passive: true });
-
-      updateUI();
     })();
   </script>
 </body>
