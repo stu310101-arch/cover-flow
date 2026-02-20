@@ -49,16 +49,16 @@
       width: min(92vw, 640px);
       height: min(90vh, 760px);
       display: flex;
-      align-items: center;
+      align-items: flex-end; /* keep cake closer to the plate/bottom */
       justify-content: center;
       padding-bottom: 0;
     }
 
     .cake-svg{
       display:block;
-      width: min(92vw, 520px);
+      width: min(94vw, 600px);
       height:auto;
-      max-height: min(84vh, 640px);
+      max-height: min(86vh, 720px);
       filter: drop-shadow(0 18px 22px rgba(0,0,0,0.65));
     }
 
@@ -72,7 +72,7 @@
       font-weight: 900;
       letter-spacing: 0;
       line-height: 1.15;
-      font-size: clamp(20px, 4.8vw, 38px);
+      font-size: clamp(28px, 6.1vw, 56px);
       color: #fff;
       -webkit-text-stroke: 3px rgba(0, 255, 102, 0.95);
       text-shadow:
@@ -105,7 +105,7 @@
 
       .message {
         top: 14px;
-        font-size: clamp(18px, 5.6vw, 26px);
+        font-size: clamp(22px, 6.8vw, 38px);
         -webkit-text-stroke: 2.4px rgba(0, 255, 102, 0.95);
       }
     }
@@ -332,6 +332,9 @@
           <ellipse cx="300" cy="568" rx="250" ry="32" fill="#fff6fb"/>
           <ellipse cx="300" cy="568" rx="210" ry="22" fill="#ffe2ef"/>
         </g>
+
+        <!-- Cake (moved down so it sits into the plate; plate stays fixed) -->
+        <g id="cake" transform="translate(0 26)">
 
         <!-- BOTTOM TIER -->
         <g id="tier-bottom" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
@@ -600,7 +603,7 @@
           </g>
         </g>
 
-        
+        </g><!-- /#cake -->
       </svg>
     </div>
   </div>
@@ -735,8 +738,8 @@
       const RAYS_MAX = isMobile ? 22 : 38;
       const MAX_RAYS = RAYS_MAX;
 
-      const MAX_R_MIN = isMobile ? 56 : 60;
-      const MAX_R_MAX = isMobile ? 110 : 120;
+      const MAX_R_MIN = isMobile ? 66 : 78;
+      const MAX_R_MAX = isMobile ? 140 : 165;
 
       const NEON_LINE_W = isMobile ? 4.8 : 6.0;
       const NEON_SHADOW = isMobile ? 12 : 18;
@@ -751,8 +754,11 @@
 
       const clamp255 = (x) => Math.max(0, Math.min(255, x));
 
+      // Per-channel RGB jitter around a single base color (tune as desired).
+      const COLOR_JITTER = 70;
+
       function pickNeonBaseRGB() {
-        // bright + saturated (avoid pastel) without hue palette picking
+        // bright + saturated (avoid pastel) without HSL palette picking
         const hi = 255;
         const mid = randInt(140, 255);
         const lo = randInt(0, 80);
@@ -765,7 +771,7 @@
       }
 
       function jitterFromBase(base) {
-        const j = () => randInt(-20, 20);
+        const j = () => randInt(-COLOR_JITTER, COLOR_JITTER);
         return {
           r: clamp255(base.r + j()),
           g: clamp255(base.g + j()),
