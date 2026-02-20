@@ -309,7 +309,7 @@
 </head>
 <body>
   <div class="stage">
-    <div class="message" role="heading" aria-level="1">祝千薰學姊生日快樂&amp;新年快樂</div>
+    <div class="message" role="heading" aria-level="1">祝千薰學姊<br>生日快樂&amp;新年快樂</div>
     <canvas id="fw"></canvas>
 
     <div class="cake-wrap" aria-hidden="true">
@@ -341,14 +341,14 @@
           <g id="sprinkles-bottom" clip-path="url(#clip-bottom)" stroke="none" stroke-width="0"></g>
 
           <!-- yellow filling band -->
-          <path d="M140 402
-                   C175 387 210 410 245 398
+          <path d="M110 402
+                   C145 387 210 410 245 398
                    C275 388 310 410 340 398
-                   C375 384 410 410 450 395
-                   L450 425
-                   C410 440 375 416 340 430
+                   C375 384 450 410 490 395
+                   L490 425
+                   C450 440 375 416 340 430
                    C310 442 275 418 245 432
-                   C210 446 175 420 140 435
+                   C180 446 145 420 110 435
                    Z" fill="#f6e28a"/>
 
           <!-- icing top -->
@@ -418,14 +418,14 @@
           <rect x="165" y="275" width="270" height="120" rx="52" fill="#b2704c"/>
           <g id="sprinkles-mid" clip-path="url(#clip-mid)" stroke="none" stroke-width="0"></g>
 
-          <path d="M190 312
-                   C215 300 240 318 265 308
+          <path d="M165 312
+                   C190 300 240 318 265 308
                    C290 298 315 318 340 308
-                   C370 296 395 318 410 304
-                   L410 332
-                   C392 346 370 322 342 336
+                   C370 296 420 318 435 304
+                   L435 332
+                   C417 346 370 322 342 336
                    C316 350 290 324 266 340
-                   C240 356 215 328 190 346
+                   C215 356 190 328 165 346
                    Z" fill="#f6e28a"/>
 
           <ellipse cx="300" cy="270" rx="140" ry="40" fill="#f3a7b1"/>
@@ -450,14 +450,14 @@
           <rect x="215" y="200" width="170" height="85" rx="40" fill="#b2704c"/>
           <g id="sprinkles-top" clip-path="url(#clip-top)" stroke="none" stroke-width="0"></g>
 
-          <path d="M235 230
-                   C252 222 270 238 288 230
+          <path d="M215 230
+                   C232 222 270 238 288 230
                    C306 222 324 238 342 230
-                   C360 222 370 236 375 224
-                   L375 248
-                   C368 262 360 244 342 256
+                   C360 222 380 236 385 224
+                   L385 248
+                   C378 262 360 244 342 256
                    C324 268 306 248 288 260
-                   C270 272 252 252 235 266
+                   C250 272 232 252 215 266
                    Z" fill="#f6e28a"/>
 
           <ellipse cx="300" cy="195" rx="92" ry="28" fill="#f3a7b1"/>
@@ -680,7 +680,7 @@
       }
     })();
 
-    // --- Fireworks (canvas): white core on top, one neon color per ray, mobile-optimized ---
+    // --- Fireworks (canvas): white core on top, neon base per burst + small per-ray RGB jitter, mobile-optimized ---
     (function fireworks() {
       const canvas = document.getElementById('fw');
       if (!(canvas instanceof HTMLCanvasElement)) return;
@@ -730,9 +730,9 @@
       const LIFE_MS_MIN = 820;
       const LIFE_MS_MAX = 1250;
 
-      // fewer rays (less dense)
-      const RAYS_MIN = isMobile ? 10 : 16;
-      const RAYS_MAX = isMobile ? 14 : 24;
+      // more rays (denser / closer to the original “many segments” look)
+      const RAYS_MIN = isMobile ? 14 : 26;
+      const RAYS_MAX = isMobile ? 22 : 38;
       const MAX_RAYS = RAYS_MAX;
 
       const MAX_R_MIN = isMobile ? 56 : 60;
@@ -749,9 +749,29 @@
       const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
       const easeInCubic = (t) => t * t * t;
 
-      const NEON_HUES = [25, 45, 65, 120, 155, 185, 205, 235, 270, 295, 315, 335];
-      const NEON_PALETTE = NEON_HUES.map((h) => `hsl(${h} 100% 65%)`);
-      const pickNeonIndex = () => randInt(0, NEON_PALETTE.length - 1);
+      const clamp255 = (x) => Math.max(0, Math.min(255, x));
+
+      function pickNeonBaseRGB() {
+        // bright + saturated (avoid pastel) without hue palette picking
+        const hi = 255;
+        const mid = randInt(140, 255);
+        const lo = randInt(0, 80);
+        const channels = [hi, mid, lo];
+        for (let i = channels.length - 1; i > 0; i--) {
+          const j = randInt(0, i);
+          [channels[i], channels[j]] = [channels[j], channels[i]];
+        }
+        return { r: channels[0], g: channels[1], b: channels[2] };
+      }
+
+      function jitterFromBase(base) {
+        const j = () => randInt(-20, 20);
+        return {
+          r: clamp255(base.r + j()),
+          g: clamp255(base.g + j()),
+          b: clamp255(base.b + j()),
+        };
+      }
 
       function allocBurst() {
         const b = pool.pop();
@@ -761,7 +781,9 @@
           uy: new Float32Array(MAX_RAYS),
           lenMul: new Float32Array(MAX_RAYS),
           speedMul: new Float32Array(MAX_RAYS),
-          colorIdx: new Uint8Array(MAX_RAYS),
+          rayR: new Uint8Array(MAX_RAYS),
+          rayG: new Uint8Array(MAX_RAYS),
+          rayB: new Uint8Array(MAX_RAYS),
           rays: 0,
           x: 0,
           y: 0,
@@ -769,7 +791,9 @@
           t0: 0,
           dotMs: 0,
           lifeMs: 0,
-          dotColorIdx: 0,
+          dotR: 0,
+          dotG: 0,
+          dotB: 0,
         };
       }
 
@@ -804,6 +828,7 @@
         b.lifeMs = randBetween(LIFE_MS_MIN, LIFE_MS_MAX);
 
         const rot = randBetween(0, Math.PI * 2);
+        const base = pickNeonBaseRGB();
 
         for (let k = 0; k < b.rays; k++) {
           const a = rot + (k / b.rays) * Math.PI * 2 + randBetween(-0.018, 0.018);
@@ -811,17 +836,25 @@
           b.uy[k] = Math.sin(a);
           b.lenMul[k] = randBetween(0.55, 1.25);
           b.speedMul[k] = randBetween(0.75, 1.35);
-          b.colorIdx[k] = pickNeonIndex();
+
+          const c = jitterFromBase(base);
+          b.rayR[k] = c.r;
+          b.rayG[k] = c.g;
+          b.rayB[k] = c.b;
         }
 
-        b.dotColorIdx = b.colorIdx[randInt(0, b.rays - 1)];
+        const dotK = randInt(0, b.rays - 1);
+        b.dotR = b.rayR[dotK];
+        b.dotG = b.rayG[dotK];
+        b.dotB = b.rayB[dotK];
+
         bursts.push(b);
       }
 
       function drawDot(b, age) {
         const p = clamp01(age / b.dotMs);
         const r = 0.8 + 1.6 * p;
-        const c = NEON_PALETTE[b.dotColorIdx];
+        const c = `rgb(${b.dotR},${b.dotG},${b.dotB})`;
 
         // neon under
         ctx.save();
@@ -898,7 +931,7 @@
 
             if (inner >= outer - 0.6) continue;
 
-            const c = NEON_PALETTE[b.colorIdx[k]];
+            const c = `rgb(${b.rayR[k]},${b.rayG[k]},${b.rayB[k]})`;
             ctx.strokeStyle = c;
             ctx.shadowColor = c;
             ctx.beginPath();
