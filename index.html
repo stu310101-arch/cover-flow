@@ -1,75 +1,76 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>學習筆記庫 - 學測自然科視覺化筆記</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>換裝遊戲</title>
+  <meta name="color-scheme" content="dark" />
+
+  <link rel="stylesheet" href="./dressup.css" />
+  <script src="./dressup.js" defer></script>
 </head>
-<body data-page="home">
-<header class="app-header">
-  <div class="brand">
-    <div class="brand-mark"><div class="brand-mark-inner"></div></div>
-    <div>
-      <div class="brand-title">學習筆記庫</div>
-      <div class="brand-subtitle">Visual Science Notes</div>
-    </div>
-  </div>
-  <div class="auth-panel">
-    <span id="authUserLabel" class="auth-user-label">尚未登入</span>
-    <button type="button" id="loginBtn" class="auth-btn">登入</button>
-    <button type="button" id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
-  </div>
-</header>
-
-<main>
-  <section class="view active">
-    <div class="home-container">
-      <div class="home-title">
-        <h1>學習筆記庫</h1>
-        <p>選擇一個科目，或直接搜尋單元名稱</p>
-      </div>
-
-      <div id="searchArea" class="search-area">
-        <div class="search-input-wrapper">
-          <span class="search-icon">🔍</span>
-          <input id="searchInput" class="search-input" type="search" placeholder="搜尋單元、關鍵字...">
-          <button id="searchClearBtn" class="search-clear-btn" title="清除搜尋">✕</button>
+<body class="dressup-root">
+  <div class="dressup-container">
+    <div class="dressup-layout" id="dressup-app">
+      <!-- 左：模特兒（正 / 背面） -->
+      <aside class="dressup-sidebar dressup-card" aria-label="模特兒">
+        <div class="dressup-card-header">
+          <h1 class="dressup-title">換裝遊戲</h1>
+          <p class="dressup-subtitle">左側切換正面 / 背面；右側選擇衣物與飾品。</p>
         </div>
-        <div id="searchResults" class="search-results"></div>
-      </div>
 
-      <div class="subject-grid">
-        <a href="physics.html" class="subject-card subject-phy">
-          <div class="subject-name-zh">物理</div>
-          <div class="subject-name-en">Physics</div>
-        </a>
-        <a href="chemistry.html" class="subject-card subject-che">
-          <div class="subject-name-zh">化學</div>
-          <div class="subject-name-en">Chemistry</div>
-        </a>
-        <a href="biology.html" class="subject-card subject-bio">
-          <div class="subject-name-zh">生物</div>
-          <div class="subject-name-en">Biology</div>
-        </a>
-        <a href="earth_science.html" class="subject-card subject-ear">
-          <div class="subject-name-zh">地科</div>
-          <div class="subject-name-en">Earth Science</div>
-        </a>
-      </div>
+        <div class="dressup-card-body">
+          <div id="dressup-stage" class="dressup-stage" aria-label="模特兒舞台"></div>
+
+          <div class="dressup-section">
+            <div class="dressup-sidebar-actions">
+              <button id="dressup-view-front" class="dressup-btn dressup-btn-primary" type="button" aria-pressed="true">正面</button>
+              <button id="dressup-view-back" class="dressup-btn" type="button" aria-pressed="false">背面</button>
+              <button id="dressup-reset" class="dressup-btn" type="button">Reset 全部</button>
+            </div>
+            <p id="dressup-error" class="dressup-subtitle" role="status"></p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 右：衣櫃 -->
+      <main class="dressup-main dressup-card" aria-label="衣櫃">
+        <div class="dressup-card-header">
+          <h2 class="dressup-title">衣櫃</h2>
+          <p class="dressup-subtitle">點一下穿上 / 更換；再點一次脫下。</p>
+        </div>
+
+        <div class="dressup-card-body">
+          <div id="dressup-tabs" class="dressup-tabs" role="tablist" aria-label="衣櫃分類"></div>
+
+          <section id="dressup-slot-section" class="dressup-section dressup-hidden" aria-label="飾品分類">
+            <div class="dressup-section-header">
+              <div>
+                <h3 class="dressup-section-title">飾品分類（slot）</h3>
+                <p class="dressup-section-hint">同 slot 互斥，不同 slot 可同時選。</p>
+              </div>
+            </div>
+            <div id="dressup-slot-tabs" class="dressup-tabs" role="tablist" aria-label="飾品 slot"></div>
+          </section>
+
+          <section class="dressup-section" aria-label="物品清單">
+            <div class="dressup-section-header">
+              <div>
+                <h3 id="dressup-grid-title" class="dressup-section-title">物品</h3>
+                <p id="dressup-grid-hint" class="dressup-section-hint"></p>
+              </div>
+            </div>
+            <div id="dressup-grid" class="dressup-grid"></div>
+          </section>
+        </div>
+      </main>
     </div>
-  </section>
-</main>
+  </div>
 
-<footer>
-  學測自然科視覺化複習筆記網 · 多頁 HTML 版本 · Firebase 登入＋個人雲端筆記
-</footer>
-
-<!-- Firebase SDK（若要啟用登入與雲端筆記，請先在下方填入自己的 firebaseConfig） -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script src="common.js"></script>
+  <noscript>
+    <div style="max-width: 720px; margin: 16px auto; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; background: rgba(0,0,0,0.12); color: white;">
+      需要啟用 JavaScript 才能使用換裝功能。
+    </div>
+  </noscript>
 </body>
 </html>
