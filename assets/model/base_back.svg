@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="60" x2="0" y2="760">
+      <stop offset="0" stop-color="#f8efe6"/>
+      <stop offset="0.55" stop-color="#f2e2d4"/>
+      <stop offset="1" stop-color="#ecd3c2"/>
+    </linearGradient>
+    <linearGradient id="sideShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b88f78" stop-opacity="0.38"/>
+      <stop offset="0.30" stop-color="#b88f78" stop-opacity="0"/>
+      <stop offset="0.70" stop-color="#b88f78" stop-opacity="0"/>
+      <stop offset="1" stop-color="#b88f78" stop-opacity="0.38"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="40" x2="0" y2="260">
+      <stop offset="0" stop-color="#3a2c25"/>
+      <stop offset="1" stop-color="#14100e"/>
+    </linearGradient>
+  </defs>
+
+  <g stroke="#b8aca2" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- hair (back) -->
+    <path d="M238 132 C230 86 262 46 300 46 C342 46 372 86 362 136 C360 170 350 210 330 240 C318 258 308 272 300 284 C292 272 282 258 270 240 C250 210 240 170 238 132 Z" fill="url(#hair)" stroke="none"/>
+    <path d="M255 112 C270 92 286 84 300 84 C314 84 330 92 345 112 C332 104 318 100 300 100 C282 100 268 104 255 112 Z" fill="#2b211c" opacity="0.78" stroke="none"/>
+
+    <!-- head (no face features on back view) -->
+    <path d="M300 60 C338 60 364 92 364 130 C364 170 338 206 300 206 C262 206 236 170 236 130 C236 92 262 60 300 60 Z" fill="url(#skin)"/>
+
+    <!-- neck -->
+    <path d="M280 198 C288 216 312 216 320 198" fill="none" stroke="#c9bbb0" stroke-width="2" opacity="0.85"/>
+
+    <!-- body (same proportions as front for asset alignment) -->
+    <path d="M230 180 C210 210 205 235 205 255 C205 285 220 305 250 320 L250 360 C250 420 235 470 215 510 C200 545 190 585 190 625 C190 705 235 750 290 750 C310 750 325 742 330 730 C335 742 350 750 370 750 C425 750 470 705 470 625 C470 585 460 545 445 510 C425 470 410 420 410 360 L410 320 C440 305 455 285 455 255 C455 235 450 210 430 180 Z" fill="url(#skin)"/>
+    <path d="M230 180 C210 210 205 235 205 255 C205 285 220 305 250 320 L250 360 C250 420 235 470 215 510 C200 545 190 585 190 625 C190 705 235 750 290 750 C310 750 325 742 330 730 C335 742 350 750 370 750 C425 750 470 705 470 625 C470 585 460 545 445 510 C425 470 410 420 410 360 L410 320 C440 305 455 285 455 255 C455 235 450 210 430 180 Z" fill="url(#sideShade)" stroke="none" opacity="0.9"/>
+
+    <!-- arms (back, closed shapes) -->
+    <path d="M252 320 C210 332 178 362 160 406 C146 442 152 476 172 510 C186 534 205 548 228 552 C241 554 252 545 255 533 C238 525 224 509 214 485 C200 452 202 422 214 396 C228 366 250 356 272 353 C265 342 258 332 252 320 Z" fill="url(#skin)"/>
+    <path d="M408 320 C450 332 482 362 500 406 C514 442 508 476 488 510 C474 534 455 548 432 552 C419 554 408 545 405 533 C422 525 436 509 446 485 C460 452 458 422 446 396 C432 366 410 356 388 353 C395 342 402 332 408 320 Z" fill="url(#skin)"/>
+
+    <!-- back anatomy hints -->
+    <path d="M262 250 C284 236 316 236 338 250" fill="none" stroke="#c9bbb0" stroke-width="2" opacity="0.65"/>
+    <path d="M275 300 C292 288 308 288 325 300" fill="none" stroke="#c9bbb0" stroke-width="2" opacity="0.45"/>
+  </g>
+</svg>

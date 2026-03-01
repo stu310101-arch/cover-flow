@@ -1,0 +1,363 @@
+/* dressup/dressup.css
+   Standalone styles for the dressup page (no dependency on /styles.css).
+   All component classes are prefixed with `dressup-`.
+*/
+
+.dressup-root {
+  --dressup-bg: #0b1020;
+  --dressup-surface: rgba(255, 255, 255, 0.06);
+  --dressup-surface-2: rgba(255, 255, 255, 0.09);
+  --dressup-text: #eaf0ff;
+  --dressup-muted: rgba(234, 240, 255, 0.72);
+  --dressup-border: rgba(255, 255, 255, 0.14);
+  --dressup-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --dressup-accent: #7c5cff;
+  --dressup-accent-2: #22d3ee;
+  --dressup-radius: 16px;
+
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  color: var(--dressup-text);
+  background:
+    radial-gradient(1200px 700px at 15% 10%, rgba(124, 92, 255, 0.26), transparent 55%),
+    radial-gradient(900px 600px at 85% 0%, rgba(34, 211, 238, 0.18), transparent 52%),
+    linear-gradient(180deg, #070a14, var(--dressup-bg));
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.dressup-root,
+.dressup-root * {
+  box-sizing: border-box;
+}
+
+.dressup-root a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dressup-root button,
+.dressup-root input,
+.dressup-root select {
+  font: inherit;
+}
+
+.dressup-container {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Desktop: 2 columns (left sticky, right scrollable) */
+.dressup-layout {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  .dressup-container {
+    padding: 24px;
+  }
+
+  .dressup-layout {
+    grid-template-columns: minmax(320px, 420px) 1fr;
+    gap: 24px;
+    min-height: calc(100vh - 48px);
+  }
+
+  .dressup-sidebar {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    height: calc(100vh - 48px);
+  }
+
+  .dressup-main {
+    height: calc(100vh - 48px);
+    overflow: auto;
+    padding-right: 6px;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Mobile/tablet: stacked; let the page scroll naturally */
+@media (max-width: 1023.98px) {
+  .dressup-main {
+    overflow: visible;
+  }
+}
+
+.dressup-card {
+  background: linear-gradient(180deg, var(--dressup-surface), rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--dressup-border);
+  border-radius: var(--dressup-radius);
+  box-shadow: var(--dressup-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.dressup-card-header {
+  padding: 14px 14px 0;
+}
+
+.dressup-card-body {
+  padding: 14px;
+}
+
+.dressup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: 0.2px;
+}
+
+.dressup-subtitle {
+  margin: 8px 0 0;
+  color: var(--dressup-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Stage */
+.dressup-stage {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: calc(var(--dressup-radius) - 4px);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(700px 520px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.dressup-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
+  background-size: 18px 18px;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Layer images (stacked) */
+.dressup-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+/* Controls in sidebar */
+.dressup-sidebar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dressup-btn {
+  appearance: none;
+  border: 1px solid var(--dressup-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--dressup-text);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.dressup-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.dressup-btn:active {
+  transform: translateY(1px);
+}
+
+.dressup-btn:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.35);
+  outline-offset: 2px;
+}
+
+.dressup-btn-primary {
+  border-color: rgba(124, 92, 255, 0.55);
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.34), rgba(124, 92, 255, 0.22));
+}
+
+.dressup-btn-primary:hover {
+  border-color: rgba(124, 92, 255, 0.70);
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.42), rgba(124, 92, 255, 0.26));
+}
+
+/* Tabs (horizontal scroll) */
+.dressup-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 10px;
+  margin: 0;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.dressup-tabs::-webkit-scrollbar {
+  height: 0;
+}
+
+.dressup-tab {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  appearance: none;
+  border: 1px solid var(--dressup-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--dressup-text);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.dressup-tab:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.dressup-tab:active {
+  transform: translateY(1px);
+}
+
+.dressup-tab:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.35);
+  outline-offset: 2px;
+}
+
+/* Required: .is-selected state */
+.dressup-tab.is-selected {
+  border-color: rgba(34, 211, 238, 0.65);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.24), rgba(124, 92, 255, 0.16));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+/* Section */
+.dressup-section {
+  margin-top: 16px;
+}
+
+@media (min-width: 1024px) {
+  .dressup-section {
+    margin-top: 18px;
+  }
+}
+
+.dressup-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 10px;
+}
+
+.dressup-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.dressup-section-hint {
+  margin: 0;
+  color: var(--dressup-muted);
+  font-size: 12px;
+}
+
+/* Grid: mobile 2, tablet 3, desktop 4 */
+.dressup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .dressup-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .dressup-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.dressup-item {
+  border-radius: 14px;
+  border: 1px solid var(--dressup-border);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.dressup-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.dressup-item:active {
+  transform: translateY(1px);
+}
+
+.dressup-item:focus-visible {
+  outline: 3px solid rgba(124, 92, 255, 0.35);
+  outline-offset: 2px;
+}
+
+/* Required: .is-selected state */
+.dressup-item.is-selected {
+  border-color: rgba(124, 92, 255, 0.75);
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.22), rgba(255, 255, 255, 0.06));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.26);
+}
+
+.dressup-item-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.dressup-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.dressup-item-label {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--dressup-muted);
+  line-height: 1.35;
+}
+
+/* Optional: hide elements without layout shift */
+.dressup-hidden {
+  display: none !important;
+}

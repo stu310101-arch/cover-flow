@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <!-- Socks (front) -->
+  <g fill="#ffffff" stroke="#cbd5e1" stroke-width="4" stroke-linejoin="round" opacity="0.95">
+    <path d="M255 690 L285 690 L285 740 L245 740 C238 720 242 705 255 690 Z"/>
+    <path d="M315 690 L345 690 L355 740 L315 740 Z"/>
+    <path d="M250 710 L285 710" fill="none" stroke="#94a3b8" stroke-width="3" opacity="0.6"/>
+    <path d="M315 710 L350 710" fill="none" stroke="#94a3b8" stroke-width="3" opacity="0.6"/>
+  </g>
+</svg>

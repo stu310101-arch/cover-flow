@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <!-- Ribbon (front) -->
+  <g opacity="0.98">
+    <path d="M260 85 C235 70 210 75 198 98 C190 115 195 135 212 145 C234 158 258 145 270 120 Z" fill="#fb7185" stroke="#be123c" stroke-width="4"/>
+    <path d="M340 85 C365 70 390 75 402 98 C410 115 405 135 388 145 C366 158 342 145 330 120 Z" fill="#fb7185" stroke="#be123c" stroke-width="4"/>
+    <circle cx="300" cy="112" r="18" fill="#f43f5e" stroke="#be123c" stroke-width="4"/>
+  </g>
+</svg>

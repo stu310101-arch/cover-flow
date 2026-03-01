@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <!-- Necklace (front only) -->
+  <path d="M255 210 C275 255 325 255 345 210" fill="none" stroke="#a78bfa" stroke-width="7" stroke-linecap="round" opacity="0.95"/>
+  <circle cx="300" cy="255" r="10" fill="#8b5cf6" opacity="0.95"/>
+</svg>
