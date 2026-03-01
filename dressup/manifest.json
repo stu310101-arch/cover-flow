@@ -40,6 +40,10 @@
       "images": {
         "front": "assets/items/top_basic_tshirt_front.svg",
         "back": "assets/items/top_basic_tshirt_back.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 },
+        "back": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     },
     {
@@ -52,6 +56,10 @@
       "images": {
         "front": "assets/items/bottom_jeans_front.svg",
         "back": "assets/items/bottom_jeans_back.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 },
+        "back": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     },
     {
@@ -64,6 +72,10 @@
       "images": {
         "front": "assets/items/socks_white_front.svg",
         "back": "assets/items/socks_white_back.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 },
+        "back": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     },
     {
@@ -76,6 +88,10 @@
       "images": {
         "front": "assets/items/shoes_sneakers_front.svg",
         "back": "assets/items/shoes_sneakers_back.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 },
+        "back": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     },
 
@@ -90,6 +106,10 @@
       "images": {
         "front": "assets/items/acc_head_ribbon_front.svg",
         "back": "assets/items/acc_head_ribbon_back.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 },
+        "back": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     },
     {
@@ -103,6 +123,10 @@
       "images": {
         "front": "assets/items/acc_earrings_front.svg",
         "back": "assets/items/acc_earrings_back.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 },
+        "back": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     },
     {
@@ -116,6 +140,10 @@
       "images": {
         "front": "assets/items/acc_hand_watch_front.svg",
         "back": "assets/items/acc_hand_watch_back.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 },
+        "back": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     },
     {
@@ -128,6 +156,9 @@
       "thumb": "assets/thumbs/acc_necklace.svg",
       "images": {
         "front": "assets/items/acc_necklace_front.svg"
+      },
+      "transform": {
+        "front": { "x": 0, "y": 0, "scale": 1, "rotate": 0 }
       }
     }
   ]

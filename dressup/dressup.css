@@ -153,6 +153,7 @@
   object-position: center;
   pointer-events: none;
   user-select: none;
+  will-change: transform;
 }
 
 /* Controls in sidebar */

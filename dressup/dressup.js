@@ -127,6 +127,28 @@
     return item?.images?.[view] || null;
   }
 
+  function resolveTransform(item, view) {
+    const t = item?.transform?.[view] || item?.transform?.default || null;
+    if (!t || typeof t !== 'object') return null;
+
+    const x = Number.isFinite(Number(t.x)) ? Number(t.x) : 0;
+    const y = Number.isFinite(Number(t.y)) ? Number(t.y) : 0;
+    const scale = Number.isFinite(Number(t.scale)) ? Number(t.scale) : 1;
+    const rotate = Number.isFinite(Number(t.rotate)) ? Number(t.rotate) : 0;
+    const origin = typeof t.origin === 'string' ? t.origin : 'center center';
+
+    return { x, y, scale, rotate, origin };
+  }
+
+  function buildCssTransform(t) {
+    if (!t) return '';
+    const parts = [];
+    if (t.x || t.y) parts.push(`translate(${t.x}%, ${t.y}%)`);
+    if (t.scale !== 1) parts.push(`scale(${t.scale})`);
+    if (t.rotate) parts.push(`rotate(${t.rotate}deg)`);
+    return parts.join(' ');
+  }
+
   function resolveThumbSrc(item, view) {
     return item?.thumb || item?.images?.[view] || item?.images?.front || null;
   }
@@ -196,6 +218,14 @@
       img.decoding = 'async';
       img.src = src;
       img.style.zIndex = String(10 + z);
+
+      const t = resolveTransform(item, state.view);
+      const cssTransform = buildCssTransform(t);
+      if (cssTransform) {
+        img.style.transform = cssTransform;
+        img.style.transformOrigin = t.origin;
+      }
+
       img.addEventListener('error', () => {
         img.style.display = 'none';
         setError(ui, `圖片載入失敗：${item.name || item.id}`);
