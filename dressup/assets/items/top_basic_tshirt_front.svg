@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <!-- Basic T-shirt (front) -->
+  <g fill="#7dd3fc" stroke="#0284c7" stroke-width="4" stroke-linejoin="round" opacity="0.95">
+    <!-- body -->
+    <path d="M230 255 C250 220 275 205 300 205 C325 205 350 220 370 255 L420 285 C400 330 385 350 360 360 L360 470 C360 505 335 530 300 530 C265 530 240 505 240 470 L240 360 C215 350 200 330 180 285 Z"/>
+    <!-- neckline -->
+    <path d="M270 225 C285 245 315 245 330 225" fill="none" stroke="#0369a1" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

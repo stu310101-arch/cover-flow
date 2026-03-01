@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <!-- Basic T-shirt (back) -->
+  <g fill="#7dd3fc" stroke="#0284c7" stroke-width="4" stroke-linejoin="round" opacity="0.95">
+    <path d="M230 255 C250 220 275 208 300 208 C325 208 350 220 370 255 L420 285 C400 330 385 350 360 360 L360 470 C360 505 335 530 300 530 C265 530 240 505 240 470 L240 360 C215 350 200 330 180 285 Z"/>
+    <!-- back collar seam -->
+    <path d="M272 232 C290 250 310 250 328 232" fill="none" stroke="#0369a1" stroke-width="4" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

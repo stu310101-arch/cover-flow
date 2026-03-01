@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <!-- Sneakers (front) -->
+  <g fill="#111827" stroke="#0b1220" stroke-width="4" stroke-linejoin="round" opacity="0.95">
+    <path d="M225 740 C240 720 265 715 295 720 L305 750 C270 770 240 770 215 758 C212 750 216 745 225 740 Z"/>
+    <path d="M375 740 C360 720 335 715 305 720 L295 750 C330 770 360 770 385 758 C388 750 384 745 375 740 Z"/>
+  </g>
+  <g fill="none" stroke="#e5e7eb" stroke-width="3" opacity="0.8" stroke-linecap="round">
+    <path d="M240 742 L280 742"/>
+    <path d="M320 742 L360 742"/>
+    <path d="M248 752 L278 752"/>
+    <path d="M322 752 L352 752"/>
+  </g>
+</svg>
